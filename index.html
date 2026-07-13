@@ -1,0 +1,3604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Straitrunner">
+<meta name="theme-color" content="#06121d">
+<meta name="description" content="Open the channel: a hex minesweeper set in the 2026 closure of the Strait of Hormuz.">
+<title>Straitrunner: Hormuz</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-180.png">
+<style>
+:root{
+  --bg:#06121d;
+  --panel:#0b1d2c;
+  --panel2:#0e2436;
+  --line:#17384f;
+  --ink:#dceaf5;
+  --dim:#8fb0c4;
+  --faint:#6d94aa;
+  --amber:#f6a521;
+  --red:#ff5c4d;
+  --green:#3ddc8b;
+  --water-a:#14496b;
+  --water-b:#175278;
+  --water-c:#1a5b85;
+  --water-rev:#0a2334;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI",Roboto,sans-serif;
+  overflow:hidden;
+  touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+  -webkit-touch-callout:none;
+  -webkit-text-size-adjust:100%;
+}
+#app{
+  position:fixed;inset:0;
+  padding-left:var(--sal);padding-right:var(--sar);
+  background:radial-gradient(90% 120% at 50% 0%, #0a1f30 0%, var(--bg) 62%);
+  display:flex;flex-direction:column;
+}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+
+/* ---------- rotate prompt (portrait) ---------- */
+#rotate{
+  display:none;position:fixed;inset:0;z-index:99;background:var(--bg);
+  flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:30px;
+}
+#rotate .phone{
+  width:46px;height:78px;border:3px solid var(--amber);border-radius:10px;
+  animation:rot 2.2s ease-in-out infinite;
+}
+@keyframes rot{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+#rotate h2{font-size:16px;letter-spacing:.28em;text-transform:uppercase}
+#rotate p{font-size:12.5px;color:var(--dim);max-width:260px;line-height:1.6}
+@media (orientation: portrait){ #rotate{display:flex} }
+
+/* ---------- screens ---------- */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;
+  padding-left:max(var(--sal), var(--gutter, 0px));
+  padding-right:max(var(--sar), var(--gutter, 0px))}
+.screen.active{display:flex;animation:screenin .3s cubic-bezier(.2,.7,.3,1)}
+@keyframes screenin{from{opacity:0;transform:translateX(16px)}}
+
+/* ---------- shared ---------- */
+.btn{
+  appearance:none;border:1px solid var(--line);border-radius:12px;
+  background:linear-gradient(180deg,var(--panel2),var(--panel));
+  color:var(--ink);font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  padding:13px 22px;cursor:pointer;transition:transform .06s ease;
+}
+.btn:active{transform:scale(.97)}
+.btn.primary{border-color:rgba(246,165,33,.55);background:linear-gradient(180deg,#3a2a10,#2a1e0b);color:var(--amber)}
+.btn.small{padding:9px 14px;font-size:11.5px;border-radius:10px}
+.iconbtn{
+  width:42px;height:42px;border-radius:10px;border:0;
+  background:transparent;color:var(--dim);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+}
+.iconbtn:active{transform:scale(.88);color:var(--ink)}
+.chip{font-size:11px;letter-spacing:.1em;color:var(--dim);border:1px solid var(--line);border-radius:99px;padding:6px 12px;background:var(--panel)}
+.chip b{color:var(--ink)}
+.chip.best{color:var(--amber);border-color:rgba(246,165,33,.55);background:rgba(246,165,33,.1);font-weight:700}
+.chip.perfect{color:var(--green);border-color:rgba(61,220,139,.5);background:rgba(61,220,139,.08);font-weight:700}
+
+/* ---------- title ---------- */
+#scr-title{align-items:center;justify-content:center;text-align:center;
+  padding:20px max(20px, var(--sal), var(--gutter, 0px)) 20px max(20px, var(--sar), var(--gutter, 0px))}
+.titlemap{position:absolute;inset:0;width:100%;height:100%;opacity:.5;pointer-events:none}
+.titlemap .coast{fill:#123048}
+.titlemap .route{fill:none;stroke:var(--amber);stroke-width:1.4;stroke-dasharray:2 7;opacity:.7;animation:routedrift 22s linear infinite}
+@keyframes routedrift{to{stroke-dashoffset:-90}}
+.titlemap .mdot{fill:var(--red);animation:pulse 2.4s ease-in-out infinite}
+.titlemap .mdot.d2{animation-delay:.8s}
+.titlemap .mdot.d3{animation-delay:1.6s}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:.95}}
+.title-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px}
+.kicker{font-size:10.5px;letter-spacing:.42em;color:var(--amber);text-transform:uppercase}
+h1.logo{font-size:52px;letter-spacing:.14em;font-weight:800;line-height:1;text-shadow:0 6px 30px rgba(246,165,33,.18)}
+.tagline{font-size:12px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
+.title-btns{display:flex;gap:12px;margin-top:16px}
+.howto{margin-top:14px;font-size:12px;color:var(--dim);line-height:1.7;max-width:480px}
+.howto b{color:var(--ink)}
+.finenote{margin-top:8px;font-size:10px;color:var(--faint);max-width:440px;line-height:1.5}
+
+/* ---------- chapters ---------- */
+#scr-chapters{padding-top:calc(10px + var(--sat))}
+.chap-head{display:flex;align-items:center;gap:12px;padding:0 16px 10px}
+.chap-head h2{font-size:14px;letter-spacing:.3em;text-transform:uppercase}
+.chap-row{
+  flex:1;display:flex;gap:12px;overflow-x:auto;padding:4px 16px calc(14px + var(--sab));
+  -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;align-items:stretch;
+}
+.chap-card{
+  flex:0 0 240px;scroll-snap-align:start;display:flex;flex-direction:column;gap:8px;text-align:left;
+  border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--panel2),var(--panel));
+  padding:16px;cursor:pointer;color:var(--ink);
+}
+.chap-card:active{transform:scale(.985)}
+.chap-card.locked{opacity:.45;pointer-events:none}
+.chap-d1{font-size:10px;color:var(--faint);letter-spacing:.2em}
+.chap-d2{font-size:20px;font-weight:800;color:var(--amber)}
+.chap-code{font-size:9.5px;letter-spacing:.28em;color:var(--faint);margin-top:4px}
+.chap-name{font-size:16px;font-weight:800;letter-spacing:.06em}
+.chap-sub{font-size:11px;color:var(--dim);line-height:1.5;flex:1;overflow:hidden}
+.chap-state{font-size:11px;color:var(--faint);letter-spacing:.08em}
+.chap-state .done{color:var(--green);font-weight:700}
+.chap-state .go{color:var(--amber);font-weight:700}
+.chap-state .star{color:var(--amber)}
+
+/* ---------- intel file ---------- */
+#scr-prologue{padding-top:calc(10px + var(--sat))}
+.intel-tabs{flex:1;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 4px}
+.intel-tab{
+  flex:0 0 auto;appearance:none;border:1px solid var(--line);border-radius:99px;background:var(--panel);
+  color:var(--dim);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  padding:7px 13px;cursor:pointer;font-family:inherit;
+}
+.intel-tab.on{border-color:rgba(62,242,154,.55);background:rgba(62,242,154,.1);color:var(--amber)}
+.intel-tab:active{transform:scale(.96)}
+.intel-body{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:8px 16px calc(14px + var(--sab));
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;align-content:start;
+}
+.intel-entry{
+  border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--panel2),var(--panel));
+  padding:12px 14px;
+}
+.intel-entry h4{font-size:12px;font-weight:800;letter-spacing:.12em;margin-bottom:5px;color:var(--ink)}
+.intel-entry p{font-size:11.5px;color:var(--dim);line-height:1.6}
+.intel-entry p b{color:var(--ink)}
+.intel-cta{grid-column:1/-1;display:flex;justify-content:center;padding:6px 0}
+.fact{
+  font-size:11px;color:var(--faint);line-height:1.55;font-style:italic;
+  border-left:2px solid var(--line);padding-left:10px;margin:0 6px 16px;text-align:left;
+}
+.fact b{color:var(--dim);font-style:normal;letter-spacing:.08em}
+
+/* ---------- briefing ---------- */
+#scr-brief{padding-top:calc(10px + var(--sat))}
+.brief-top{display:flex;align-items:center;gap:12px;padding:0 16px}
+.brief-grid{
+  flex:1;display:grid;grid-template-columns:1fr 1.15fr;gap:18px;
+  padding:10px 18px calc(14px + var(--sab));min-height:0;
+}
+.brief-left{display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0}
+.brief-tag{font-size:9.5px;letter-spacing:.4em;color:var(--red);text-transform:uppercase}
+.brief-date{font-size:27px;font-weight:800;letter-spacing:.05em}
+.brief-name{font-size:13px;letter-spacing:.26em;color:var(--amber);text-transform:uppercase;font-weight:700}
+.brief-sector{font-size:10px;letter-spacing:.24em;color:var(--faint);text-transform:uppercase}
+.brief-sub{font-size:12.5px;color:var(--dim);line-height:1.6}
+.mission{display:flex;gap:7px;flex-wrap:wrap}
+.brief-right{display:flex;flex-direction:column;gap:10px;min-height:0}
+.wire{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column}
+.wire-head{font-size:9.5px;letter-spacing:.32em;color:var(--faint);padding:9px 14px;border-bottom:1px solid var(--line);text-transform:uppercase}
+.wire-body{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.wire-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(23,56,79,.5);align-items:baseline}
+.wire-item:last-child{border-bottom:0}
+.wire-src{flex:0 0 auto;font-size:9px;letter-spacing:.12em;color:var(--amber);border:1px solid rgba(246,165,33,.35);border-radius:4px;padding:2px 6px;text-transform:uppercase}
+.wire-h{font-size:12px;line-height:1.5;color:var(--ink)}
+
+/* ---------- phone-height compaction: every landscape iPhone is <=430px tall ---------- */
+@media (max-height: 450px){
+  .brief-grid{gap:12px;padding:6px 14px calc(10px + var(--sab))}
+  .brief-left{justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;gap:9px;padding-right:2px}
+  .brief-left .btn{position:sticky;bottom:0;flex-shrink:0;margin-top:auto;box-shadow:0 -10px 18px rgba(2,8,14,.55)}
+  .brief-date{font-size:20px}
+  .brief-name{font-size:12px}
+  .brief-sub{font-size:11.5px;line-height:1.5}
+  .modal{padding:10px}
+  .modal-card{padding:12px 16px;max-height:97%;max-width:440px}
+  .modal-kicker{margin-bottom:4px}
+  .modal-title{font-size:18px;margin-bottom:4px}
+  .modal-flavor{font-size:11.5px;line-height:1.5;margin-bottom:8px}
+  .modal-stats{margin-bottom:8px;gap:6px}
+  .modal-stats .chip{font-size:10px;padding:5px 9px}
+  .fact{font-size:10px;margin:0 4px 8px;line-height:1.45}
+  .modal-btns .btn{font-size:11.5px;padding:10px 14px;letter-spacing:.1em}
+  .brief-left .btn{padding:11px 18px}
+  .intel-entry{padding:9px 11px}
+  .intel-entry p{font-size:11px;line-height:1.5}
+}
+
+/* ---------- game ----------
+   The board fills the whole screen; HUD floats over the Iranian coast (top land)
+   and the ticker over the southern coast, so no pixel is spent on chrome bars. */
+#scr-game{padding:0}
+.hud{
+  position:absolute;top:calc(3px + var(--sat));left:0;right:0;z-index:6;
+  display:flex;align-items:center;gap:6px;pointer-events:none;
+  padding:0 calc(max(var(--sar), var(--gutter, 0px)) + 8px)
+          0 calc(max(var(--sal), var(--gutter, 0px)) + 8px);
+}
+.hud button,.hud .stat,.hud .backlog-mid{pointer-events:auto}
+.hud-title{text-shadow:0 1px 4px rgba(0,0,0,.8)}
+.hud-title{min-width:0;line-height:1.2;margin-right:2px;border:1px solid var(--line);border-radius:9px;background:rgba(4,14,10,.62);padding:3px 9px;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.hud-name{font-size:12.5px;font-weight:800;letter-spacing:.09em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-date{font-size:8.5px;color:var(--amber);letter-spacing:.16em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.backlog-mid{flex:1;min-width:80px;display:flex;flex-direction:column;gap:3px}
+.backlog-row{display:flex;align-items:center;gap:7px}
+.backlog-count{font-size:11px;color:var(--dim);white-space:nowrap}
+.backlog-count b{color:var(--amber)}
+.slots{display:flex;gap:3px;flex:1}
+.slot{
+  flex:1;height:12px;border:1px solid var(--line);border-radius:3px;background:rgba(11,29,44,.7);
+  display:flex;align-items:center;justify-content:center;line-height:1;
+}
+.slot.filled{background:rgba(246,165,33,.14);border-color:rgba(246,165,33,.45)}
+.slot.filled.hot{background:rgba(255,92,77,.16);border-color:rgba(255,92,77,.55)}
+.slot.new{animation:slotpop .35s ease}
+@keyframes slotpop{0%{transform:scale(.4)}70%{transform:scale(1.18)}100%{transform:scale(1)}}
+.tankbar{height:3px;border-radius:2px;background:var(--panel2);overflow:hidden}
+.tankbar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--amber),var(--red));transition:width .22s linear}
+.stat{
+  border:1px solid var(--line);border-radius:9px;background:rgba(4,14,10,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  padding:5px 9px;font-size:11px;letter-spacing:.05em;color:var(--dim);
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.stat b{color:var(--ink);font-size:12.5px}
+.stat.alert{animation:statalert 1.1s ease}
+@keyframes statalert{0%,100%{border-color:var(--line)}25%,60%{border-color:var(--red);background:rgba(255,92,77,.14)}}
+.minedot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px rgba(255,92,77,.25)}
+#boardWrap{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  /* the extra 12px on the left keeps the start column clear of punch-holes and notches */
+  padding:2px max(var(--sar), var(--gutter, 0px)) 2px calc(max(var(--sal), var(--gutter, 0px)) + 12px);
+}
+#boardWrap.shake{animation:shake .5s ease}
+@keyframes shake{
+  0%,100%{transform:translate(0,0)}
+  20%{transform:translate(-7px,3px)}40%{transform:translate(6px,-4px)}
+  60%{transform:translate(-5px,-3px)}80%{transform:translate(4px,3px)}
+}
+svg#board{width:100%;height:100%;touch-action:none}
+
+/* board layers */
+/* nothing decorative may swallow touches: only the hex cells are interactive */
+.chart-deco,.coastlayer,.caustics,.map-label,.goal-mark,.buoy,.buoy-mast,#fxlayer,.city,.intl-border{pointer-events:none}
+.city circle{fill:#9fc3d8;opacity:.7}
+.port .portglow{fill:#ffd76a;opacity:.28;transform-box:fill-box;transform-origin:center;animation:portpulse 2.8s ease-in-out infinite}
+.port .portdot{fill:#ffd76a;opacity:.95}
+.port .ring{stroke:#ffd76a;opacity:.5}
+@keyframes portpulse{0%,100%{transform:scale(.7);opacity:.32}50%{transform:scale(1.35);opacity:.12}}
+.city .ring{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.35}
+.city text{font-size:6.5px;letter-spacing:1.3px;fill:#9fc3d8;opacity:.6;font-weight:600}
+.intl-border{fill:none;stroke:#9fc3d8;stroke-width:1;opacity:.3;stroke-dasharray:1 4;stroke-linecap:round}
+[data-theme="chart"] .city circle{fill:#3d3426;opacity:.85}
+[data-theme="chart"] .city .ring{stroke:#3d3426;opacity:.5}
+[data-theme="chart"] .city text{fill:#3d3426;opacity:.85}
+[data-theme="chart"] .intl-border{stroke:#5a4a2e;opacity:.55}
+[data-theme="ecdis"] .city circle{fill:#7fe9b6}
+[data-theme="ecdis"] .city .ring{stroke:#7fe9b6}
+[data-theme="ecdis"] .city text{fill:#7fe9b6;opacity:.6}
+[data-theme="ecdis"] .intl-border{stroke:#35e08a;opacity:.35}
+.op-area{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.14;stroke-dasharray:6 6}
+.chart-deco line{stroke:#9fc3d8;stroke-width:.5;opacity:.05}
+.chart-deco .contour{fill:none;stroke:#9fc3d8;stroke-width:.7;opacity:.08;stroke-dasharray:4 5}
+.chart-deco .compass line{stroke:#9fc3d8;opacity:.3;stroke-width:.9}
+.chart-deco .compass path{fill:#9fc3d8;opacity:.3}
+.chart-deco .compass text{fill:#9fc3d8;opacity:.35;font-size:7px;text-anchor:middle}
+.map-label{font-weight:700;letter-spacing:3.2px;text-anchor:middle;pointer-events:none}
+.map-label.onland{fill:#2c1e08;opacity:.55}
+.map-label.water{fill:#cfe6f4;opacity:.62;font-style:italic;font-weight:400;letter-spacing:4.6px;font-family:Georgia,"Times New Roman",serif;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
+.map-label.islet{fill:#a9cee2;opacity:.42}
+.iconbtn svg{width:20px;height:20px}
+.slot svg{width:13px;height:7px;color:var(--amber)}
+.chip svg{width:11px;height:11px;vertical-align:-1.5px}
+.chap-state svg{width:11px;height:11px;vertical-align:-1.5px}
+.fx-sonar{fill:none;stroke:#8fd8ff;stroke-width:1.6;transform-box:fill-box;transform-origin:center;animation:fxsonar .9s cubic-bezier(.2,.7,.4,1) forwards}
+@keyframes fxsonar{from{transform:scale(.15);opacity:.8}to{transform:scale(3.4);opacity:0}}
+.coast{stroke:#38281078;stroke-width:1.2}
+.coast.k-I{fill:url(#sandI)}
+.coast.k-O{fill:url(#sandO)}
+.coast.k-Q{fill:url(#sandQ)}
+.buoy{fill:var(--amber);opacity:.55;transform-box:fill-box;transform-origin:center;animation:bob 3.2s ease-in-out infinite}
+.buoy-mast{stroke:var(--amber);stroke-width:.8;opacity:.4}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
+.caustic-a{animation:causa 46s linear infinite}
+.caustic-b{animation:causb 61s linear infinite}
+@keyframes causa{from{transform:translate(0,0)}to{transform:translate(90px,70px)}}
+@keyframes causb{from{transform:translate(90px,0)}to{transform:translate(0,70px)}}
+#boardWrap.winpulse{animation:winpulse .9s cubic-bezier(.3,.8,.4,1)}
+@keyframes winpulse{0%{transform:scale(1)}30%{transform:scale(1.014)}100%{transform:scale(1)}}
+.mineg .mglow{fill:#ff5a4e;opacity:.16}
+.goal-mark{fill:var(--amber);opacity:.5;animation:goalpulse 2.6s ease-in-out infinite}
+@keyframes goalpulse{0%,100%{opacity:.28}50%{opacity:.75}}
+
+/* hex cells */
+.hexbg{transform-box:fill-box;transform-origin:center;stroke:#071825;stroke-width:1.1}
+.cell.covered.w0 .hexbg{fill:url(#wgA)}
+.cell.covered.w1 .hexbg{fill:url(#wgB)}
+.cell.covered.w2 .hexbg{fill:url(#wgC)}
+.cell.covered .hexbg{stroke:#0a2c42;stroke-width:1.4}
+.cell.revealed .hexbg{fill:url(#revGrad);animation:hexpop .28s cubic-bezier(.34,1.4,.64,1)}
+.cell.wrecked .hexbg{fill:#1c1512;animation:hexpop .3s ease}
+.cell.pressing .hexbg{transform:scale(.88);filter:brightness(1.35);transition:transform .28s ease,filter .28s ease}
+@keyframes hexpop{0%{transform:scale(.6);opacity:.3}70%{transform:scale(1.07)}100%{transform:scale(1);opacity:1}}
+text.num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font-size:16px;text-anchor:middle;pointer-events:none}
+.n1{fill:#6fd2ff}.n2{fill:#6fe3a5}.n3{fill:#ffd36e}.n4{fill:#ffa14d}.n5{fill:#ff7a63}.n6{fill:#ff5470}
+.flagg line{stroke:var(--amber);stroke-width:1.8;stroke-linecap:round}
+.flagg path{fill:var(--amber)}
+.flagg circle{fill:var(--amber)}
+.flagg{animation:flagdrop .32s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+@keyframes flagdrop{0%{transform:translateY(-9px) scale(.5);opacity:0}60%{transform:translateY(1.5px) scale(1.06);opacity:1}100%{transform:translateY(0) scale(1)}}
+.cell.revealed text.num{animation:numin .3s ease .06s backwards}
+@keyframes numin{from{opacity:0;transform:translateY(3px)}}
+.mineg .body{fill:url(#mineGrad)}
+.mineg .spikes line{stroke:#c33a2e;stroke-width:2.4;stroke-linecap:round}
+.mineg .glint{fill:#ffb3a6}
+.mineg{pointer-events:none;animation:hexpop .25s ease}
+.wreckg{pointer-events:none;animation:hexpop .3s ease}
+.wreckg .hull{fill:#3a2c22}
+.wreckg .slick{fill:#0d0a08;opacity:.75}
+.wreckg .smoke{fill:#586067;opacity:.4}
+.fx-ring{fill:none;stroke:var(--red);stroke-width:2;transform-box:fill-box;transform-origin:center;animation:fxring .6s ease-out forwards}
+@keyframes fxring{from{transform:scale(.2);opacity:1}to{transform:scale(2.4);opacity:0}}
+.fx-splash{fill:#bfe8ff;transform-box:fill-box;transform-origin:center;animation:fxsplash .5s ease-out forwards}
+@keyframes fxsplash{from{transform:scale(.3);opacity:.8}to{transform:scale(1.8);opacity:0}}
+.ship .hull{fill:var(--amber)}
+.ship .wake{stroke:#bfe8ff;stroke-width:1.4;opacity:.45;stroke-linecap:round}
+#entlayer{pointer-events:none}
+#entlayer .runner-hit{pointer-events:all;cursor:pointer;fill:transparent}
+.dship .stallring{fill:none;stroke:var(--amber);stroke-width:2.4;stroke-dasharray:5 4;opacity:0}
+.dship.warn .stallring{opacity:1;animation:stallblink .55s steps(2,start) infinite}
+@keyframes stallblink{50%{opacity:.12}}
+.runner .hull{fill:#ff5d45}
+.runner .sup{fill:#ffb8a8}
+.runner .cargo{fill:#5a1008}
+.runner .wake{stroke:#ff9d8a;stroke-width:1.1;opacity:.5;stroke-linecap:round}
+.runner .beacon{fill:none;stroke:#ff5d45;stroke-width:1.3;opacity:.8;animation:stallblink .9s steps(2,start) infinite}
+.dship.gamble .stallring{stroke:#ff5d45;stroke-dasharray:2 3;opacity:1;animation:stallblink .8s steps(2,start) infinite}
+.drone .arms{stroke:#ff5d45;stroke-width:1.6}
+.drone .rotor{fill:none;stroke:#ff9d8a;stroke-width:1}
+.drone .body{fill:#ff5d45}
+.drone .beacon{fill:none;stroke:#ff5d45;stroke-width:1.2;opacity:.75;animation:stallblink .5s steps(2,start) infinite}
+.holdmark circle{fill:none;stroke:var(--amber);stroke-width:1.5;stroke-dasharray:4 4;transform-box:fill-box;transform-origin:center;animation:holdspin 7s linear infinite}
+.holdmark .pin{fill:var(--amber);stroke:none;animation:none}
+@keyframes holdspin{to{transform:rotate(360deg)}}
+
+/* effects overlays */
+#boomflash{position:absolute;inset:0;background:radial-gradient(120% 120% at 50% 45%,rgba(255,70,40,.38),rgba(255,70,40,.05));opacity:0;pointer-events:none;z-index:15}
+#boomflash.on{animation:boomflash-a .55s ease-out}
+@keyframes boomflash-a{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+#toast{
+  position:absolute;left:50%;bottom:52px;transform:translateX(-50%) translateY(8px);
+  background:rgba(8,19,29,.94);border:1px solid var(--line);border-radius:10px;
+  padding:9px 16px;font-size:12px;color:var(--ink);letter-spacing:.04em;line-height:1.5;
+  opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:12;
+  max-width:70%;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ticker */
+.ticker{
+  position:absolute;left:0;right:0;bottom:0;z-index:6;pointer-events:none;
+  background:linear-gradient(180deg, transparent, rgba(3,10,16,.82) 45%);
+  padding:8px 0 calc(4px + max(var(--sab), var(--gutter-b, 0px)));
+  overflow:hidden;white-space:nowrap;
+}
+.ticker::before{
+  content:"LIVE";position:absolute;left:0;top:8px;bottom:var(--sab);z-index:2;
+  display:flex;align-items:center;padding:0 10px 0 12px;
+  background:linear-gradient(90deg, rgba(3,10,16,.9) 70%, transparent);
+  color:var(--red);font-size:8.5px;font-weight:800;letter-spacing:.28em;
+}
+.tick-track{display:inline-block;font-size:11.5px;color:var(--dim);letter-spacing:.04em;animation:tick linear infinite}
+.tick-track b{color:var(--amber);font-weight:700}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* modal */
+.modal{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  background:rgba(4,10,16,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:20;padding:20px;
+}
+.modal.open{display:flex}
+.modal-card{
+  width:100%;max-width:400px;border:1px solid var(--line);border-radius:18px;
+  background:linear-gradient(180deg,#10283c,var(--panel));padding:22px;text-align:center;
+  animation:cardin .42s cubic-bezier(.34,1.45,.64,1);max-height:90%;overflow-y:auto;
+}
+@keyframes cardin{from{transform:translateY(26px) scale(.92);opacity:0}}
+.modal-kicker{font-size:10px;letter-spacing:.4em;text-transform:uppercase;margin-bottom:7px}
+.modal-kicker.good{color:var(--green)}
+.modal-kicker.bad{color:var(--red)}
+.modal-title{font-size:24px;font-weight:800;letter-spacing:.1em;margin-bottom:7px}
+.modal-flavor{font-size:12.5px;color:var(--dim);line-height:1.6;margin-bottom:13px}
+.modal-stats{display:flex;justify-content:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.modal-stats .chip{animation:chipin .32s ease backwards}
+.modal-stats .chip:nth-child(1){animation-delay:.1s}
+.modal-stats .chip:nth-child(2){animation-delay:.2s}
+.modal-stats .chip:nth-child(3){animation-delay:.3s}
+.modal-stats .chip:nth-child(4){animation-delay:.4s}
+.modal-stats .chip:nth-child(5){animation-delay:.5s}
+@keyframes chipin{from{opacity:0;transform:translateY(7px)}}
+.modal-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#fmImg{margin:4px auto 10px;max-width:300px}
+#fmImg svg{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:10px;background:rgba(2,10,16,.5)}
+
+/* ---------- render themes (test: ?theme=chart / ?theme=ecdis) ---------- */
+:root[data-theme="chart"]{
+  --bg:#e9dfc8; --panel:#e2d6b8; --panel2:#eee4cc; --line:#c4b28c;
+  --ink:#2b3440; --dim:#5c6672; --faint:#8a8268;
+  --amber:#b23a2f; --red:#a02c22; --green:#2e7d4f;
+  --water-rev:#efe7d2;
+}
+[data-theme="chart"] #app{background:radial-gradient(90% 120% at 50% 0%, #efe6cf 0%, #e9dfc8 62%)}
+[data-theme="chart"] .hexbg{stroke:#93a5a0;stroke-width:1}
+[data-theme="chart"] .coast{stroke:#3a414877}
+[data-theme="chart"] .chart-deco line{stroke:#2b3440;opacity:.1}
+[data-theme="chart"] .chart-deco .contour{stroke:#2b3440;opacity:.14}
+[data-theme="chart"] .chart-deco .compass line{stroke:#2b3440;opacity:.5}
+[data-theme="chart"] .chart-deco .compass path{fill:#2b3440;opacity:.5}
+[data-theme="chart"] .chart-deco .compass text{fill:#2b3440;opacity:.55}
+[data-theme="chart"] .op-area{stroke:#2b3440;opacity:.22}
+[data-theme="chart"] .map-label.onland{fill:#4a3d24;opacity:.72}
+[data-theme="chart"] .map-label.water{fill:#3d5560;opacity:.6;stroke:#e9dfc8}
+[data-theme="chart"] .n1{fill:#1f5f8b}[data-theme="chart"] .n2{fill:#2e7d4f}
+[data-theme="chart"] .n3{fill:#b4762a}[data-theme="chart"] .n4{fill:#a04b2b}
+[data-theme="chart"] .n5{fill:#8e2f3c}[data-theme="chart"] .n6{fill:#6b2d5b}
+[data-theme="chart"] .flagg line{stroke:#a02c22}
+[data-theme="chart"] .flagg path,[data-theme="chart"] .flagg circle{fill:#a02c22}
+[data-theme="chart"] .mineg .spikes line{stroke:#2b2b2b}
+[data-theme="chart"] .mineg .glint{fill:#9c9c9c}
+[data-theme="chart"] .mineg .mglow{fill:#a02c22;opacity:.14}
+[data-theme="chart"] .buoy{fill:#a02c22}
+[data-theme="chart"] .buoy-mast{stroke:#a02c22}
+[data-theme="chart"] .goal-mark{fill:#a02c22}
+[data-theme="chart"] .wreckg .hull{fill:#5a4636}
+[data-theme="chart"] .wreckg .slick{fill:#494439;opacity:.5}
+[data-theme="chart"] .fx-splash{fill:#5f9dad}
+[data-theme="chart"] .fx-sonar{stroke:#1f5f8b}
+[data-theme="chart"] .ship .hull{fill:#2b3440}
+[data-theme="chart"] .ship .wake{stroke:#5f9dad}
+[data-theme="chart"] .slot.filled{background:rgba(178,58,47,.12);border-color:rgba(178,58,47,.4)}
+[data-theme="chart"] .slot.filled.hot{background:rgba(160,44,34,.2);border-color:rgba(160,44,34,.6)}
+[data-theme="chart"] .btn.primary{background:linear-gradient(180deg,#d8bfa0,#ccae88);color:#7c2119;border-color:rgba(160,44,34,.5)}
+[data-theme="chart"] .modal-card{background:linear-gradient(180deg,#efe4c9,#e2d6b8)}
+[data-theme="chart"] .ticker{background:linear-gradient(180deg, transparent, rgba(226,214,184,.9) 45%)}
+[data-theme="chart"] .ticker::before{background:linear-gradient(90deg,#e2d6b8 75%,transparent)}
+[data-theme="chart"] #toast{background:rgba(238,228,204,.96);color:#2b3440}
+[data-theme="chart"] .titlemap .coast{fill:#d3c29b}
+[data-theme="chart"] .wire-src{color:#a02c22;border-color:rgba(160,44,34,.4)}
+[data-theme="chart"] .map-label.islet{fill:#4a3d24;opacity:.68}
+[data-theme="chart"] .stat{background:rgba(255,252,240,.55);border-color:#b3a17c}
+[data-theme="chart"] .slot{background:rgba(255,252,240,.4);border-color:#b3a17c}
+[data-theme="chart"] .tankbar{background:#d3c5a2}
+[data-theme="ecdis"] .map-label.islet{fill:#7fe9b6;opacity:.45}
+
+:root[data-theme="ecdis"]{
+  --bg:#010805; --panel:#04120b; --panel2:#071a10; --line:#124530;
+  --ink:#d9ffe9; --dim:#6fbf97; --faint:#3f7d5c;
+  --amber:#3ef29a; --red:#ff4d3d; --green:#52ffb0;
+  --water-rev:#031710;
+}
+[data-theme="ecdis"] #app{background:radial-gradient(90% 120% at 50% 0%, #03130b 0%, #010805 62%)}
+[data-theme="ecdis"] .hexbg{stroke:#062028}
+[data-theme="ecdis"] .cell.covered .hexbg{stroke:#0e4a52;stroke-width:1.2}
+[data-theme="ecdis"] .coast{stroke:#ffd76a33;stroke-width:1.2}
+[data-theme="ecdis"] .coastlayer{filter:url(#phos)}
+[data-theme="ecdis"] .chart-deco line{stroke:#3ef29a;opacity:.08}
+[data-theme="ecdis"] .chart-deco .contour{stroke:#2de8b0;opacity:.12}
+[data-theme="ecdis"] .chart-deco .compass line{stroke:#3ef29a;opacity:.55}
+[data-theme="ecdis"] .chart-deco .compass path{fill:#3ef29a;opacity:.55}
+[data-theme="ecdis"] .chart-deco .compass text{fill:#3ef29a;opacity:.6}
+[data-theme="ecdis"] .op-area{stroke:#3ef29a;opacity:.22}
+[data-theme="ecdis"] .map-label.onland{fill:#e0be55;opacity:.85;paint-order:stroke;stroke:#180f02;stroke-width:2.6px}
+[data-theme="ecdis"] .map-label.islet{fill:#c9a94a;opacity:.5}
+[data-theme="ecdis"] .map-label.water{fill:#8df2df;opacity:.66;stroke:#02120b;stroke-width:3.2px}
+[data-theme="ecdis"] .city circle{fill:#ffd76a}
+[data-theme="ecdis"] .port .portglow,[data-theme="ecdis"] .port .portdot{fill:#ffd76a}
+[data-theme="ecdis"] .city .ring{stroke:#ffd76a}
+[data-theme="ecdis"] .city text{fill:#c9a94a;opacity:.75}
+[data-theme="ecdis"] .intl-border{stroke:#c9a94a;opacity:.4}
+[data-theme="ecdis"] .n1{fill:#4de3ff}[data-theme="ecdis"] .n2{fill:#3ef29a}
+[data-theme="ecdis"] .n3{fill:#ffd76a}[data-theme="ecdis"] .n4{fill:#ffab4d}
+[data-theme="ecdis"] .n5{fill:#ff7a5e}[data-theme="ecdis"] .n6{fill:#ff4d6d}
+/* faux phosphor bloom on numerals: same-hue translucent stroke under the fill */
+[data-theme="ecdis"] text.num{paint-order:stroke;stroke-width:2.6px;stroke-opacity:.3}
+[data-theme="ecdis"] .n1{stroke:#4de3ff}[data-theme="ecdis"] .n2{stroke:#3ef29a}
+[data-theme="ecdis"] .n3{stroke:#ffd76a}[data-theme="ecdis"] .n4{stroke:#ffab4d}
+[data-theme="ecdis"] .n5{stroke:#ff7a5e}[data-theme="ecdis"] .n6{stroke:#ff4d6d}
+[data-theme="ecdis"] .flagg line{stroke:#ffd76a}
+[data-theme="ecdis"] .flagg path,[data-theme="ecdis"] .flagg circle{fill:#ffd76a}
+[data-theme="ecdis"] .mineg .spikes line{stroke:#ff5347}
+[data-theme="ecdis"] .mineg .mglow{fill:#ff4d3d;opacity:.26}
+[data-theme="ecdis"] .buoy{fill:#ffd76a;animation:buoyflash 2.6s ease-in-out infinite}
+[data-theme="ecdis"] .buoy-mast{stroke:#ffd76a}
+@keyframes buoyflash{0%,72%,100%{opacity:.25}80%,88%{opacity:.95}}
+[data-theme="ecdis"] .goal-mark{fill:#3ef29a}
+[data-theme="ecdis"] .cell.wrecked .hexbg{fill:#1d0806;stroke:#7c2118}
+[data-theme="ecdis"] .wreckg .hull{fill:#8a4a2e}
+[data-theme="ecdis"] .wreckg .slick{fill:#2a0f08;opacity:.85}
+[data-theme="ecdis"] .wreckg .smoke{fill:#b0543a;opacity:.55}
+[data-theme="ecdis"] .fx-splash{fill:#4de3ff}
+[data-theme="ecdis"] .fx-sonar{stroke:#3ef29a}
+[data-theme="ecdis"] .ship .hull{fill:#3ef29a}
+[data-theme="ecdis"] .ship .wake{stroke:#4de3ff}
+[data-theme="ecdis"] .slot{background:rgba(3,20,13,.8);border-color:#124530}
+[data-theme="ecdis"] .slot.filled{background:rgba(62,242,154,.14);border-color:rgba(62,242,154,.45)}
+[data-theme="ecdis"] .slot.filled.hot{background:rgba(255,77,61,.16);border-color:rgba(255,77,61,.55)}
+[data-theme="ecdis"] .btn.primary{background:linear-gradient(180deg,#0a2c1b,#061d11);color:#3ef29a;border-color:rgba(62,242,154,.5)}
+[data-theme="ecdis"] .modal-card{background:linear-gradient(180deg,#07211466,#04120b);background-color:#061810}
+[data-theme="ecdis"] .ticker{background:linear-gradient(180deg, transparent, rgba(2,13,8,.85) 45%)}
+[data-theme="ecdis"] .ticker::before{background:linear-gradient(90deg,#020d08 75%,transparent)}
+[data-theme="ecdis"] .titlemap .coast{fill:#171407}
+[data-theme="ecdis"] .titlemap .route{stroke:#3ef29a}
+[data-theme="ecdis"] .wire-src{color:#3ef29a;border-color:rgba(62,242,154,.4)}
+/* instrument-cluster typography + phosphor glow on the chrome */
+[data-theme="ecdis"] .hud-name,[data-theme="ecdis"] .hud-date,[data-theme="ecdis"] .stat,
+[data-theme="ecdis"] .backlog-count,[data-theme="ecdis"] .chip,[data-theme="ecdis"] .tick-track,
+[data-theme="ecdis"] h1.logo,[data-theme="ecdis"] .kicker,[data-theme="ecdis"] .tagline,
+[data-theme="ecdis"] .chap-name,[data-theme="ecdis"] .brief-name,[data-theme="ecdis"] .brief-date,
+[data-theme="ecdis"] .modal-title{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+[data-theme="ecdis"] .hud,[data-theme="ecdis"] h1.logo,[data-theme="ecdis"] .modal-title{text-shadow:0 0 8px rgba(62,242,154,.35)}
+[data-theme="ecdis"] h1.logo{animation:crtboot 1.4s ease-out 1}
+@keyframes crtboot{0%{opacity:0}8%{opacity:.9}12%{opacity:.2}20%{opacity:1}26%{opacity:.5}34%,100%{opacity:1}}
+/* scanlines + rotating radar sweep, both strictly non-interactive */
+[data-theme="ecdis"] #boardWrap{overflow:hidden}
+[data-theme="ecdis"] #boardWrap::after{
+  content:"";position:absolute;inset:6px;pointer-events:none;border-radius:8px;z-index:3;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.15) 0 1px, transparent 1px 3px);
+}
+[data-theme="ecdis"] #boardWrap::before{
+  content:"";position:absolute;left:50%;top:50%;width:160vmax;height:160vmax;
+  margin:-80vmax 0 0 -80vmax;pointer-events:none;z-index:2;border-radius:50%;
+  background:conic-gradient(from 0deg, transparent 0deg 336deg, rgba(62,242,154,.04) 350deg, rgba(62,242,154,.13) 359deg, transparent 360deg);
+  animation:radar 11s linear infinite;
+}
+@keyframes radar{to{transform:rotate(360deg)}}
+
+@media (prefers-reduced-motion: reduce){
+  .tick-track{animation:none !important}
+  #boardWrap.shake{animation:none}
+  .titlemap .route,.titlemap .mdot{animation:none}
+  .tanker-glyph{display:none}
+  .cell.revealed .hexbg,.cell.wrecked .hexbg,.flagg,.mineg,.wreckg,.slot.new,.modal-stats .chip{animation:none}
+  #boomflash.on{animation:none}
+  .goal-mark{animation:none;opacity:.5}
+  #rotate .phone{animation:none;transform:rotate(-90deg)}
+  .buoy,.caustic-a,.caustic-b,#boardWrap.winpulse{animation:none}
+  .screen.active{animation:none}
+  [data-theme="ecdis"] #boardWrap::before{animation:none;display:none}
+  [data-theme="ecdis"] .buoy{animation:none;opacity:.6}
+  [data-theme="ecdis"] h1.logo{animation:none}
+  .port .portglow,.holdmark circle,.runner .beacon,.dship.warn .stallring,.drone .beacon,.dship.gamble .stallring{animation:none}
+  .modal-card,.cell.revealed text.num,.stat.alert{animation:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="rotate">
+    <div class="phone"></div>
+    <h2>Rotate your device</h2>
+    <p>HORMUZ charts the whole strait, west to east. Turn your phone sideways to play.</p>
+  </div>
+
+  <!-- ============ TITLE ============ -->
+  <section class="screen active" id="scr-title">
+    <svg class="titlemap" viewBox="0 0 840 390" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <path class="coast" d="M0,0 L840,0 L840,86 C700,110 620,88 520,102 C420,118 300,92 180,112 C110,124 40,110 0,120 Z"/>
+      <path class="coast" d="M0,390 L0,300 C80,315 170,292 240,308 C300,322 320,360 310,390 Z"/>
+      <path class="coast" d="M840,390 L840,260 C770,270 720,300 700,335 C680,368 640,375 620,390 Z"/>
+      <path class="route" id="routePath" d="M20,210 C200,180 420,225 570,190 C670,167 760,145 825,120"/>
+      <g class="tanker-glyph" opacity="0.8">
+        <path d="M-9,-1 L9,-1 L6,3 L-6,3 Z M-2,-4 L4,-4 L4,-1 L-2,-1 Z" fill="#f6a521"/>
+        <animateMotion dur="34s" repeatCount="indefinite" rotate="auto">
+          <mpath href="#routePath"/>
+        </animateMotion>
+      </g>
+      <circle class="mdot" cx="250" cy="196" r="4"/>
+      <circle class="mdot d2" cx="470" cy="207" r="4"/>
+      <circle class="mdot d3" cx="680" cy="163" r="4"/>
+    </svg>
+    <div class="title-inner">
+      <div class="kicker" id="titleKicker">Straitrunner</div>
+      <h1 class="logo">HORMUZ</h1>
+      <div class="tagline">Open the Channel</div>
+      <div class="title-btns">
+        <button class="btn primary" id="btnContinue">Start Patrol</button>
+        <button class="btn" id="btnChapters">Chapters</button>
+        <button class="btn" id="btnPrologue">Intel</button>
+      </div>
+      <div class="howto">
+        <b>Tap</b> to sweep &nbsp;·&nbsp; <b>Hold</b> to flag &nbsp;·&nbsp; connect the <b>Persian Gulf</b> to the <b>Gulf of Oman</b><br>
+        with a channel of swept hexes before the tanker backlog fills.
+      </div>
+      <button class="btn small" id="btnAmb">Ambience · Sonar Room</button>
+      <div class="finenote">
+        Seven chapters follow the real record, from the first rumor of mines to this week.
+        Headlines are paraphrased from the reported record of those dates.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INTEL ============ -->
+  <section class="screen" id="scr-prologue">
+    <div class="chap-head">
+      <button class="iconbtn" id="btnPrologueBack" aria-label="Back"></button>
+      <h2>Intel</h2>
+      <div class="intel-tabs" id="intelTabs"></div>
+    </div>
+    <div class="intel-body" id="intelBody"></div>
+  </section>
+
+  <!-- ============ CHAPTERS ============ -->
+  <section class="screen" id="scr-chapters">
+    <div class="chap-head">
+      <button class="iconbtn" id="btnChapBack">‹</button>
+      <h2>Patrol Log · 2026</h2>
+    </div>
+    <div class="chap-row" id="chapList"></div>
+  </section>
+
+  <!-- ============ BRIEFING ============ -->
+  <section class="screen" id="scr-brief">
+    <div class="brief-top">
+      <button class="iconbtn" id="btnBriefBack">‹</button>
+    </div>
+    <div class="brief-grid">
+      <div class="brief-left">
+        <div>
+          <div class="brief-tag">Situation Report</div>
+          <div class="brief-date" id="briefDate"></div>
+          <div class="brief-name" id="briefName"></div>
+          <div class="brief-sector" id="briefSector"></div>
+        </div>
+        <div class="brief-sub" id="briefSub"></div>
+        <div class="mission" id="briefChips"></div>
+        <button class="btn primary" id="btnBegin">Begin Sweep</button>
+      </div>
+      <div class="brief-right">
+        <div class="wire">
+          <div class="wire-head">News Wire · Those Days</div>
+          <div class="wire-body" id="briefWire"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section class="screen" id="scr-game">
+    <div class="hud">
+      <button class="iconbtn" id="btnGameBack" aria-label="Back to Patrol Log"></button>
+      <div class="hud-title">
+        <div class="hud-name" id="hudName"></div>
+        <div class="hud-date" id="hudDate"></div>
+      </div>
+      <div class="backlog-mid">
+        <div class="backlog-row">
+          <div class="slots" id="slots"></div>
+          <span class="backlog-count" id="backlogCount"></span>
+        </div>
+        <div class="tankbar"><i id="tankbarFill"></i></div>
+      </div>
+      <div class="stat"><span class="minedot"></span> <b id="minesLeft">00</b></div>
+      <div class="stat mono" id="clock">0:00</div>
+      <button class="iconbtn" id="btnMute" aria-label="Sound on or off; hold for ambience"></button>
+      <button class="iconbtn" id="btnRestart" aria-label="Restart chapter"></button>
+    </div>
+    <div id="boardWrap"><svg id="board" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div class="ticker"><div class="tick-track" id="tickTrack"></div></div>
+    <div id="boomflash"></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <div class="modal" id="fmodal">
+      <div class="modal-card">
+        <div class="modal-kicker good">Field Manual</div>
+        <div class="modal-title" id="fmTitle"></div>
+        <div id="fmImg"></div>
+        <div class="modal-flavor" id="fmBody"></div>
+        <div class="modal-btns"><button class="btn primary" id="fmOk">Understood</button></div>
+      </div>
+    </div>
+
+    <div class="modal" id="modal">
+      <div class="modal-card">
+        <div class="modal-kicker" id="mKicker"></div>
+        <div class="modal-title" id="mTitle"></div>
+        <div class="modal-flavor" id="mFlavor"></div>
+        <div class="modal-stats" id="mStats"></div>
+        <div class="modal-btns" id="mBtns"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   HORMUZ · Open the Channel
+   Hex minesweeper set in the 2026 closure of the Strait of Hormuz.
+   Goal: connect the west edge (Persian Gulf) to the east edge (Gulf of
+   Oman) with a channel of revealed safe hexes. Mines leave wreckage and
+   cost backlog instead of ending the level.
+   ===================================================================== */
+
+/* ---------------- level data ---------------- */
+/* mask chars: I=Iran coast, O=Oman/UAE coast, Q=island, B=buoyed shoal (separation line), ~=water, .=open sea (off sector) */
+const LEVELS = [
+  {
+    code:"CHAPTER 1", name:"THE RUMOR", date:"JUN-JUL 2025", sector:"GULF OF OMAN APPROACHES",
+    sub:"The twelve-day war is over and the ceasefire is holding, barely. Then the intelligence lands: during the June fighting, Iran loaded naval mines onto vessels in the Gulf. Nobody can say whether any went into the water. Someone has to take a survey ship out and find out, quietly, before the insurers do.",
+    winTitle:"THE RUMOR WAS TRUE",
+    winFlavor:"The survey finds them: a thin scatter, quietly cleared before the market hears a word. The mines were never the question. The question was when someone would decide to use them.",
+    brief:[
+      ["Reuters · Jul 1","US intelligence: Iran loaded naval mines onto vessels in the Persian Gulf after the June strikes"],
+      ["UKMTO","Advisory: transit with caution and report floating objects to coalition warships"],
+      ["Insurers","War-risk premiums stay stubbornly high after the ceasefire; underwriters quietly demand surveys"],
+      ["Tehran","Officials dismiss the mine reports as 'psychological warfare' and deny any deployment"]
+    ],
+    ticker:[
+      "JUN 24 2025 · <b>WIRE</b> · The twelve-day war ends in a shaky ceasefire; the strait stayed open, narrowly",
+      "JUL 1 2025 · <b>REUTERS</b> · US intelligence says Iran loaded naval mines onto vessels in the Persian Gulf in June",
+      "JUL 2025 · <b>INSURERS</b> · War-risk premiums refuse to fall to pre-war levels; surveys demanded at Fujairah",
+      "JUL 2025 · <b>UKMTO</b> · Mariners advised to report drifting objects; survey operations begin in the eastern approaches",
+      "JUL 2025 · <b>TEHRAN</b> · 'Psychological warfare': Iran denies any mines were deployed"
+    ],
+    minePct:.13, cap:10, interval:23, wreckCost:2,
+    labels:[["IRANIAN COASTLINE",.5,.2,0],["OMANI COASTLINE",.3,.72,0],["GULF OF OMAN",.66,.48,0],["STRAIT OF HORMUZ",.17,.33,0]],
+    cities:[["JASK",.6,.1],["KHOR FAKKAN",.04,.7],["SOHAR",.3,.95]],
+    border:[[.13,.72],[.09,1.0]],
+    mask:[
+      "IIIIIIIIIIIIIIIIII......",
+      "I~~~~~~~~~~~~~~~III.....",
+      "~~~~~~~~~~~~~~~~~~~~~...",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "O~~~~~~~~~~~~~~~~~~~~~~~",
+      "OOOO~~~~~~~~~~~~~~~~~...",
+      "OOOOOOOOO~~~~~.........."
+    ]
+  },
+  {
+    code:"CHAPTER 2", name:"MINES IN THE WATER", date:"FEB 28 - MAR 12 2026", sector:"THE MINED NARROWS",
+    sub:"It takes one morning for the world to change: Operation Epic Fury before dawn, and by nightfall the IRGC is broadcasting that the strait is shut. Within two weeks the tankers have gone dark, the insurers have fled, and the intelligence is certain: minelayers are working the narrows at night. Every lane you clear can be seeded again behind you.",
+    winTitle:"A LANE, FOR NOW",
+    winFlavor:"The narrows are passable tonight. But the intelligence counted sixteen minelayers destroyed at work, which means there were sixteen minelayers. Nobody believes the field will stay clear.",
+    brief:[
+      ["CENTCOM","'Operation Epic Fury': US-Israeli strikes across Iran; within hours the IRGC declares the strait closed"],
+      ["UKMTO","Just after midnight on 2 March, not one tanker in the strait broadcasts an AIS position"],
+      ["US Intelligence","Iran has begun planting naval mines; 16 minelayers destroyed at work in the narrows"],
+      ["Markets","Brent crude tops $100 for the first time in four years, on its way to a $126 peak"]
+    ],
+    ticker:[
+      "FEB 28 · <b>WIRE</b> · US and Israel launch “Operation Epic Fury” against military and nuclear sites across Iran",
+      "FEB 28 · <b>IRGC RADIO</b> · “Ship passages through the Strait of Hormuz are not allowed”",
+      "MAR 2 · <b>UKMTO</b> · AIS goes dark across the strait just after midnight",
+      "MAR 5 · <b>P&I CLUBS</b> · Protection and indemnity cover removed from Hormuz transits",
+      "MAR 8 · <b>MARKETS</b> · Brent passes 100 dollars, peaking at 126: the largest monthly rise on record",
+      "MAR 10 · <b>US INTELLIGENCE</b> · Iran has begun planting naval mines in the strait; 16 minelayers destroyed",
+      "MAR 10 · <b>CENTCOM</b> · Warning to mariners: cleared water may be re-seeded overnight; sweep and re-sweep"
+    ],
+    minePct:.165, cap:11, interval:20, wreckCost:2, reMine:{every:4, max:2},
+    labels:[["IRANIAN COASTLINE",.55,.18,0],["LARAK",.26,.26,1],["HORMUZ",.54,.26,1],["MUSANDAM",.2,.72,1],["PERSIAN GULF",.19,.36,0],["GULF OF OMAN",.78,.42,0]],
+    cities:[["BANDAR ABBAS",.3,.06],["KHASAB",.3,.62]],
+    border:[[.16,.55],[.1,1.0]],
+    mask:[
+      "IIIIIIIIIIIIIIIIIIIIIIII",
+      "III~~~~~~~~~~~~~~~~IIIII",
+      "I~~~~~Q~~~~~QQ~~~~~~~III",
+      "~~~~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~Q~~~~~~~~~Q~~~~~~~~~",
+      "~~~~~OOO~~~~~~~~~~~~~~~~",
+      "~~OOOOOOOOO~~~~~~~~~~~~~",
+      "OOOOOOOOOOOOOO~~~~~~~~~.",
+      "OOOOOOOOOOOOOOOOO~~~~..."
+    ]
+  },
+  {
+    code:"CHAPTER 3", name:"TOTAL CLOSURE", date:"MAR 27 2026", sector:"THE QESHM CHANNEL",
+    sub:"Tehran stops pretending the closure is negotiable: shut to anyone serving the US, Israel or their allies, open to five chosen nations. A stricken carrier lies aground on Qeshm as proof of what the field can do. CENTCOM's destroyers begin clearing, and the channel south of Qeshm is yours to open.",
+    winTitle:"THE CHANNEL HOLDS",
+    winFlavor:"South of Qeshm the water is honest again. Twenty thousand mariners are still waiting inside the Gulf, and every one of them heard that this lane opened.",
+    brief:[
+      ["IRGC","Strait closed to any vessel to or from the ports of the US, Israel and their allies"],
+      ["CENTCOM","Destroyer-led mine-clearing operations begin in the approaches"],
+      ["Tehran","Passage granted to China, Russia, India, Iraq and Pakistan; UN humanitarian cargo approved"],
+      ["Wire","Stricken carrier Mayuree Naree runs aground on Qeshm Island after weeks adrift"]
+    ],
+    ticker:[
+      "MAR 14-24 · <b>INDIAN NAVY</b> · “Operation Sankalp”: five LPG carriers escorted out through the Gulf of Oman",
+      "MAR 26 · <b>TEHRAN</b> · Passage list announced: China, Russia, India, Iraq, Pakistan",
+      "MAR 27 · <b>IRGC</b> · Closure extended to all vessels serving US, Israeli and allied ports",
+      "MAR 27 · <b>CENTCOM</b> · Mine-clearing operations begin using destroyers",
+      "MAR 27 · <b>WIRE</b> · Mayuree Naree, on fire since the 11th, runs aground on Qeshm Island",
+      "MAR 27 · <b>UN</b> · Humanitarian and fertilizer shipments approved for transit"
+    ],
+    minePct:.18, cap:12, interval:18, wreckCost:3, reMine:{every:3, max:3},
+    labels:[["IRANIAN COASTLINE",.6,.17,0],["QESHM",.22,.3,1],["LARAK",.56,.48,1],["MUSANDAM",.4,.78,1],["PERSIAN GULF",.17,.62,0],["STRAIT OF HORMUZ",.68,.4,0]],
+    cities:[["BANDAR ABBAS",.62,.06],["KHASAB",.28,.86]],
+    border:[[.14,.72],[.1,1.0]],
+    mask:[
+      "IIIIIIIIIIIIIIIIIIIIIIII",
+      "I~~~~~~~~~~~~~~~~~~~IIII",
+      "I~QQQQQQQQQQQ~~~~~~~~~~I",
+      "~~QQQQQQQ~~~~~~~~~~~~~~~",
+      "~~~QQ~~~~~~~~Q~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~OO~~~~~~~~~~~~~",
+      "O~~~~OOOOOOOO~~~~~~~~~~.",
+      "OOOOOOOOOOOOOOO~~~~....."
+    ]
+  },
+  {
+    code:"CHAPTER 4", name:"CLEARING THE STRAIT", date:"APR 11-21 2026", sector:"THE WESTERN APPROACHES",
+    sub:"American destroyers enter the strait for the first time since the war began, and two days later the blockade of Iran's ports slams shut behind them. Inside the Gulf, two thousand ships and twenty thousand mariners are trapped, and the water you clear today is their only way out.",
+    winTitle:"A WAY OUT",
+    winFlavor:"The western approaches are open. Somewhere behind you, two thousand crews are doing the math on fuel, food, and how fast they can raise anchor.",
+    brief:[
+      ["White House","US forces have started 'clearing' the strait, the president says; destroyers enter the narrows"],
+      ["CENTCOM","Blockade of Iranian ports from 13 April; transit to non-Iranian ports unimpeded"],
+      ["IMO","About 20,000 mariners and 2,000 ships stranded in the Persian Gulf"],
+      ["Wire","A brief reopening for commercial shipping collapses within days; restrictions reimposed"]
+    ],
+    ticker:[
+      "APR 11 · <b>WHITE HOUSE</b> · US Navy destroyers enter the strait as Washington vows to reopen the waterway",
+      "APR 13 · <b>CENTCOM</b> · Naval blockade of Iranian ports and coastal waters begins",
+      "APR 14 · <b>CENTCOM</b> · Minelayers slipping the blockade under cover of dark; escorts move to cut them off",
+      "APR 17 · <b>WIRE</b> · Brief reopening for commercial shipping collapses; restrictions reimposed",
+      "APR 21 · <b>IMO</b> · Some 20,000 mariners and 2,000 ships remain stranded in the Gulf",
+      "APR · <b>ANALYSTS</b> · The largest disruption to world energy supply since the 1970s"
+    ],
+    minePct:.195, cap:12, interval:18, wreckCost:3, reMine:{every:3, max:3}, runners:{every:30, escape:6},
+    labels:[["IRANIAN COASTLINE",.5,.17,0],["TUNBS",.36,.44,1],["ABU MUSA",.1,.46,1],["U.A.E. COASTLINE",.4,.78,0],["PERSIAN GULF",.42,.3,0],["STRAIT OF HORMUZ",.8,.44,0]],
+    cities:[["BANDAR LENGEH",.3,.06],["RAS AL KHAIMAH",.42,.9]],
+    border:[[.62,.7],[.56,1.0]],
+    mask:[
+      "IIIIIIIIIIIIIIIIIIIIIIII",
+      "II~~~~~~~~~~~~~~~~~~IIII",
+      "~~~~Q~~~~~~Q~~~~~~~~~~~I",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~Q~~~~~Q~~~~~~Q~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~OO~~~~~~~~~~",
+      ".~~~~~~~~OOOOOOO~~~~~~~.",
+      ".OOOOOOOOOOOOOOOOO~~~..."
+    ]
+  },
+  {
+    code:"CHAPTER 5", name:"PROJECT FREEDOM", date:"MAY 4-8 2026", sector:"THE CONVOY RUN",
+    sub:"Project Freedom: warships form up and the trapped fleet starts to move, single file, through water you have to clear faster than the minelayers can poison it. Two days in, the escorts pause for diplomacy, and every captain in the Gulf holds their breath.",
+    winTitle:"CONVOY THROUGH",
+    winFlavor:"They came out in a line that stretched past the horizon, and every ship that cleared the narrows was one argument for finishing this.",
+    brief:[
+      ["US Navy","'Project Freedom': warships escort merchant convoys out of the Gulf"],
+      ["Tehran","A 'Persian Gulf Strait Authority' is created to license and charge for transits"],
+      ["Wire","IRGC holds seized tankers, MSC Epaminondas and MSC Francesca among them"],
+      ["White House","Escorts paused after 'great progress' toward an agreement"]
+    ],
+    ticker:[
+      "MAY 4 · <b>US NAVY</b> · “Project Freedom” begins: escorted convoys out of the Persian Gulf",
+      "MAY 5 · <b>TEHRAN</b> · Iran creates a “Persian Gulf Strait Authority” to license transits",
+      "MAY 5 · <b>MASTERS' ADVISORY</b> · Convoys stop waiting: some captains push into half-swept water rather than anchor another week",
+      "MAY 6 · <b>WHITE HOUSE</b> · Escort mission paused, citing “great progress” toward a deal",
+      "MAY 6 · <b>WIRE</b> · Patrol boats board and detain any tanker caught loitering outside the swept lanes",
+      "MAY 8 · <b>WIRE</b> · Tanker Ocean Koi seized for “trying to disrupt oil exports”",
+      "MAY · <b>LLOYD'S LIST</b> · Convoy insurance written voyage by voyage, at rates no one prints"
+    ],
+    minePct:.19, cap:12, interval:18, wreckCost:3, reMine:{every:3, max:4}, runners:{every:34, escape:6}, convoy:{every:22, max:3},
+    labels:[["IRANIAN COASTLINE",.55,.18,0],["QESHM",.12,.22,1],["MUSANDAM",.56,.82,1],["PERSIAN GULF",.14,.52,0],["GULF OF OMAN",.78,.45,0]],
+    cities:[["BANDAR ABBAS",.62,.06],["KHASAB",.42,.72]],
+    border:[[.28,.6],[.2,1.0]],
+    mask:[
+      "IIIIIIIIIIIIIIIIIIIIIIII",
+      "I~~~~~~~~~~~~~~~~~~~~III",
+      "I~QQQQQQQ~~~~Q~~~~~~~III",
+      "~~~QQQQ~~~~~~~~Q~~~~~~~~",
+      "~~~~Q~~~~~~~~~~~~~~~~~~~",
+      "~~~~Q~~~~~~~~~~~~~~~~~~~",
+      "~~~~Q~~~~~~~~~~~~~~~~~~~",
+      "~~~~Q~~~~~~~~~~~~~~~~~~~",
+      "~~~~Q~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~OO~~~~~~~~~~~",
+      "~~~~~~~~OOOOOO~~~~~~~~~~",
+      ".~~~OOOOOOOOOOOO~~~~~~~.",
+      "OOOOOOOOOOOOOOOOOO~~~..."
+    ]
+  },
+  {
+    code:"CHAPTER 6", name:"THE WIDENED ROUTE", date:"JUN 17-27 2026", sector:"TRAFFIC SEPARATION SCHEME",
+    sub:"A memorandum ends the war on paper. Iran declares one last closure anyway, and then the answer arrives drawn on a chart: a widened route near Oman, two lanes, both directions, daring anyone to shut it again. Open both lanes and make the paper real.",
+    winTitle:"THE STRAIT LIVES",
+    winFlavor:"Both lanes hold and traffic moves in two directions for the first time since February. The strait is open.",
+    brief:[
+      ["Wire","The US and Iranian presidents sign a memorandum of understanding ending the war and the blockades"],
+      ["Tehran","20 June: Iran declares the strait closed again, citing Israeli violations"],
+      ["JMIC","A widened two-way route opens near Oman, breaking Iran's hold on the waterway"],
+      ["Lloyd's List","Underwriters return, lane by lane, at triple the old rates"]
+    ],
+    ticker:[
+      "JUN 11 · <b>AL JAZEERA</b> · Iran shuts Hormuz strait: but wasn't it already closed?",
+      "JUN 17 · <b>WIRE</b> · Memorandum of understanding signed: the war and the blockades end",
+      "JUN 20 · <b>TEHRAN</b> · Iran says the strait is closed again over ceasefire violations",
+      "JUN 22 · <b>CNBC</b> · Shipping stalls after Iran declares the key waterway closed again",
+      "JUN 27 · <b>JMIC</b> · Widened route through the strait announced near Oman: traffic in both directions"
+    ],
+    minePct:.15, cap:13, interval:18, wreckCost:3, reMine:{every:2, max:5}, runners:{every:32, escape:6}, convoy:{every:20, max:4},
+    labels:[["IRANIAN COASTLINE",.5,.17,0],["MUSANDAM COAST",.3,.82,0],["SEPARATION SCHEME",.5,.5,0],["PERSIAN GULF",.16,.27,0],["GULF OF OMAN",.78,.28,0]],
+    cities:[["BANDAR ABBAS",.6,.05],["KHASAB",.2,.8]],
+    border:[[.3,.75],[.24,1.0]],
+    mask:[
+      "IIIIIIIIIIIIIIIIIIIIIIII",
+      "II~~~~~~~~~~~~~~~~~~~~II",
+      "~~~~~~Q~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "BBBBBBBBBBBBBBBBBBBBBBBB",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      ".~~OOOOOO~~~~~~~~~~~~~~.",
+      ".OOOOOOOOOOOOOOO~~~~~..."
+    ]
+  },
+  {
+    code:"CHAPTER 7", name:"THE RELAPSE", date:"JUL 8-11 2026", sector:"THE ESCORTED CORRIDOR",
+    sub:"Nineteen days. That's how long the peace lasted before missiles found three merchant ships and the strikes resumed on both shores. Traffic has collapsed to a trickle crawling down one escorted lane against the Omani coast while the diplomats try again in Muscat. Keep the corridor breathing. It is the only one left.",
+    winTitle:"THE CORRIDOR HOLDS",
+    winFlavor:"The escorted lane survives the night. The talks continue in Muscat, and the strait stays open one convoy at a time.",
+    brief:[
+      ["Wire","Ceasefire breaks: three merchant ships struck in the strait; US strikes dozens of targets; Iran answers across five countries"],
+      ["Lloyd's List","Traceable crossings through the strait effectively grind to a halt"],
+      ["Muscat","Security talks open as Washington demands a public pledge to stop attacks on shipping"],
+      ["Markets","War-risk premiums at eight times pre-crisis rates; six P&I clubs restrict cover"]
+    ],
+    ticker:[
+      "JUL 7 · <b>WIRE</b> · Iranian missiles and a drone strike three merchant ships in the strait; US hits coastal targets in response",
+      "JUL 8 · <b>WIRE</b> · US strikes dozens of targets across Iran for a second day",
+      "JUL 9 · <b>WIRE</b> · Iranian retaliation reported against sites in Bahrain, Kuwait, Qatar, Jordan and Iraq",
+      "JUL 5 · <b>PORTWATCH</b> · Route already thinned to 34 transits a day against a normal 88 before the strikes resumed",
+      "JUL 10 · <b>AL JAZEERA</b> · Hormuz shipping grinds to a halt as the US and Iran resume fighting",
+      "JUL 11 · <b>MARKETS</b> · War-risk premiums at eight times pre-crisis rates; six P&I clubs restrict cover for Gulf transits",
+      "JUL 11 · <b>MUSCAT</b> · Foreign minister in Oman for strait security talks; escorted convoys keep a single lane alive"
+    ],
+    minePct:.21, cap:12, interval:17, wreckCost:3, reMine:{every:2, max:5}, runners:{every:30, escape:6}, convoy:{every:18, max:4}, drones:{every:26},
+    labels:[["IRANIAN COASTLINE",.5,.17,0],["OMANI COASTLINE",.62,.8,0],["ESCORTED CORRIDOR",.42,.62,0],["PERSIAN GULF",.12,.5,0],["GULF OF OMAN",.82,.42,0]],
+    cities:[["JASK",.62,.06],["DIBBA",.1,.8],["SOHAR",.45,.95]],
+    border:[[.2,.76],[.16,1.0]],
+    mask:[
+      "IIIIIIIIIIIIIIIIIIIIIIII",
+      "IIIIII~~~~~~~~~~~~IIIIII",
+      "II~~~~~~~Q~~~~Q~~~~~~III",
+      "I~~~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~Q~~~~~~~~~~~~Q~~~~~~",
+      "~~~~~~~~~~Q~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~~",
+      "OO~~~~~~~~~~~~~~~~~~~~OO",
+      "OOOOOOOOOOOOOOOOOOOOOOOO"
+    ]
+  }
+];
+
+/* ---------------- board render themes ---------------- */
+const THEMES = {
+  navy: {
+    seaTop:"#0a2233", seaMid:"#0c2b42", seaBot:"#092031",
+    sandI:["#a8814a","#8a6a3c"], sandO:["#96784a","#77613e"], sandQ:["#b58c50","#97733f"],
+    mine:["#e05545","#8e2318"],
+    wgA:["#1d5a80","#123f5e"], wgB:["#216489","#154766"], wgC:["#256d93","#184e6e"],
+    rev:["#0e2c40","#071a29"],
+    coastShadow:"#020a12", caustic:"#bfe8ff", causticOp:[0.045,0.035],
+    grain:["#5b421f","#6b5127"], rimOuter:"#2e7fa3", rimInner:"#4aa3c4", shore:"#d8b578",
+    vignOp:0.3
+  },
+  chart: {
+    seaTop:"#dfe9e0", seaMid:"#d6e3da", seaBot:"#cfdcd2",
+    sandI:["#dcca9f","#cdb98a"], sandO:["#d5c193","#c5b083"], sandQ:["#e2d1a8","#d0bd90"],
+    mine:["#3a3a3a","#151515"],
+    wgA:["#b7d1d8","#a3c2cb"], wgB:["#aecbd3","#9bbcc6"], wgC:["#c0d7dd","#abc8d1"],
+    rev:["#f0e8d3","#e5dabf"],
+    coastShadow:"#8d8266", caustic:"#ffffff", causticOp:[0,0],
+    grain:["#7a6a45","#8a7a52"], rimOuter:"#7fb6c0", rimInner:"#5f9dad", shore:"#3a4148",
+    vignOp:0.12
+  },
+  /* improved ECDIS: functional color families like a real bridge display —
+     amber land contours, cyan-teal unscanned water, near-black scanned water,
+     red for danger. Phosphor bloom + radar sweep live in the CSS layer. */
+  ecdis: {
+    seaTop:"#010905", seaMid:"#02100a", seaBot:"#010704",
+    sandI:["#2c2812","#1d1a0b"], sandO:["#282412","#19160a"], sandQ:["#332e14","#221e0c"],
+    mine:["#ff5347","#7c120c"],
+    wgA:["#07333d","#052832"], wgB:["#083a45","#062e38"], wgC:["#09424e","#07333d"],
+    rev:["#031710","#020c08"],
+    coastShadow:"#000000", caustic:"#2de8b0", causticOp:[0.025,0.018],
+    grain:["#4a441f","#3a350f"], rimOuter:"#0d4a42", rimInner:"#12695c", shore:"#ffd76a",
+    vignOp:0.5
+  }
+};
+let currentTheme = "ecdis";
+try { currentTheme = localStorage.getItem("ormuz.theme2") || "ecdis"; } catch(e){}
+const themeParam = new URLSearchParams(location.search).get("theme");
+if (themeParam && THEMES[themeParam]) currentTheme = themeParam;
+if (!THEMES[currentTheme]) currentTheme = "ecdis";
+document.documentElement.dataset.theme = currentTheme;
+function T(){ return THEMES[currentTheme]; }
+
+/* ---------------- geometry ---------------- */
+const SQRT3 = Math.sqrt(3);
+const HEX_S = 20;
+const PAD = 8;
+const HEXPTS = (function(){
+  const r = HEX_S * 0.955, pts = [];
+  for (let i = 0; i < 6; i++){
+    const a = Math.PI / 180 * (60 * i - 30);
+    pts.push((r * Math.cos(a)).toFixed(2) + "," + (r * Math.sin(a)).toFixed(2));
+  }
+  return pts.join(" ");
+})();
+const VERT_ANGLES = [-30, 30, 90, 150, 210, 270].map(a => a * Math.PI / 180);
+/* edge k (v[k] -> v[k+1]) faces: 0=E 1=SE 2=SW 3=W 4=NW 5=NE */
+const EDGE_DIRS_EVEN = [[1,0],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1]];
+const EDGE_DIRS_ODD  = [[1,0],[1,1],[0,1],[-1,0],[0,-1],[1,-1]];
+const N_EVEN = [[1,0],[-1,0],[0,-1],[-1,-1],[0,1],[-1,1]];
+const N_ODD  = [[1,0],[-1,0],[1,-1],[0,-1],[1,1],[0,1]];
+
+const MINE_SVG =
+  '<g class="mineg"><circle class="mglow" r="11"/><g class="spikes">' +
+  '<line x1="5.5" y1="0" x2="10" y2="0"/><line x1="-5.5" y1="0" x2="-10" y2="0"/>' +
+  '<line x1="2.8" y1="4.8" x2="5" y2="8.7"/><line x1="-2.8" y1="4.8" x2="-5" y2="8.7"/>' +
+  '<line x1="2.8" y1="-4.8" x2="5" y2="-8.7"/><line x1="-2.8" y1="-4.8" x2="-5" y2="-8.7"/>' +
+  '</g><circle class="body" r="6.2"/><circle class="glint" cx="-2" cy="-2.2" r="1.6"/></g>';
+const FLAG_SVG =
+  '<g class="flagg"><line x1="0" y1="7" x2="0" y2="-8"/>' +
+  '<path d="M0,-8 L9,-5 L0,-2 Z"/><circle cx="0" cy="7" r="2.6"/></g>';
+const WRECK_SVG =
+  '<g class="wreckg"><ellipse class="slick" cx="0" cy="3" rx="11" ry="4.5"/>' +
+  '<path class="hull" d="M-8,1 L-2,-4 L2,-4 L7,1 L4,4 L-5,4 Z"/>' +
+  '<circle class="smoke" cx="2" cy="-6" r="2.2"/><circle class="smoke" cx="4.5" cy="-9" r="1.6"/></g>';
+
+/* UI icon set: inline SVG only, no emoji */
+const ICONS = {
+  back:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 L8 12 L14.5 18.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  restart:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2.05-4.95" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M16.6 3.2 L17.2 8 L12.6 7.2 Z" fill="currentColor"/></svg>',
+  soundOn:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5 L8 9.5 L13 5 L13 19 L8 14.5 L4 14.5 Z" fill="currentColor"/><path d="M16 9.2 q2.4 2.8 0 5.6 M18.6 7.2 q3.7 4.8 0 9.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  soundOff:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5 L8 9.5 L13 5 L13 19 L8 14.5 L4 14.5 Z" fill="currentColor"/><path d="M16.5 9.5 L21 14 M21 9.5 L16.5 14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
+  flag:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21 L7 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7 4.5 L17.5 7.5 L7 10.5 Z" fill="currentColor"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10.5" width="12" height="8.5" rx="2" fill="currentColor"/><path d="M8.5 10.5 V8 a3.5 3.5 0 0 1 7 0 V10.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 L18 12 L8 18.5 Z" fill="currentColor"/></svg>',
+  ship:'<svg viewBox="0 0 24 12" aria-hidden="true"><path d="M2 7 L22 7 L19 11 L4 11 Z M6 4 L11 4 L11 7 L6 7 Z M13 1.5 L16 1.5 L16 7 L13 7 Z" fill="currentColor"/></svg>',
+  star:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L14.6 8.9 L21 9.6 L16.2 13.9 L17.6 20.2 L12 16.9 L6.4 20.2 L7.8 13.9 L3 9.6 L9.4 8.9 Z" fill="currentColor"/></svg>'
+};
+
+/* ---------------- state ---------------- */
+let S = null;
+let cellEls = [];
+let clockId = null;
+let briefIdx = 0;
+let cancelAllPresses = () => {};
+
+let pending = [];
+function later(fn, ms){ pending.push(setTimeout(fn, ms)); }
+function clearPending(){ pending.forEach(clearTimeout); pending = []; }
+
+const $ = id => document.getElementById(id);
+const REDUCED_MQ = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)");
+let REDUCED = !!(REDUCED_MQ && REDUCED_MQ.matches);
+if (REDUCED_MQ && REDUCED_MQ.addEventListener) REDUCED_MQ.addEventListener("change", e => { REDUCED = e.matches; });
+
+/* ---------------- persistence ---------------- */
+const STORE_KEY = "ormuz.v3";
+function loadProgress(){
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { u:0, best:{}, perfect:{} }; }
+  catch(e){ return { u:0, best:{}, perfect:{} }; }
+}
+function saveProgress(p){
+  if (DEV) return;
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(p)); } catch(e){}
+}
+let PROG = loadProgress();
+if (!PROG.perfect) PROG.perfect = {};
+const DEV = /[?&]dev\b/.test(location.search);
+if (DEV) PROG.u = 99;   /* all chapters unlocked; saveProgress is a no-op in dev */
+
+/* ---------------- sound (synthesized) ---------------- */
+let AC = null;
+let muted = false;
+try { muted = localStorage.getItem("ormuz.mute") === "1"; } catch(e){}
+function ensureAudio(){
+  if (!AC){
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return;
+    AC = new Ctor();
+  }
+  if (AC.state === "suspended") AC.resume();
+}
+function tone(freq, dur, opts){
+  if (muted || !AC) return;
+  const { type = "sine", vol = 0.1, at = 0, slide = null } = opts || {};
+  const t0 = AC.currentTime + at;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t0);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(slide, 1), t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(AC.destination);
+  o.start(t0); o.stop(t0 + dur + 0.03);
+}
+function boomNoise(dur, vol, lp){
+  if (muted || !AC) return;
+  const n = Math.floor(AC.sampleRate * dur);
+  const buf = AC.createBuffer(1, n, AC.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const src = AC.createBufferSource(); src.buffer = buf;
+  const f = AC.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = lp;
+  const g = AC.createGain(); g.gain.value = vol;
+  src.connect(f); f.connect(g); g.connect(AC.destination);
+  src.start();
+}
+/* Native haptics when wrapped in Capacitor; silent no-ops on the web */
+const HAPTIC = (function(){
+  const cap = window.Capacitor;
+  const h = cap && cap.Plugins && cap.Plugins.Haptics;
+  if (!h) return { light(){}, medium(){}, heavy(){}, success(){}, error(){} };
+  return {
+    light(){ h.impact({ style: "LIGHT" }).catch(() => {}); },
+    medium(){ h.impact({ style: "MEDIUM" }).catch(() => {}); },
+    heavy(){ h.impact({ style: "HEAVY" }).catch(() => {}); },
+    success(){ h.notification({ type: "SUCCESS" }).catch(() => {}); },
+    error(){ h.notification({ type: "ERROR" }).catch(() => {}); }
+  };
+})();
+
+/* sonar ping: fast attack, exponential decay, faint echo — the ECDIS voice */
+function ping(freq, vol, at, echo){
+  tone(freq, 0.42, { vol, at, slide: freq * 0.94 });
+  if (echo) tone(freq * 0.995, 0.3, { vol: vol * 0.35, at: (at || 0) + 0.22, slide: freq * 0.9 });
+}
+const SFX = {
+  reveal(ring){ tone(720 + Math.min(ring, 7) * 85, 0.045, { type:"square", vol:0.035 }); },
+  flag(){ tone(980, 0.04, { type:"square", vol:0.04 }); tone(1470, 0.05, { type:"square", vol:0.04, at:0.05 }); },
+  unflag(){ tone(1470, 0.035, { type:"square", vol:0.035 }); tone(980, 0.05, { type:"square", vol:0.035, at:0.045 }); },
+  mine(){
+    tone(340, 0.14, { type:"sawtooth", vol:0.16, slide:180 });
+    tone(340, 0.14, { type:"sawtooth", vol:0.16, slide:180, at:0.16 });
+    tone(120, 0.7, { vol:0.36, slide:34, at:0.05 });
+    boomNoise(0.5, 0.26, 500);
+  },
+  tanker(){ tone(98, 0.32, { type:"triangle", vol:0.07 }); tone(49, 0.32, { vol:0.06 }); },
+  horn(){ tone(110, 0.22, { type:"triangle", vol:0.06 }); tone(55, 0.22, { vol:0.05 }); },
+  lane(){ ping(1180, 0.09, 0, true); ping(1560, 0.07, 0.3, false); },
+  minelayer(){ ping(236, 0.13, 0, true); ping(212, 0.11, 0.55, true); },
+  closed(){ tone(300, 0.3, { type:"sawtooth", vol:0.1, slide:150 }); tone(210, 0.5, { type:"sawtooth", vol:0.1, slide:105, at:0.3 }); },
+  win(){ ping(880, 0.09, 0, false); ping(1175, 0.09, 0.18, false); ping(1568, 0.1, 0.36, true); },
+  ui(){ tone(1650, 0.022, { type:"square", vol:0.022 }); },
+  alert(){ tone(1240, 0.05, { type:"square", vol:0.05 }); tone(1240, 0.05, { type:"square", vol:0.05, at:0.09 }); },
+  board(){ ping(920, 0.1, 0, false); tone(1380, 0.08, { type:"square", vol:0.05, at:0.12 }); },
+  detain(){ tone(196, 0.25, { type:"triangle", vol:0.09, slide:150 }); tone(98, 0.4, { vol:0.08, at:0.1 }); },
+  tankerIn(){ tone(82, 0.5, { type:"triangle", vol:0.075 }); tone(41, 0.5, { vol:0.06 }); tone(82, 0.32, { type:"triangle", vol:0.06, at:0.68 }); tone(41, 0.32, { vol:0.05, at:0.68 }); },
+  droneIn(){ tone(1750, 0.4, { type:"sawtooth", vol:0.028, slide:1350 }); tone(1744, 0.4, { type:"sawtooth", vol:0.024, slide:1344, at:0.02 }); },
+  droneDown(){ tone(1500, 0.09, { type:"square", vol:0.06, slide:300 }); ping(520, 0.07, 0.12, false); },
+  minelayerIn(){ ping(168, 0.12, 0, true); tone(620, 0.045, { type:"square", vol:0.05, at:0.5 }); tone(620, 0.045, { type:"square", vol:0.05, at:0.62 }); tone(620, 0.045, { type:"square", vol:0.05, at:0.74 }); }
+};
+
+/* ---------------- ambient bed (synthesized, two test modes) ----------------
+   "sonar": control-room drones + a soft sweep ping every ~8s.
+   "sea":   slow filtered-noise swell, like water against a hull.
+   Runs with the game clock; no assets, a few hundred bytes of graph. */
+let ambMode = "sonar";
+try { ambMode = localStorage.getItem("ormuz.amb") || "sonar"; } catch(e){}
+let AMB = null;
+function ambNoise(){
+  const len = AC.sampleRate * 3;
+  const buf = AC.createBuffer(1, len, AC.sampleRate);
+  const d = buf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++){
+    const w = Math.random() * 2 - 1;
+    last = (last + 0.02 * w) / 1.02;
+    d[i] = last * 3.5;
+  }
+  return buf;
+}
+function ambientStart(){
+  if (muted || ambMode === "off" || AMB) return;
+  ensureAudio();
+  if (!AC) return;
+  const master = AC.createGain();
+  master.gain.value = 0;
+  master.connect(AC.destination);
+  master.gain.setTargetAtTime(1, AC.currentTime, 2.5);
+  const stops = [];
+  const lfoTo = (param, freq, depth, base) => {
+    const l = AC.createOscillator(), lg = AC.createGain();
+    l.frequency.value = freq;
+    lg.gain.value = depth;
+    param.value = base;
+    l.connect(lg); lg.connect(param);
+    l.start(); stops.push(l);
+  };
+  let timer = null;
+  if (ambMode === "sonar"){
+    for (const [f, v] of [[55, 0.035], [55.7, 0.028], [110.3, 0.012]]){
+      const o = AC.createOscillator(), g = AC.createGain(), lp = AC.createBiquadFilter();
+      o.frequency.value = f;
+      lp.type = "lowpass"; lp.frequency.value = 240;
+      lfoTo(g.gain, 0.045 + f / 4000, v * 0.4, v);
+      o.connect(lp); lp.connect(g); g.connect(master);
+      o.start(); stops.push(o);
+    }
+    timer = setInterval(() => { if (!muted && !document.hidden) ping(690, 0.028, 0, true); }, 8200);
+  } else {
+    const src = AC.createBufferSource();
+    src.buffer = ambNoise();
+    src.loop = true;
+    const lp = AC.createBiquadFilter();
+    lp.type = "lowpass";
+    lfoTo(lp.frequency, 0.06, 160, 300);
+    const g = AC.createGain();
+    lfoTo(g.gain, 0.085, 0.05, 0.11);
+    src.connect(lp); lp.connect(g); g.connect(master);
+    src.start(); stops.push(src);
+  }
+  AMB = { master, stops, timer };
+  coach("ambhint", "Ambience on · long-press the sound button to change or silence it", 5000);
+}
+function ambientStop(){
+  if (!AMB) return;
+  const a = AMB;
+  AMB = null;
+  if (a.timer) clearInterval(a.timer);
+  a.master.gain.setTargetAtTime(0, AC.currentTime, 0.6);
+  setTimeout(() => { a.stops.forEach(n => { try { n.stop(); } catch(e){} }); a.master.disconnect(); }, 2500);
+}
+function ambientLabel(){
+  return "Ambience · " + (ambMode === "sonar" ? "Sonar Room" : ambMode === "sea" ? "Open Sea" : "Off");
+}
+
+/* ---------------- one-time hints ---------------- */
+let COACH = {};
+try { COACH = JSON.parse(localStorage.getItem("ormuz.coach2")) || {}; } catch(e){ COACH = {}; }
+let toastTimer = null;
+function toast(msg, ms){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), ms || 4000);
+}
+function coach(key, msg, ms){
+  if (COACH[key]) return;
+  COACH[key] = 1;
+  try { localStorage.setItem("ormuz.coach2", JSON.stringify(COACH)); } catch(e){}
+  toast(msg, ms);
+}
+
+/* ---------------- field manual: first-time mechanic popups ----------------
+   Pauses the clock, shows an illustrated card, resumes on dismiss.
+   Illustrations reference the board's SVG defs, so they are theme-correct. */
+const FM_IMG = {
+  drone: `<svg viewBox="0 0 300 96">
+    <g transform="translate(220,58)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g class="ship dship" transform="translate(220,58) scale(1.6)">
+      <path class="hull" d="M-8,-2 L6,-2 L9,1 L6,4 L-8,4 Z M-3,-5 L3,-5 L3,-2 L-3,-2 Z"/>
+    </g>
+    <line x1="70" y1="30" x2="196" y2="52" stroke="#ff5d45" stroke-width="1.2" stroke-dasharray="4 4" opacity=".8"/>
+    <g class="drone" transform="translate(70,30) scale(1.6)">
+      <circle class="beacon" r="9"/>
+      <path class="arms" d="M-5,-5 L5,5 M-5,5 L5,-5"/>
+      <circle class="rotor" cx="-5" cy="-5" r="1.7"/><circle class="rotor" cx="5" cy="-5" r="1.7"/>
+      <circle class="rotor" cx="-5" cy="5" r="1.7"/><circle class="rotor" cx="5" cy="5" r="1.7"/>
+      <circle class="body" r="2"/>
+    </g>
+    <circle cx="70" cy="30" r="24" fill="none" stroke="#3ef29a" stroke-width="1.4" stroke-dasharray="3 4" opacity=".9"/>
+    <text x="70" y="12" text-anchor="middle" font-size="11" fill="#3ef29a" letter-spacing="2">TAP TO INTERCEPT</text>
+    <text x="220" y="92" text-anchor="middle" font-size="10.5" fill="#ff5d45" letter-spacing="1.5">HIT = TANKER DISABLED</text>
+  </svg>`,
+  lanes2: `<svg viewBox="0 0 300 96">
+    <g transform="translate(75,26)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.8)" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(150,26)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.8)" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(225,26)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.8)" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(75,72)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.8)" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(150,72)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.8)" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(225,72)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.8)" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <line x1="40" y1="49" x2="260" y2="49" stroke="#f6a521" stroke-width="1.5" stroke-dasharray="5 5"/>
+    <circle cx="90" cy="49" r="2.4" fill="#f6a521"/><circle cx="150" cy="49" r="2.4" fill="#f6a521"/><circle cx="210" cy="49" r="2.4" fill="#f6a521"/>
+    <text x="150" y="12" text-anchor="middle" font-size="11" fill="#3ef29a" letter-spacing="2">LANE 1 + LANE 2</text>
+  </svg>`,
+  wreck: `<svg viewBox="0 0 300 96">
+    <g transform="translate(75,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(150,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(255,93,69,.14)" stroke="rgba(255,93,69,.6)"/></g>
+    <g transform="translate(225,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <path d="M138,52 L147,43 M147,52 L138,43 M153,52 L162,43 M162,52 L153,43" stroke="#ff9d8a" stroke-width="2"/>
+    <path d="M141,55 L159,55 L156,59 L144,59 Z" fill="#8a4a2e"/>
+    <text x="150" y="14" text-anchor="middle" font-size="11" fill="#ff5d45" letter-spacing="2">HULL DAMAGED</text>
+    <text x="150" y="90" text-anchor="middle" font-size="10.5" fill="#f6a521" letter-spacing="1.5">HEX BLOCKED · TANKERS JOIN THE BACKLOG</text>
+  </svg>`,
+  minelayer: `<svg viewBox="0 0 300 96">
+    <g transform="translate(50,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(85,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(190,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgA)" stroke="rgba(0,0,0,.4)"/></g>
+    <g transform="translate(225,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgB)" stroke="rgba(0,0,0,.4)"/></g>
+    <line x1="120" y1="48" x2="160" y2="48" stroke="#ff5d45" stroke-width="1.4" stroke-dasharray="4 4" opacity=".8"/>
+    <g class="runner" transform="translate(120,48) scale(1.7)">
+      <circle class="beacon" r="11"/>
+      <line class="wake" x1="-17" y1="1" x2="-10" y2="1" stroke-dasharray="2 3"/>
+      <path class="hull" d="M-9,-2 L4,-2 L8.5,0.5 L4,3 L-9,3 Z"/>
+      <path class="sup" d="M-6,-4.6 L-1,-4.6 L-1,-2 L-6,-2 Z M0.5,-4 L3,-4 L3,-2 L0.5,-2 Z"/>
+      <circle class="cargo" cx="-3.5" cy="0.6" r="1.1"/><circle class="cargo" cx="0" cy="0.6" r="1.1"/><circle class="cargo" cx="3.2" cy="0.6" r="1.1"/>
+    </g>
+    <circle cx="120" cy="48" r="27" fill="none" stroke="#3ef29a" stroke-width="1.4" stroke-dasharray="3 4" opacity=".9"/>
+    <text x="120" y="14" text-anchor="middle" font-size="11" fill="#3ef29a" letter-spacing="2">TAP TO INTERCEPT</text>
+    <text x="207" y="88" text-anchor="middle" font-size="10.5" fill="#9bc" letter-spacing="1.5">UNSWEPT WATER</text>
+  </svg>`,
+  dship: `<svg viewBox="0 0 300 96">
+    <g transform="translate(45,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(80,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(115,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(150,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(220,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgA)" stroke="rgba(0,0,0,.4)"/></g>
+    <g class="ship dship" transform="translate(115,48) scale(1.7)">
+      <line class="wake" x1="-19" y1="1" x2="-9" y2="1" stroke-dasharray="3 3"/>
+      <path class="hull" d="M-8,-2 L6,-2 L9,1 L6,4 L-8,4 Z M-3,-5 L3,-5 L3,-2 L-3,-2 Z"/>
+    </g>
+    <circle cx="185" cy="48" r="16" fill="none" stroke="#ff5d45" stroke-width="1.8" opacity=".85"/>
+    <text x="150" y="14" text-anchor="middle" font-size="11" fill="#f6a521" letter-spacing="2">FOLLOWS YOUR SWEPT WATER</text>
+    <text x="185" y="88" text-anchor="middle" font-size="10.5" fill="#ff5d45" letter-spacing="1.5">STRANDED = DETAINED</text>
+  </svg>`,
+  reMine: `<svg viewBox="0 0 300 96">
+    <g transform="translate(90,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgA)" stroke="rgba(0,0,0,.4)"/></g>
+    <g transform="translate(150,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgB)" stroke="rgba(0,0,0,.4)"/></g>
+    <g transform="translate(210,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgC)" stroke="rgba(0,0,0,.4)"/></g>
+    <circle cx="150" cy="48" r="7" fill="url(#mineGrad)"/>
+    <g stroke="#ff5d45" stroke-width="1.6">
+      <line x1="150" y1="37" x2="150" y2="32"/><line x1="150" y1="59" x2="150" y2="64"/>
+      <line x1="139" y1="48" x2="134" y2="48"/><line x1="161" y1="48" x2="166" y2="48"/>
+    </g>
+    <circle cx="150" cy="48" r="15" fill="none" stroke="#ff5d45" stroke-width="1" opacity=".55"/>
+    <circle cx="150" cy="48" r="22" fill="none" stroke="#ff5d45" stroke-width="1" opacity=".3"/>
+    <text x="150" y="14" text-anchor="middle" font-size="11" fill="#ff5d45" letter-spacing="2">NEW MINE IN UNSWEPT WATER</text>
+    <text x="150" y="90" text-anchor="middle" font-size="10.5" fill="#9bc" letter-spacing="1.5">OPENED NUMBERS NEVER LIE</text>
+  </svg>`
+};
+function fieldManual(key, title, body, img){
+  if (COACH[key]) return false;
+  if ($("fmodal").classList.contains("open")) return false;   /* keep the open card readable; retry next spawn */
+  cancelAllPresses();
+  COACH[key] = 1;
+  try { localStorage.setItem("ormuz.coach2", JSON.stringify(COACH)); } catch(e){}
+  $("fmTitle").textContent = title;
+  $("fmBody").textContent = body + " The clock is paused while you read.";
+  $("fmImg").innerHTML = img;
+  $("fmodal").classList.add("open");
+  stopClock();
+  return true;
+}
+
+
+/* ---------------- board model ---------------- */
+const LAND = new Set(["I", "O", "Q"]);
+function buildCells(mask){
+  const cells = [], grid = {};
+  mask.forEach((row, r) => {
+    [...row].forEach((ch, c) => {
+      if (ch === ".") return;
+      const cell = { i:cells.length, r, c, kind:ch, water:ch === "~",
+                     mine:false, wreck:false, n:0, rev:false, flag:false, neigh:[] };
+      cells.push(cell);
+      grid[r + "," + c] = cell;
+    });
+  });
+  for (const cell of cells){
+    if (!cell.water) continue;
+    const D = (cell.r % 2) ? N_ODD : N_EVEN;
+    for (const [dc, dr] of D){
+      const nb = grid[(cell.r + dr) + "," + (cell.c + dc)];
+      if (nb && nb.water) cell.neigh.push(nb);
+    }
+  }
+  return { cells, grid };
+}
+
+/* water components; lanes = components touching both west (c=0) and east (c=W-1) edges */
+function computeLanes(cells, cols){
+  let compN = 0;
+  for (const c of cells) c.comp = -1;
+  for (const c0 of cells){
+    if (!c0.water || c0.comp !== -1) continue;
+    const id = compN++;
+    const q = [c0]; c0.comp = id;
+    while (q.length){
+      const c = q.pop();
+      for (const nb of c.neigh) if (nb.comp === -1){ nb.comp = id; q.push(nb); }
+    }
+  }
+  const touch = {};
+  for (const c of cells){
+    if (!c.water) continue;
+    const t = touch[c.comp] || (touch[c.comp] = { w:false, e:false });
+    if (c.c === 0) t.w = true;
+    if (c.c === cols - 1) t.e = true;
+  }
+  return Object.keys(touch).filter(k => touch[k].w && touch[k].e).map(Number);
+}
+
+function shuffle(a){
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* a lane still has a possible channel if safe (non-mine, non-wreck) water connects W to E */
+function lanePossible(laneId, ignoreMines, excludeI){
+  const start = S.cells.filter(c => c.water && c.comp === laneId && c.c === 0 &&
+                                    c.i !== excludeI && !c.wreck && (ignoreMines || !c.mine));
+  const seen = new Set(start.map(c => c.i));
+  const q = [...start];
+  while (q.length){
+    const c = q.pop();
+    if (c.c === S.cols - 1) return true;
+    for (const nb of c.neigh){
+      if (seen.has(nb.i) || nb.i === excludeI || nb.wreck || (!ignoreMines && nb.mine)) continue;
+      seen.add(nb.i); q.push(nb);
+    }
+  }
+  return false;
+}
+
+/* stronger guarantee: no single safe cell severs the lane (two disjoint safe routes
+   exist). Note wrecks can only ever replace mine cells, so they can never sever a lane;
+   the real value of this guarantee is that the player is never forced through a
+   single-file corridor of guesses. A severing cell must lie on EVERY west-east path,
+   hence on any one found path: testing just that path's cells suffices. */
+function safePathCells(laneId){
+  const starts = S.cells.filter(c => c.water && c.comp === laneId && c.c === 0 && !c.mine && !c.wreck);
+  const prev = new Map();
+  const q = [...starts];
+  starts.forEach(c => prev.set(c.i, null));
+  let end = null;
+  while (q.length){
+    const c = q.shift();
+    if (c.c === S.cols - 1){ end = c; break; }
+    for (const nb of c.neigh){
+      if (nb.mine || nb.wreck || prev.has(nb.i)) continue;
+      prev.set(nb.i, c); q.push(nb);
+    }
+  }
+  if (!end) return null;
+  const path = [];
+  let cur = end;
+  while (cur){ path.push(cur); cur = prev.get(cur.i); }
+  return path;
+}
+function laneRobust(laneId){
+  const path = safePathCells(laneId);
+  if (!path) return false;
+  for (const c of path)
+    if (!lanePossible(laneId, false, c.i)) return false;
+  return true;
+}
+
+/* would the first tap's flood already connect west to east? (instant win) */
+function floodSpans(safe){
+  const seen = new Set([safe.i]);
+  const q = [safe];
+  let west = false, east = false;
+  while (q.length){
+    const c = q.pop();
+    if (c.c === 0) west = true;
+    if (c.c === S.cols - 1) east = true;
+    if (west && east) return true;
+    if (c.n === 0)
+      for (const nb of c.neigh)
+        if (!seen.has(nb.i) && !nb.mine){ seen.add(nb.i); q.push(nb); }
+  }
+  return false;
+}
+
+function placeMines(safe){
+  const banned = new Set([safe.i, ...safe.neigh.map(n => n.i)]);
+  const pool0 = S.cells.filter(c => c.water && !banned.has(c.i));
+  let fallback = null;               // last layout passing floodSpans + single safe route
+  S.robustBoard = false;
+  for (let attempt = 0; attempt < 320; attempt++){
+    for (const c of S.cells) c.mine = false;
+    const pool = shuffle(pool0.slice());
+    for (let k = 0; k < S.mineCount && k < pool.length; k++) pool[k].mine = true;
+    for (const c of S.cells)
+      if (c.water) c.n = c.neigh.filter(n => n.mine).length;
+    if (floodSpans(safe)) continue;   // first tap must never win outright
+    if (S.lanes.every(l => laneRobust(l))){ S.robustBoard = true; return; }
+    if (!fallback && S.lanes.every(l => lanePossible(l, false)))
+      fallback = S.cells.filter(c => c.mine).map(c => c.i);
+    if (attempt >= 260 && fallback) break;   // settle for a single guaranteed route
+  }
+  if (fallback){
+    const set = new Set(fallback);
+    for (const c of S.cells) c.mine = set.has(c.i);
+    for (const c of S.cells)
+      if (c.water) c.n = c.neigh.filter(n => n.mine).length;
+  }
+}
+
+/* ---------------- game flow ---------------- */
+function startLevel(idx){
+  const L = LEVELS[idx];
+  const { cells, grid } = buildCells(L.mask);
+  const cols = L.mask[0].length;
+  const lanes = computeLanes(cells, cols);
+  const waterCount = cells.filter(c => c.water).length;
+  S = {
+    idx, L, cells, grid, cols, rows:L.mask.length, lanes,
+    laneOpen: lanes.map(() => false),
+    waterCount,
+    mineCount: Math.round(waterCount * L.minePct),
+    minesInit: Math.round(waterCount * L.minePct),
+    wrecks:0,
+    armed:false, over:false, won:false,
+    flags:0, revealed:0, backlog:0,
+    tankersArrived:0, minesAdded:0,
+    ships:[], runners:[], holds:[], shipTimer:0, runnerTimer:0,
+    shipsOut:0, runnersStopped:0, runnerMines:0, detained:0, critWarned:false, taps:0,
+    drones:[], droneTimer:0, dronesDowned:0, struck:0,
+    cycleMs:0, totalMs:0, lastT:0
+  };
+  /* distance from each water cell to the Iranian coast (for detention risk) */
+  S.iranDist = (() => {
+    const dist = new Map();
+    const q = [];
+    for (const c of cells){
+      if (!c.water) continue;
+      const D = (c.r % 2) ? N_ODD : N_EVEN;
+      const coastal = D.some(([dc, dr]) => {
+        const nb = grid[(c.r + dr) + "," + (c.c + dc)];
+        return nb && (nb.kind === "I" || nb.kind === "Q");
+      });
+      if (coastal){ dist.set(c.i, 0); q.push(c); }
+    }
+    while (q.length){
+      const c = q.shift();
+      for (const nb of c.neigh){
+        if (dist.has(nb.i)) continue;
+        dist.set(nb.i, dist.get(c.i) + 1);
+        q.push(nb);
+      }
+    }
+    return dist;
+  })();
+  S.safeTotal = S.waterCount - S.minesInit;
+  stopClock();
+  clearPending();
+  cancelAllPresses();
+  $("tankbarFill").style.width = "0%";
+  $("clock").textContent = "0:00";
+  buildBoardSVG();
+  renderBacklog(false);
+  updateHud();
+  setTicker(L);
+  closeModal();
+  show("scr-game");
+  if (idx === 0) coach("start", "Open a channel of swept hexes from the WEST edge to the EAST edge · your first tap is always safe", 6500);
+  if (S.lanes.length > 1)
+    fieldManual("lanes2", "TWO LANES, BOTH MUST OPEN",
+      "A buoyed separation line splits this sector into two shipping lanes, and both need their own swept channel from west to east. Opening the FIRST lane starts one-way traffic and clears part of the backlog, so scout both lanes and open the cheaper one first.",
+      FM_IMG.lanes2);
+}
+
+function tapCell(i){
+  if (!S || S.over) return;
+  S.taps++;
+  const c = S.cells[i];
+  if (!c || !c.water || c.wreck) return;
+  if (c.rev){ chord(c); return; }
+  if (c.flag) return;
+  revealCell(c);
+}
+
+function revealCell(c){
+  if (c.rev || c.flag || c.wreck || S.over) return;
+  if (!S.armed){ placeMines(c); S.armed = true; startClock(); }
+  if (c.mine){ detonate(c); return; }
+  const before = S.revealed;
+  floodReveal(c);
+  if (S.revealed - before >= 6) sonarAt(c);   // meaningful clears get a sonar wave
+  if (S.taps >= 2) coach("numbers", "Numbers count adjacent mines · hold a hex to flag it");
+  checkWin();
+}
+
+function floodReveal(start){
+  /* one batched paint per ring (not per cell): a 180-cell cascade is ~14
+     callbacks instead of 180, and the whole wave lands inside ~200ms */
+  let ring = 0, frontier = [start];
+  while (frontier.length){
+    const next = [];
+    const painted = [];
+    for (const c of frontier){
+      if (c.rev || c.flag || c.mine || c.wreck) continue;
+      c.rev = true;
+      S.revealed++;
+      painted.push(c);
+      if (c.n === 0)
+        for (const nb of c.neigh)
+          if (!nb.rev && !nb.flag && !nb.wreck) next.push(nb);
+    }
+    if (painted.length){
+      const r = ring;
+      if (r === 0){
+        for (const c of painted) renderCell(c);
+        splashAt(painted[0]);
+        HAPTIC.light();
+        SFX.reveal(0);
+      } else {
+        later(() => {
+          for (const c of painted) renderCell(c);
+          SFX.reveal(r);
+        }, Math.min(r * 16, 200));
+      }
+    }
+    frontier = next;
+    ring++;
+  }
+  updateHud();
+}
+
+function toggleFlag(i){
+  const c = S.cells[i];
+  if (!c || !c.water || c.rev || c.wreck || S.over) return;
+  c.flag = !c.flag;
+  S.flags += c.flag ? 1 : -1;
+  HAPTIC.medium();
+  if (c.flag) SFX.flag(); else SFX.unflag();
+  renderCell(c);
+  updateHud();
+  if (c.flag) coach("chord", "Flagged · tap a revealed number when its flags match to clear around it");
+}
+
+function chord(c){
+  if (!c.rev || c.n === 0 || S.over) return;
+  const flagged = c.neigh.filter(n => n.flag).length;
+  if (flagged !== c.n) return;
+  const targets = c.neigh.filter(n => !n.rev && !n.flag && !n.wreck);
+  for (const t of targets){
+    if (S.over) break;
+    if (t.mine) detonate(t);
+    else floodReveal(t);
+  }
+  if (!S.over) checkWin();
+}
+
+/* mine hit: wreckage blocks the hex, mine is spent, backlog +2 */
+function detonate(c){
+  c.mine = false;
+  c.wreck = true;
+  c.flag && (c.flag = false, S.flags--);
+  S.mineCount--;
+  S.wrecks++;
+  for (const nb of c.neigh){
+    nb.n = Math.max(0, nb.n - 1);
+    if (nb.rev) renderCell(nb);
+  }
+  renderCell(c);
+  detonationFx(c);
+  HAPTIC.heavy();
+  SFX.mine();
+  const fl = $("boomflash");
+  fl.classList.remove("on");
+  void fl.offsetWidth;
+  fl.classList.add("on");
+  $("boardWrap").classList.add("shake");
+  setTimeout(() => $("boardWrap").classList.remove("shake"), 550);
+  const cost = (S.L.wreckCost || 2) + Math.min(3, S.wrecks - 1);
+  if (!fieldManual("wreck", "HULL DAMAGED",
+    `A mine went off under the sweep. The patrol continues, but the wreck blocks that hex for the rest of the level, nearby numbers re-count, and ${cost} tankers join the backlog. Each further wreck costs one more, so slow down before you spend another.`,
+    FM_IMG.wreck))
+    toast(`Hull damaged · the wreck blocks that hex and ${cost} tankers join the backlog`, 5000);
+  addBacklog(cost);
+  if (S.over) return;
+  updateHud();
+  /* safety net only: wrecks replace mine cells, so they can never sever a lane that
+     placement guaranteed; this can fire only after a full placement-exhaustion tail */
+  if (!S.lanes.every(l => lanePossible(l, false))){
+    S.over = true;
+    stopClock();
+    clearEntities();
+    SFX.closed();
+    later(() => openModal("blocked"), 700);
+  }
+}
+
+function connectedLane(laneId){
+  const start = S.cells.filter(c => c.water && c.comp === laneId && c.c === 0 && c.rev);
+  const seen = new Set(start.map(c => c.i));
+  const q = [...start];
+  while (q.length){
+    const c = q.pop();
+    if (c.c === S.cols - 1) return true;
+    for (const nb of c.neigh){
+      if (seen.has(nb.i) || !nb.rev) continue;
+      seen.add(nb.i); q.push(nb);
+    }
+  }
+  return false;
+}
+
+function lanePathCells(laneId){
+  /* shortest revealed path west->east for the convoy */
+  const starts = S.cells.filter(c => c.water && c.comp === laneId && c.c === 0 && c.rev);
+  const prev = new Map();
+  const q = [...starts];
+  starts.forEach(c => prev.set(c.i, null));
+  let endCell = null;
+  while (q.length){
+    const c = q.shift();
+    if (c.c === S.cols - 1){ endCell = c; break; }
+    for (const nb of c.neigh){
+      if (!nb.rev || prev.has(nb.i)) continue;
+      prev.set(nb.i, c);
+      q.push(nb);
+    }
+  }
+  if (!endCell) return null;
+  const path = [];
+  let cur = endCell;
+  while (cur){ path.push(cur); cur = prev.get(cur.i); }
+  return path.reverse();
+}
+
+function checkWin(){
+  if (S.over) return;
+  let all = true;
+  S.lanes.forEach((l, k) => {
+    const open = connectedLane(l);
+    if (open && !S.laneOpen[k]){
+      S.laneOpen[k] = true;
+      if (S.lanes.length > 1 && !S.lanes.every((l2, k2) => S.laneOpen[k2] || connectedLane(l2))){
+        SFX.lane();
+        if (S.backlog > 0){
+          S.backlog = Math.max(0, S.backlog - 3);
+          renderBacklog(false);
+        }
+        toast(`Lane ${S.laneOpen.filter(Boolean).length}/${S.lanes.length} open · one-way traffic moves and the backlog eases`, 5000);
+      }
+    }
+    if (!open) all = false;
+  });
+  if (!all) return;
+  S.over = true; S.won = true;
+  stopClock();
+  clearEntities();
+  const bw = $("boardWrap");
+  bw.classList.remove("winpulse");
+  void bw.offsetWidth;
+  bw.classList.add("winpulse");
+  for (const c of S.cells)
+    if (c.water && c.mine && !c.flag){ c.flag = true; S.flags++; renderCell(c); }
+  updateHud();
+  const secs = Math.round(S.totalMs / 1000);
+  PROG.u = Math.max(PROG.u, Math.min(S.idx + 1, LEVELS.length - 1));
+  if (S.idx === LEVELS.length - 1) PROG.u = LEVELS.length;
+  S.newBest = !(S.idx in PROG.best) || secs < PROG.best[S.idx];
+  if (S.newBest) PROG.best[S.idx] = secs;
+  S.perfect = (S.revealed >= S.safeTotal) && S.wrecks === 0;
+  if (S.perfect) PROG.perfect[S.idx] = true;
+  saveProgress(PROG);
+  HAPTIC.success();
+  SFX.win();
+  const paths = S.lanes.map(lanePathCells).filter(Boolean);
+  runConvoy(paths, () => openModal("win"));
+}
+
+/* ---------------- tanker clock ---------------- */
+function startClock(){
+  if (clockId) return;
+  S.lastT = performance.now();
+  clockId = setInterval(tickClock, 200);
+  ambientStart();
+}
+function stopClock(){
+  if (clockId){ clearInterval(clockId); clockId = null; }
+  ambientStop();
+}
+function tickClock(){
+  const now = performance.now();
+  const dt = now - S.lastT;
+  S.lastT = now;
+  S.totalMs += dt;
+  S.cycleMs += dt;
+  const cyc = S.L.interval * 1000;
+  if (S.cycleMs >= cyc){
+    S.cycleMs -= cyc;
+    SFX.tanker();
+    coach("tanker", "A tanker joined the backlog · open the channel before it fills");
+    S.tankersArrived++;
+    addBacklog(1);
+    if (S.over) return;
+    const rm = S.L.reMine;
+    if (rm && S.tankersArrived % rm.every === 0 && S.minesAdded < rm.max) seedMine();
+  }
+  if (S.over) return;
+  tickHolds();
+  tickShips(dt);
+  if (S.over) return;
+  tickRunners(dt);
+  if (S.over) return;
+  tickDrones(dt);
+  if (S.over) return;
+  const pct = Math.round(Math.min(100, S.cycleMs / cyc * 100));
+  if (pct !== S.lastPct){ S.lastPct = pct; $("tankbarFill").style.width = pct + "%"; }
+  const ct = fmtTime(S.totalMs);
+  if (ct !== S.lastClock){ S.lastClock = ct; $("clock").textContent = ct; }
+}
+/* late-war minelayers: a fresh mine slips into deep fog. Only cells with zero
+   revealed neighbors qualify (no displayed number ever becomes a lie), and the
+   two-disjoint-safe-routes guarantee must survive the addition. */
+function seedMine(quiet){
+  if (!S.armed || S.over) return false;
+  const candidates = shuffle(S.cells.filter(c =>
+    c.water && !c.mine && !c.wreck && !c.rev && !c.flag &&
+    c.neigh.every(nb => !nb.rev)));
+  for (const c of candidates){
+    c.mine = true;
+    /* strict boards keep the two-route guarantee; relaxed-fallback boards keep the
+       single-route guarantee they were born with (robustness is monotone, so demanding
+       laneRobust there would silently disable the minelayer forever) */
+    if (S.lanes.every(l => S.robustBoard ? laneRobust(l) : lanePossible(l, false))){
+      for (const nb of c.neigh) nb.n++;
+      S.mineCount++;
+      if (!quiet) S.minesAdded++;   /* escaped minelayers must not eat the scheduled reMine budget */
+      S.safeTotal--;
+      updateHud();
+      const ml = $("minesLeft").closest(".stat");
+      if (ml){ ml.classList.remove("alert"); void ml.offsetWidth; ml.classList.add("alert"); }
+      if (!quiet){
+        SFX.minelayer();
+        if (!fieldManual("minelayer", "MINELAYING RESUMES",
+          "Cleared water can be re-seeded overnight. From here on, fresh mines slip into unswept water as time passes and the mine counter climbs. Numbers you have already opened never lie.",
+          FM_IMG.reMine))
+          toast("Minelayer active · a new mine entered the water", 4500);
+      }
+      return true;
+    }
+    c.mine = false;   // would create a chokepoint; try another cell
+  }
+}
+
+function addBacklog(n){
+  S.backlog = Math.min(S.L.cap, S.backlog + n);
+  renderBacklog(true);
+  if (!S.over && !S.critWarned && S.backlog >= S.L.cap - 2){
+    S.critWarned = true;
+    SFX.alert();
+    HAPTIC.medium();
+    toast(`Backlog critical · ${S.L.cap - S.backlog} slots left before the strait closes`, 4800);
+  }
+  if (S.backlog >= S.L.cap){
+    S.over = true;
+    stopClock();
+    clearEntities();
+    SFX.closed();
+    later(() => openModal("closed"), 500);
+  }
+}
+/* ---------------- live traffic: desperate tankers + minelayers ----------------
+   Non-violent by design: stranded tankers are DETAINED by Iranian patrols and towed
+   off; minelayers are INTERCEPTED and turn back. Nobody shoots anybody. */
+const SHIP_SPEED = 3400, SHIP_WARN = 8000, SHIP_DETAIN = 20000, SHIP_HOLD = 15000, SHIP_GRACE = 30000;
+const GAMBLE_AT = 14000, GAMBLE_SPEED = 2600, GAMBLE_MAX_FOG = 8;
+const RUN_SPEED = 1150, RUN_ESCAPE_PER_HEX = 1650, RUNNER_MINE_CAP = 5;
+const DRONE_UNITS_PER_MS = 0.085;
+/* per-move detention risk by distance to the Iranian coast (hexes) */
+const IRAN_RISK = [0.05, 0.034, 0.022, 0.012, 0.007];
+
+function entLayer(){ return $("board").querySelector("#entlayer"); }
+
+/* Entity motion uses the SVG transform ATTRIBUTE driven by one rAF loop.
+   CSS transforms on SVG children behave inconsistently on iOS WebKit (vessels
+   rendered invisible on device), the attribute renders everywhere. */
+const entAnims = new Set();
+let entRaf = 0;
+function entFrame(now){
+  entRaf = 0;
+  for (const a of entAnims){
+    if (!a.g.isConnected){ entAnims.delete(a); continue; }
+    const t = Math.min(1, (now - a.start) / a.dur);
+    const x = a.x0 + (a.x1 - a.x0) * t;
+    const y = a.y0 + (a.y1 - a.y0) * t;
+    if (t >= 1 && a.bob && now - (a.lastW || 0) < 90) continue;
+    a.lastW = now;
+    const bob = a.bob ? Math.sin(now / 190 + a.phase) * 0.6 : 0;
+    a.g.setAttribute("transform", `translate(${x.toFixed(1)},${(y + bob).toFixed(1)}) rotate(${a.ang.toFixed(1)})`);
+    if (t >= 1 && !a.bob) entAnims.delete(a);
+  }
+  if (entAnims.size) entRaf = requestAnimationFrame(entFrame);
+}
+function entKick(){ if (!entRaf && entAnims.size) entRaf = requestAnimationFrame(entFrame); }
+
+function placeEnt(g, from, to, snap, dur){
+  const [x, y] = cellCenter(to);
+  let ang = 0;
+  if (from !== to){
+    const [fx, fy] = cellCenter(from);
+    ang = Math.atan2(y - fy, x - fx) * 180 / Math.PI;
+  }
+  let a = g._anim;
+  if (!a){
+    a = g._anim = { g, phase: Math.random() * 6.28, bob: g.classList.contains("dship") && !REDUCED };
+    if (a.bob) entAnims.add(a);   /* bobbing ships stay animated even at rest */
+  }
+  const [fx0, fy0] = (snap || from === to) ? [x, y] : cellCenter(from);
+  a.x0 = fx0; a.y0 = fy0; a.x1 = x; a.y1 = y; a.ang = ang;
+  a.start = performance.now();
+  a.dur = (snap || REDUCED) ? 1 : (dur || 1100);
+  if (a.dur === 1) g.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${ang.toFixed(1)})`);
+  entAnims.add(a);
+  entKick();
+}
+
+function shipPassable(c){ return c.rev && !c.wreck && !c.hold; }
+
+/* BFS from the ship over revealed water: the goal is the reachable revealed cell
+   closest to the east edge (max column). Returns {goal, step} or nulls. */
+function shipRoute(sh){
+  const from = sh.cell;
+  const prev = new Map([[from.i, null]]);
+  const q = [from];
+  let goal = from;
+  while (q.length){
+    const c = q.shift();
+    if (c.c > goal.c) goal = c;
+    for (const nb of c.neigh){
+      if (!shipPassable(nb) || prev.has(nb.i)) continue;
+      prev.set(nb.i, c);
+      q.push(nb);
+    }
+  }
+  if (goal === from || goal.c <= from.c) return { goal: null, step: null };
+  let cur = goal, step = goal;
+  while (prev.get(cur.i)){ step = cur; cur = prev.get(cur.i); }
+  return { goal, step };
+}
+
+function spawnShip(){
+  const cfg = S.L.convoy;
+  if (!cfg || S.over || S.ships.length >= (cfg.max || 3)) return;
+  if (S.backlog >= S.L.cap * 0.8) return;   /* no pile-on while the backlog burns */
+  const starts = S.cells.filter(c => c.water && c.c === 0 && shipPassable(c) &&
+    S.lanes.includes(c.comp) && !S.ships.some(sh => sh.cell === c));
+  if (!starts.length) return;
+  const lay = entLayer(); if (!lay) return;
+  const cell = starts[Math.floor(Math.random() * starts.length)];
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.setAttribute("class", "ship dship");
+  g.innerHTML = `<circle class="stallring" r="13"/>` +
+                `<line class="wake" x1="-19" y1="1" x2="-9" y2="1" stroke-dasharray="3 3"/>` +
+                `<path class="hull" d="M-8,-2 L6,-2 L9,1 L6,4 L-8,4 Z M-3,-5 L3,-5 L3,-2 L-3,-2 Z"/>`;
+  lay.appendChild(g);
+  placeEnt(g, cell, cell, true);
+  S.ships.push({ cell, g, moveT:0, stallT:0, warned:false });
+  SFX.tankerIn();
+  if (!fieldManual("dship", "CONVOYS STOP WAITING",
+    "Tankers now enter on their own and follow your swept water east. Keep opening a way ahead of them: a stranded tanker will push into unswept water and gamble with the mines, or be detained by the patrols that watch the Iranian coast. Ships that make it out east ease the backlog.",
+    FM_IMG.dship))
+    toast("Tanker underway in your channel", 4200);
+}
+
+function removeShip(sh){
+  sh.g.remove();
+  const k = S.ships.indexOf(sh);
+  if (k >= 0) S.ships.splice(k, 1);
+}
+
+function shipExit(sh){
+  removeShip(sh);
+  S.shipsOut++;
+  if (S.backlog > 0){ S.backlog--; renderBacklog(false); }
+  SFX.horn();
+  HAPTIC.light();
+  coach("dshipout", "Tanker through to open water · every ship that exits eases the backlog by one");
+}
+
+function shipDetained(sh, midMove){
+  const cell = sh.cell;
+  removeShip(sh);
+  SFX.detain();
+  HAPTIC.medium();
+  const cost = S.L.convoy.cost ?? 2;
+  S.detained++;
+  const firstEver = !COACH.detain;
+  coach("detain", `Iranian patrols detain the tanker and tow it off · ${cost} join the backlog and the operation blocks that hex for a while`);
+  if (!firstEver) toast(midMove ?
+    "Iranian patrols pull a tanker out of the channel · it is towed off under escort" :
+    "Stranded tanker detained by Iranian patrols", 5000);
+  holdCell(cell, SHIP_HOLD);
+  addBacklog(cost);
+  if (!S.over) updateHud();
+}
+
+function holdCell(cell, ms){
+  cell.hold = true;
+  const lay = entLayer();
+  let g = null;
+  if (lay){
+    g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "holdmark");
+    const [x, y] = cellCenter(cell);
+    g.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+    g.innerHTML = `<circle r="12"/><circle class="pin" r="2.6"/>`;
+    lay.appendChild(g);
+  }
+  S.holds.push({ cell, g, until: S.totalMs + ms });
+}
+
+function tickHolds(){
+  for (const h of [...S.holds]){
+    if (S.totalMs < h.until) continue;
+    h.cell.hold = false;
+    if (h.g) h.g.remove();
+    S.holds.splice(S.holds.indexOf(h), 1);
+  }
+}
+
+function tickShips(dt){
+  const cfg = S.L.convoy;
+  if (!cfg || S.over) return;
+  S.shipTimer += dt;
+  if (S.totalMs > SHIP_GRACE && S.shipTimer >= cfg.every * 1000){
+    S.shipTimer = 0;
+    spawnShip();
+  }
+  if (!S.ships.length) return;
+  for (const sh of [...S.ships]){
+    if (S.over) return;
+    sh.moveT += dt;
+    /* gambling ships push through the fog toward the east mouth */
+    if (sh.gamble){
+      if (sh.moveT < GAMBLE_SPEED) continue;
+      sh.moveT = 0;
+      const to = sh.gamble.path[sh.gamble.idx++];
+      if (!to || to.wreck || to.hold){ sh.gamble = null; sh.g.classList.remove("gamble"); continue; }
+      placeEnt(sh.g, sh.cell, to, false, GAMBLE_SPEED);
+      sh.cell = to;
+      if (to.mine){ shipStruck(sh, to); continue; }
+      if (to.c === S.cols - 1){ shipExit(sh); continue; }
+      continue;
+    }
+    if (sh.moveT < SHIP_SPEED) continue;
+    if (sh.cell.c === S.cols - 1){ shipExit(sh); continue; }
+    const { step } = shipRoute(sh);
+    if (step && !S.ships.some(o => o !== sh && o.cell === step)){
+      placeEnt(sh.g, sh.cell, step, false, SHIP_SPEED);
+      sh.cell = step; sh.moveT = 0; sh.stallT = 0;
+      if (sh.warned){ sh.warned = false; sh.g.classList.remove("warn"); }
+      /* moving through contested water: detention risk grows near the Iranian coast */
+      const d = S.iranDist.get(step.i) ?? 9;
+      const p = d < IRAN_RISK.length ? IRAN_RISK[d] : 0.004;
+      if (Math.random() < p){ shipDetained(sh, true); }
+    } else if (step){
+      sh.moveT = SHIP_SPEED - 1000;   /* queued behind another ship: retry at 1Hz */
+    } else {
+      /* dead end: the swept water ahead has run out */
+      sh.moveT = SHIP_SPEED - 1000;
+      sh.stallT += dt;
+      if (!sh.warned && sh.stallT >= SHIP_WARN){
+        sh.warned = true;
+        sh.g.classList.add("warn");
+        SFX.horn();
+        toast("Tanker at the end of swept water · open a way ahead or it will push into the fog", 5000);
+      }
+      if (sh.stallT >= GAMBLE_AT){
+        const route = fogRoute(sh);
+        if (route && route.fog > 0 && route.fog <= GAMBLE_MAX_FOG){
+          sh.gamble = { path: route.path, idx: 0 };
+          sh.stallT = 0; sh.moveT = 0;
+          sh.warned = false;
+          sh.g.classList.remove("warn");
+          sh.g.classList.add("gamble");
+          SFX.horn();
+          const firstEver = !COACH.gamble;
+          coach("gamble", "The tanker stops waiting and pushes into unswept water · it exits east if it survives the fog");
+          if (!firstEver) toast("A tanker pushes into the fog", 3600);
+          continue;
+        }
+      }
+      if (sh.stallT >= SHIP_DETAIN) shipDetained(sh);
+    }
+  }
+}
+
+/* shortest path to the east edge through ANY water (fog included): the gamble route */
+function fogRoute(sh){
+  const pass = c => c.water && !c.wreck && !c.hold;
+  const prev = new Map([[sh.cell.i, null]]);
+  const q = [sh.cell];
+  let goal = null;
+  while (q.length){
+    const c = q.shift();
+    if (c.c === S.cols - 1){ goal = c; break; }
+    for (const nb of c.neigh){
+      if (!pass(nb) || prev.has(nb.i)) continue;
+      prev.set(nb.i, c);
+      q.push(nb);
+    }
+  }
+  if (!goal) return null;
+  const path = [];
+  let cur = goal;
+  while (cur){ path.push(cur); cur = prev.get(cur.i); }
+  path.reverse();
+  path.shift();   /* drop the current cell */
+  const fog = path.filter(c => !c.rev).length;
+  return { path, fog };
+}
+
+/* a gambling tanker strikes a real mine in the fog: the mine is spent, the
+   wreck is charted (free information), the backlog pays for the hull */
+function shipStruck(sh, cell){
+  removeShip(sh);
+  S.struck++;
+  cell.mine = false;
+  cell.wreck = true;
+  cell.flag && (cell.flag = false, S.flags--);
+  S.mineCount--;
+  for (const nb of cell.neigh){
+    nb.n = Math.max(0, nb.n - 1);
+    if (nb.rev) renderCell(nb);
+  }
+  renderCell(cell);
+  detonationFx(cell);
+  HAPTIC.heavy();
+  SFX.mine();
+  toast("A gambling tanker finds a mine the hard way · the wreck is charted, 2 join the backlog", 5200);
+  addBacklog(2);
+  if (S.over) return;
+  updateHud();
+  if (!S.lanes.every(l => lanePossible(l, false))){
+    S.over = true;
+    stopClock();
+    clearEntities();
+    SFX.closed();
+    later(() => openModal("blocked"), 700);
+  }
+}
+
+function iranAdjacent(c){
+  const D = (c.r % 2) ? N_ODD : N_EVEN;
+  return D.some(([dc, dr]) => {
+    const nb = S.grid[(c.r + dr) + "," + (c.c + dc)];
+    return nb && (nb.kind === "I" || nb.kind === "Q");
+  });
+}
+
+function nearestFog(from){
+  const seen = new Set([from.i]);
+  let q = [from];
+  while (q.length){
+    const next = [];
+    for (const c of q){
+      if (!c.rev && c !== from && !c.wreck) return c;
+      for (const nb of c.neigh){
+        if (seen.has(nb.i) || nb.wreck) continue;
+        seen.add(nb.i);
+        next.push(nb);
+      }
+    }
+    q = next;
+  }
+  return null;
+}
+
+function stepToward(from, target){
+  const pass = c => c.water && !c.wreck;
+  if (target){
+    const dist = new Map([[target.i, 0]]);
+    const q = [target];
+    while (q.length){
+      const c = q.shift();
+      for (const nb of c.neigh){
+        if (!pass(nb) || dist.has(nb.i)) continue;
+        dist.set(nb.i, dist.get(c.i) + 1);
+        q.push(nb);
+      }
+    }
+    const opts = from.neigh.filter(nb => pass(nb) && dist.has(nb.i) &&
+      dist.get(nb.i) < (dist.get(from.i) ?? Infinity));
+    if (opts.length) return opts.sort((a, b) => dist.get(a.i) - dist.get(b.i))[0];
+  }
+  const east = from.neigh.filter(nb => pass(nb) && nb.c > from.c);
+  return east.length ? east[Math.floor(Math.random() * east.length)] : null;
+}
+
+function spawnRunner(){
+  const cfg = S.L.runners;
+  if (!cfg || !S.armed || S.over || S.runners.length) return;
+  if (S.backlog >= S.L.cap * 0.8) return;   /* pressure valve: no pile-on near a full backlog */
+  const lay = entLayer(); if (!lay) return;
+  const spots = shuffle(S.cells.filter(c => c.water && !c.wreck && !c.hold && iranAdjacent(c)));
+  if (!spots.length) return;
+  /* prefer coastal water clear of the HUD strip so the ship is seen surfacing */
+  const cell = spots.find(c => c.r >= 2) || spots[0];
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.setAttribute("class", "runner");
+  g.innerHTML = `<circle class="runner-hit" r="26"/>` +
+                `<circle class="beacon" r="11"/>` +
+                `<line class="wake" x1="-17" y1="1" x2="-10" y2="1" stroke-dasharray="2 3"/>` +
+                `<path class="hull" d="M-9,-2 L4,-2 L8.5,0.5 L4,3 L-9,3 Z"/>` +
+                `<path class="sup" d="M-6,-4.6 L-1,-4.6 L-1,-2 L-6,-2 Z M0.5,-4 L3,-4 L3,-2 L0.5,-2 Z"/>` +
+                `<circle class="cargo" cx="-3.5" cy="0.6" r="1.1"/><circle class="cargo" cx="0" cy="0.6" r="1.1"/><circle class="cargo" cx="3.2" cy="0.6" r="1.1"/>`;
+  lay.appendChild(g);
+  placeEnt(g, cell, cell, true);
+  const rn = { cell, g, age:0, moveT:0, target:null };
+  g.addEventListener("pointerdown", e => { e.stopPropagation(); interceptRunner(rn); });
+  S.runners.push(rn);
+  SFX.minelayerIn();
+  if (!fieldManual("runner", "MINELAYER SIGHTED",
+    "A minelayer is making for unswept water, marked by a blinking beacon. TAP the ship to intercept it: the mine never enters the water and a backlog slot clears.",
+    FM_IMG.minelayer))
+    toast("Minelayer in the channel · tap the ship to intercept it", 5000);
+}
+
+function removeRunner(rn){
+  rn.g.remove();
+  const k = S.runners.indexOf(rn);
+  if (k >= 0) S.runners.splice(k, 1);
+}
+
+function interceptRunner(rn){
+  if (!S || S.over || !S.runners.includes(rn)) return;
+  ensureAudio();
+  removeRunner(rn);
+  S.runnersStopped++;
+  SFX.board();
+  HAPTIC.medium();
+  sonarAt(rn.cell);
+  const freed = S.backlog > 0;
+  if (freed){ S.backlog--; renderBacklog(false); }
+  const firstEver = !COACH.runnerout;
+  coach("runnerout", "Minelayer intercepted · its cargo never reaches the water and a backlog slot clears");
+  if (!firstEver) toast(freed ? "Minelayer intercepted · backlog eases by one" : "Minelayer intercepted", 4200);
+}
+
+function runnerEscape(rn){
+  removeRunner(rn);
+  let laid = false;
+  if (S.runnerMines < RUNNER_MINE_CAP){ laid = seedMine(true) === true; }
+  if (laid){
+    S.runnerMines++;
+    SFX.minelayer();
+    toast("The minelayer slips into unswept water · sonar hears fresh mine-laying", 5200);
+  } else {
+    toast("The minelayer slips away into unswept water and goes quiet", 4800);
+  }
+}
+
+function tickRunners(dt){
+  const cfg = S.L.runners;
+  if (!cfg || S.over) return;
+  S.runnerTimer += dt;
+  if (S.runnerTimer >= cfg.every * 1000){
+    S.runnerTimer = 0;
+    spawnRunner();
+  }
+  for (const rn of [...S.runners]){
+    rn.age += dt;   /* the catch window is time-based; a cornered ship still burns it */
+    if (rn.age >= (cfg.escape || 6) * RUN_ESCAPE_PER_HEX){ runnerEscape(rn); continue; }
+    rn.moveT += dt;
+    if (rn.moveT < RUN_SPEED) continue;
+    rn.moveT = 0;
+    if (!rn.target || rn.target.rev || rn.target.wreck) rn.target = nearestFog(rn.cell);
+    const to = stepToward(rn.cell, rn.target);
+    if (to){ placeEnt(rn.g, rn.cell, to, false, RUN_SPEED); rn.cell = to; }
+  }
+}
+
+/* CH7: one-way drones launch from the Iranian coast at a moving tanker,
+   anywhere on the board. Tap the drone to intercept it before it connects. */
+function spawnDrone(){
+  const cfg = S.L.drones;
+  if (!cfg || S.over || !S.armed || S.drones.length) return;
+  if (!S.ships.length) return;                       /* needs a target */
+  const lay = entLayer(); if (!lay) return;
+  const target = S.ships[Math.floor(Math.random() * S.ships.length)];
+  const spots = shuffle(S.cells.filter(c => c.water && iranAdjacent(c) && c.r >= 2));
+  if (!spots.length) return;
+  const from = spots[0];
+  const [x0, y0] = cellCenter(from);
+  const [x1, y1] = cellCenter(target.cell);
+  const dur = Math.max(1600, Math.hypot(x1 - x0, y1 - y0) / DRONE_UNITS_PER_MS);
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.setAttribute("class", "drone");
+  g.innerHTML = `<circle class="runner-hit" r="26"/>` +
+                `<circle class="beacon" r="9"/>` +
+                `<path class="arms" d="M-5,-5 L5,5 M-5,5 L5,-5"/>` +
+                `<circle class="rotor" cx="-5" cy="-5" r="1.7"/><circle class="rotor" cx="5" cy="-5" r="1.7"/>` +
+                `<circle class="rotor" cx="-5" cy="5" r="1.7"/><circle class="rotor" cx="5" cy="5" r="1.7"/>` +
+                `<circle class="body" r="2"/>`;
+  lay.appendChild(g);
+  const dr = { g, target, start: performance.now(), dur, aim: target.cell };
+  g._anim = { g, bob: false };
+  g._anim.x0 = x0; g._anim.y0 = y0; g._anim.x1 = x1; g._anim.y1 = y1;
+  g._anim.ang = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI;
+  g._anim.start = dr.start; g._anim.dur = REDUCED ? 1 : dur;
+  entAnims.add(g._anim); entKick();
+  if (REDUCED) g.setAttribute("transform", `translate(${x1.toFixed(1)},${y1.toFixed(1)})`);
+  g.addEventListener("pointerdown", e => { e.stopPropagation(); interceptDrone(dr); });
+  S.drones.push(dr);
+  SFX.droneIn();
+  if (!fieldManual("drone", "ONE-WAY DRONES",
+    "Iranian drones now come for the convoy itself, anywhere on the board. TAP the drone before it reaches its target; a hit disables the tanker and adds to the backlog.",
+    FM_IMG.drone))
+    toast("Drone inbound · tap it before it reaches the convoy", 4600);
+}
+
+function removeDrone(dr){
+  dr.g.remove();
+  const k = S.drones.indexOf(dr);
+  if (k >= 0) S.drones.splice(k, 1);
+}
+
+function interceptDrone(dr){
+  if (!S || S.over || !S.drones.includes(dr)) return;
+  ensureAudio();
+  removeDrone(dr);
+  S.dronesDowned++;
+  SFX.droneDown();
+  HAPTIC.medium();
+  sonarAt(dr.aim);
+  const firstEver = !COACH.droneout;
+  coach("droneout", "Drone intercepted short of the convoy");
+  if (!firstEver) toast("Drone intercepted", 3200);
+}
+
+function tickDrones(dt){
+  const cfg = S.L.drones;
+  if (!cfg || S.over) return;
+  S.droneTimer += dt;
+  if (S.droneTimer >= cfg.every * 1000){
+    S.droneTimer = S.ships.length ? 0 : (cfg.every - 6) * 1000;   /* no target: retry in ~6s */
+    if (S.backlog < S.L.cap * 0.9) spawnDrone();
+  }
+  for (const dr of [...S.drones]){
+    if (performance.now() - dr.start < dr.dur) continue;
+    removeDrone(dr);
+    const t2 = dr.target;
+    const stillThere = S.ships.includes(t2) &&
+      Math.hypot(cellCenter(t2.cell)[0] - cellCenter(dr.aim)[0],
+                 cellCenter(t2.cell)[1] - cellCenter(dr.aim)[1]) < HEX_S * 2.2;
+    if (stillThere){
+      const cell = t2.cell;
+      removeShip(t2);
+      S.detained++;
+      SFX.detain();
+      HAPTIC.heavy();
+      holdCell(cell, SHIP_HOLD);
+      toast("A drone gets through · the tanker is disabled and towed off, 2 join the backlog", 5200);
+      addBacklog(2);
+      if (!S.over) updateHud();
+    } else {
+      toast("The drone loses its target and ditches", 3200);
+    }
+  }
+}
+
+function clearEntities(){
+  if (!S) return;
+  for (const sh of [...(S.ships || [])]) removeShip(sh);
+  for (const rn of [...(S.runners || [])]) removeRunner(rn);
+  for (const dr of [...(S.drones || [])]) removeDrone(dr);
+  for (const h of [...(S.holds || [])]){ h.cell.hold = false; if (h.g) h.g.remove(); }
+  S.holds = [];
+}
+
+function gamePaused(){
+  return $("fmodal").classList.contains("open") ||
+         (matchMedia && matchMedia("(orientation: portrait)").matches);
+}
+document.addEventListener("visibilitychange", () => {
+  if (!S || S.over || !S.armed) return;
+  if (document.hidden) stopClock(); else if (!gamePaused()) startClock();
+});
+/* the rotate prompt must also stop the tanker clock, not just cover it */
+matchMedia("(orientation: portrait)").addEventListener("change", e => {
+  if (!S || S.over || !S.armed) return;
+  if (e.matches) stopClock();
+  else if (!document.hidden && !$("fmodal").classList.contains("open")) startClock();
+});
+
+function fmtTime(ms){
+  const s = Math.floor(ms / 1000);
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+
+/* ---------------- rendering ---------------- */
+function cellCenter(c){
+  const hw = SQRT3 * HEX_S;
+  const cx = hw * (c.c + (c.r % 2 ? 0.5 : 0)) + hw / 2 + PAD;
+  const cy = 1.5 * HEX_S * c.r + HEX_S + PAD;
+  return [cx, cy];
+}
+function hexVerts(c){
+  const [cx, cy] = cellCenter(c);
+  return VERT_ANGLES.map(a => [cx + HEX_S * Math.cos(a), cy + HEX_S * Math.sin(a)]);
+}
+
+/* trace land clusters into smooth coastline paths */
+function coastPaths(){
+  const land = S.cells.filter(c => LAND.has(c.kind));
+  const nbAt = (cell, k) => {
+    const D = (cell.r % 2) ? EDGE_DIRS_ODD : EDGE_DIRS_EVEN;
+    return S.grid[(cell.r + D[k][1]) + "," + (cell.c + D[k][0])];
+  };
+  const seen = new Set(), clusters = [];
+  for (const c0 of land){
+    if (seen.has(c0.i)) continue;
+    const cl = [], q = [c0];
+    seen.add(c0.i);
+    while (q.length){
+      const c = q.pop();
+      cl.push(c);
+      for (let k = 0; k < 6; k++){
+        const n = nbAt(c, k);
+        if (n && LAND.has(n.kind) && !seen.has(n.i)){ seen.add(n.i); q.push(n); }
+      }
+    }
+    clusters.push(cl);
+  }
+  return clusters.map(cl => {
+    const edges = new Map();
+    const key = (x, y) => x.toFixed(1) + "," + y.toFixed(1);
+    for (const c of cl){
+      const v = hexVerts(c);
+      for (let k = 0; k < 6; k++){
+        const n = nbAt(c, k);
+        if (n && LAND.has(n.kind)) continue;
+        const a = v[k], b = v[(k + 1) % 6];
+        edges.set(key(a[0], a[1]), { a, b });
+      }
+    }
+    const loops = [], used = new Set();
+    const kOf = p => key(p[0], p[1]);
+    for (const k0 of edges.keys()){
+      if (used.has(k0)) continue;
+      const loop = [];
+      let k = k0;
+      while (!used.has(k)){
+        used.add(k);
+        const e = edges.get(k);
+        if (!e) break;
+        loop.push(e);
+        k = kOf(e.b);
+      }
+      if (loop.length > 2) loops.push(loop);
+    }
+    const mid = e => [(e.a[0] + e.b[0]) / 2, (e.a[1] + e.b[1]) / 2];
+    /* fractal midpoint displacement: hex silhouettes become ragged, chart-like
+       coastline. Deterministic per level+loop; amplitude stays well inside the
+       hex apothem so no water cell is ever visually swallowed. */
+    const mulberry = s => () => {
+      s |= 0; s = s + 0x6D2B79F5 | 0;
+      let z = Math.imul(s ^ s >>> 15, 1 | s);
+      z = z + Math.imul(z ^ z >>> 7, 61 | z) ^ z;
+      return ((z ^ z >>> 14) >>> 0) / 4294967296;
+    };
+    let d = "";
+    let loopIdx = 0;
+    for (const loop of loops){
+      let pts = loop.map(mid);
+      const rng = mulberry(S.idx * 977 + loop.length * 131 + (loopIdx++) * 7919);
+      for (let it = 0; it < 2; it++){
+        const amp = it === 0 ? 0.34 : 0.30;
+        const out = [];
+        for (let i = 0; i < pts.length; i++){
+          const a = pts[i], b = pts[(i + 1) % pts.length];
+          out.push(a);
+          const dx = b[0] - a[0], dy = b[1] - a[1];
+          const len = Math.hypot(dx, dy) || 1;
+          const off = len * amp * (rng() * 2 - 1);
+          out.push([(a[0] + b[0]) / 2 - dy / len * off, (a[1] + b[1]) / 2 + dx / len * off]);
+        }
+        pts = out;
+      }
+      const pm = (p, q2) => [(p[0] + q2[0]) / 2, (p[1] + q2[1]) / 2];
+      const m0 = pm(pts[0], pts[1]);
+      d += `M${m0[0].toFixed(1)},${m0[1].toFixed(1)}`;
+      for (let i = 1; i <= pts.length; i++){
+        const p = pts[i % pts.length];
+        const m = pm(p, pts[(i + 1) % pts.length]);
+        d += ` Q${p[0].toFixed(1)},${p[1].toFixed(1)} ${m[0].toFixed(1)},${m[1].toFixed(1)}`;
+      }
+      d += "Z";
+    }
+    const counts = { I:0, O:0, Q:0 };
+    cl.forEach(c => counts[c.kind]++);
+    const kind = counts.I >= counts.O && counts.I >= counts.Q ? "I" : (counts.O >= counts.Q ? "O" : "Q");
+    return { d, kind, cells: cl };
+  });
+}
+
+/* principal axis of a land cluster, clamped to a readable tilt */
+function clusterAxis(cells){
+  if (cells.length < 3) return 0;
+  const pts = cells.map(cellCenter);
+  let mx = 0, my = 0;
+  pts.forEach(p => { mx += p[0]; my += p[1]; });
+  mx /= pts.length; my /= pts.length;
+  let sxx = 0, syy = 0, sxy = 0;
+  pts.forEach(p => {
+    const dx = p[0] - mx, dy = p[1] - my;
+    sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
+  });
+  let ang = 0.5 * Math.atan2(2 * sxy, sxx - syy) * 180 / Math.PI;
+  if (ang > 45) ang -= 90;
+  if (ang < -45) ang += 90;
+  return Math.max(-20, Math.min(20, ang));
+}
+
+function buildBoardSVG(){
+  const svg = $("board");
+  const rows = S.rows, cols = S.cols;
+  const hw = SQRT3 * HEX_S;
+  const vbW = hw * (cols + 0.5) + PAD * 2;
+  const vbH = 1.5 * HEX_S * (rows - 1) + 2 * HEX_S + PAD * 2;
+  svg.setAttribute("viewBox", `0 0 ${vbW.toFixed(1)} ${vbH.toFixed(1)}`);
+
+  const th = T();
+  const lin = (id, [a, b]) =>
+    `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">` +
+    `<stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+  let html = `<defs>
+    <linearGradient id="seabg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${th.seaTop}"/><stop offset=".55" stop-color="${th.seaMid}"/><stop offset="1" stop-color="${th.seaBot}"/>
+    </linearGradient>
+    ${lin("sandI", th.sandI)}${lin("sandO", th.sandO)}${lin("sandQ", th.sandQ)}
+    <radialGradient id="mineGrad" cx=".35" cy=".3" r="1">
+      <stop offset="0" stop-color="${th.mine[0]}"/><stop offset="1" stop-color="${th.mine[1]}"/>
+    </radialGradient>
+    ${lin("wgA", th.wgA)}${lin("wgB", th.wgB)}${lin("wgC", th.wgC)}
+    <radialGradient id="revGrad" cx=".5" cy=".42" r=".72">
+      <stop offset="0" stop-color="${th.rev[0]}"/><stop offset="1" stop-color="${th.rev[1]}"/>
+    </radialGradient>
+    <radialGradient id="vign" cx=".5" cy=".5" r=".72">
+      <stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${th.vignOp}"/>
+    </radialGradient>
+    <filter id="coastShadow" x="-8%" y="-8%" width="116%" height="116%">
+      <feDropShadow dx="0" dy="1.6" stdDeviation="2.2" flood-color="${th.coastShadow}" flood-opacity=".55"/>
+    </filter>
+    <filter id="phos" x="-12%" y="-12%" width="124%" height="124%">
+      <feGaussianBlur stdDeviation="1.4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="caustic" width="90" height="70" patternUnits="userSpaceOnUse">
+      <ellipse cx="22" cy="18" rx="16" ry="7" fill="${th.caustic}"/>
+      <ellipse cx="66" cy="46" rx="19" ry="8" fill="${th.caustic}"/>
+      <ellipse cx="44" cy="62" rx="12" ry="5" fill="${th.caustic}"/>
+    </pattern>
+    <pattern id="grain" width="14" height="14" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="4" r=".7" fill="${th.grain[0]}"/><circle cx="10" cy="9" r=".6" fill="${th.grain[0]}"/>
+      <circle cx="6" cy="12" r=".5" fill="${th.grain[1]}"/>
+    </pattern>
+  </defs>`;
+  html += `<clipPath id="opclip"><rect x="3" y="3" width="${(vbW-6).toFixed(1)}" height="${(vbH-6).toFixed(1)}" rx="8"/></clipPath>`;
+  /* the sea runs past the operational area to the physical screen edges */
+  html += `<rect x="-420" y="-420" width="${(vbW+840).toFixed(1)}" height="${(vbH+840).toFixed(1)}" fill="url(#seabg)"/>`;
+
+  /* chart layer */
+  html += `<g class="chart-deco">`;
+  for (let gx = 1; gx <= 5; gx++){
+    const x = (vbW * gx / 6).toFixed(1);
+    html += `<line x1="${x}" y1="0" x2="${x}" y2="${vbH.toFixed(1)}"/>`;
+  }
+  for (let gy = 1; gy <= 3; gy++){
+    const y = (vbH * gy / 4).toFixed(1);
+    html += `<line x1="0" y1="${y}" x2="${vbW.toFixed(1)}" y2="${y}"/>`;
+  }
+  html += `<path class="contour" d="M0,${(vbH*.34).toFixed(1)} C ${(vbW*.3).toFixed(1)},${(vbH*.27).toFixed(1)} ${(vbW*.6).toFixed(1)},${(vbH*.4).toFixed(1)} ${vbW.toFixed(1)},${(vbH*.3).toFixed(1)}"/>`;
+  html += `<path class="contour" d="M0,${(vbH*.6).toFixed(1)} C ${(vbW*.35).toFixed(1)},${(vbH*.68).toFixed(1)} ${(vbW*.65).toFixed(1)},${(vbH*.52).toFixed(1)} ${vbW.toFixed(1)},${(vbH*.62).toFixed(1)}"/>`;
+  html += `<g class="compass" transform="translate(${(vbW-18).toFixed(1)},22)">` +
+          `<line x1="0" y1="8" x2="0" y2="-7"/><path d="M0,-8 L3,-2 L-3,-2 Z"/><text y="-11">N</text></g>`;
+  html += `<rect class="op-area" x="3" y="3" width="${(vbW-6).toFixed(1)}" height="${(vbH-6).toFixed(1)}" rx="8"/>`;
+  html += `</g>`;
+
+  /* water cells */
+  for (const c of S.cells){
+    if (!c.water) continue;
+    const [cx, cy] = cellCenter(c);
+    html += `<g class="${cellClass(c)}" data-i="${c.i}" transform="translate(${cx.toFixed(1)},${cy.toFixed(1)})">` +
+            `<polygon class="hexbg" points="${HEXPTS}"/></g>`;
+  }
+
+  /* smooth coasts: shallow-water rim, shadowed landmass, terrain grain, bright shoreline */
+  const clusters = coastPaths();
+  html += `<g class="coastlayer">`;
+  for (const p of clusters)
+    html += `<path d="${p.d}" fill="none" stroke="${th.rimOuter}" stroke-width="9" stroke-linejoin="round" opacity=".2"/>` +
+            `<path d="${p.d}" fill="none" stroke="${th.rimInner}" stroke-width="3.5" stroke-linejoin="round" opacity=".22"/>`;
+  for (const p of clusters)
+    html += `<path class="coast k-${p.kind}" d="${p.d}" filter="url(#coastShadow)"/>` +
+            `<path d="${p.d}" fill="url(#grain)" opacity=".5"/>` +
+            `<path d="${p.d}" fill="none" stroke="${th.shore}" stroke-width=".8" opacity=".38"/>`;
+
+  /* land continues beyond the operational area so the whole screen reads as
+     the real region: every edge cell that is land extends to the screen edge */
+  const EXT = 420;
+  const extRect = (x, y, w, h, kind) =>
+    `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="url(#sand${kind})"/>` +
+    `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="url(#grain)" opacity=".5"/>`;
+  const colCells = {}, rowCells = {};
+  for (const c of S.cells){
+    (colCells[c.c] = colCells[c.c] || []).push(c);
+    (rowCells[c.r] = rowCells[c.r] || []).push(c);
+  }
+  for (let cc = 0; cc < cols; cc++){
+    const list = colCells[cc]; if (!list) continue;
+    const top = list.reduce((a, b) => a.r < b.r ? a : b);
+    const bot = list.reduce((a, b) => a.r > b.r ? a : b);
+    if (LAND.has(top.kind)){
+      const [x, y] = cellCenter(top);
+      html += extRect(x - hw / 2 - 1, -EXT, hw + 2, EXT + y, top.kind);
+    }
+    if (LAND.has(bot.kind)){
+      const [x, y] = cellCenter(bot);
+      html += extRect(x - hw / 2 - 1, y, hw + 2, EXT, bot.kind);
+    }
+  }
+  for (let rr = 0; rr < rows; rr++){
+    const list = rowCells[rr]; if (!list) continue;
+    const west = list.reduce((a, b) => a.c < b.c ? a : b);
+    const east = list.reduce((a, b) => a.c > b.c ? a : b);
+    if (LAND.has(west.kind)){
+      const [x, y] = cellCenter(west);
+      html += extRect(-EXT, y - HEX_S * 0.78, EXT + x, HEX_S * 1.56, west.kind);
+      if (west.r === 0) html += extRect(-EXT, -EXT, EXT + x, EXT + y, west.kind);
+      if (west.r === rows - 1) html += extRect(-EXT, y, EXT + x, EXT, west.kind);
+    }
+    if (LAND.has(east.kind)){
+      const [x, y] = cellCenter(east);
+      html += extRect(x, y - HEX_S * 0.78, EXT, HEX_S * 1.56, east.kind);
+      if (east.r === 0) html += extRect(x, -EXT, EXT, EXT + y, east.kind);
+      if (east.r === rows - 1) html += extRect(x, y, EXT, EXT, east.kind);
+    }
+  }
+  html += `</g>`;
+  /* drifting light caustics over the whole sector */
+  html += `<g class="caustics" clip-path="url(#opclip)">` +
+          `<g class="caustic-a"><rect x="-120" y="-90" width="${(vbW+240).toFixed(1)}" height="${(vbH+180).toFixed(1)}" fill="url(#caustic)" opacity="${th.causticOp[0]}"/></g>` +
+          `<g class="caustic-b"><rect x="-120" y="-90" width="${(vbW+240).toFixed(1)}" height="${(vbH+180).toFixed(1)}" fill="url(#caustic)" opacity="${th.causticOp[1]}"/></g></g>`;
+
+  /* buoyed separation line */
+  for (const c of S.cells){
+    if (c.kind !== "B") continue;
+    const [cx, cy] = cellCenter(c);
+    html += `<line class="buoy-mast" x1="${cx.toFixed(1)}" y1="${(cy-7).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${cy.toFixed(1)}"/>` +
+            `<circle class="buoy" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2.6"/>`;
+  }
+
+  /* goal chevrons on lane entrances/exits */
+  for (const c of S.cells){
+    if (!c.water || !S.lanes.includes(c.comp)) continue;
+    const [cx, cy] = cellCenter(c);
+    if (c.c === 0)
+      html += `<path class="goal-mark" d="M${(cx-24).toFixed(1)},${(cy-5).toFixed(1)} l7,5 l-7,5 Z"/>`;
+    if (c.c === S.cols - 1)
+      html += `<path class="goal-mark" d="M${(cx+17).toFixed(1)},${(cy-5).toFixed(1)} l7,5 l-7,5 Z"/>`;
+  }
+
+  /* ports sit in the water beside their coast, marked with a glowing berth light */
+  const landAdjPort = c => {
+    const D = (c.r % 2) ? N_ODD : N_EVEN;
+    return D.some(([dc, dr]) => {
+      const nb = S.grid[(c.r + dr) + "," + (c.c + dc)];
+      return nb && LAND.has(nb.kind);
+    });
+  };
+  for (const [cname, cfx, cfy] of (S.L.cities || [])){
+    const hx = vbW * cfx, hy = vbH * cfy;
+    let best = null, bd = Infinity;
+    for (const c of S.cells){
+      if (!c.water || !landAdjPort(c)) continue;
+      const [x, y] = cellCenter(c);
+      const d2 = (x - hx) * (x - hx) + (y - hy) * (y - hy);
+      if (d2 < bd){ bd = d2; best = [x, y]; }
+    }
+    if (!best) continue;
+    /* names hang left of the light near the east edge so they never run off the chart */
+    const flip = best[0] > vbW * 0.78;
+    html += `<g class="city port" transform="translate(${best[0].toFixed(1)},${best[1].toFixed(1)})">` +
+            `<circle class="portglow" r="7"/><circle class="portdot" r="2.3"/><circle class="ring" r="4.2"/>` +
+            `<text x="${flip ? -8 : 8}" y="2.5"${flip ? ' text-anchor="end"' : ""}>PORT OF ${cname}</text></g>`;
+  }
+  /* dashed international boundary (U.A.E. | Oman on the Musandam exclave) */
+  if (S.L.border){
+    const pts = S.L.border.map(([bx, by]) => `${(vbW * bx).toFixed(1)},${(vbH * by).toFixed(1)}`).join(" ");
+    html += `<polyline class="intl-border" points="${pts}"/>`;
+  }
+
+  /* chart labels: land names snap onto their landmass and follow its axis;
+     water names run italic along a gentle arc, like a nautical chart */
+  let lblN = 0;
+  for (const [t, fx, fy, onland] of (S.L.labels || [])){
+    const hx = vbW * fx, hy = vbH * fy;
+    if (onland){
+      let best = null, bd = Infinity, bcl = null;
+      for (const cl of clusters){
+        for (const c of cl.cells){
+          const [x, y] = cellCenter(c);
+          const d2 = (x - hx) * (x - hx) + (y - hy) * (y - hy);
+          if (d2 < bd){ bd = d2; best = [x, y]; bcl = cl; }
+        }
+      }
+      if (!best) continue;
+      if (bcl.cells.length <= 3){
+        /* small islet: set the name beside it, like a chart annotation */
+        html += `<text class="map-label islet" font-size="7.5" x="${best[0].toFixed(1)}" y="${(best[1] + HEX_S * 1.7).toFixed(1)}">${t}</text>`;
+      } else {
+        const ang = clusterAxis(bcl.cells);
+        const size = Math.max(9, Math.min(16, 7.5 + bcl.cells.length * 0.12));
+        html += `<text class="map-label onland" font-size="${size.toFixed(1)}" transform="translate(${best[0].toFixed(1)},${best[1].toFixed(1)}) rotate(${ang.toFixed(1)})">${t}</text>`;
+      }
+    } else {
+      /* path must be longer than the letterspaced text or textPath truncates */
+      const w = Math.max(80, t.length * 11.4);
+      const cx2 = Math.max(w / 2 + 8, Math.min(vbW - w / 2 - 8, hx));  // keep the arc on the chart
+      /* keep water names clear of the HUD strip (top) and ticker strip (bottom) */
+      const hy2 = Math.max(vbH * 0.16, Math.min(vbH * 0.86, hy));
+      const pid = "lblp" + (lblN++);
+      html += `<defs><path id="${pid}" d="M${(cx2 - w / 2).toFixed(1)},${hy2.toFixed(1)} q ${(w / 2).toFixed(1)},-10 ${w.toFixed(1)},0"/></defs>` +
+              `<text class="map-label water" font-size="10.5"><textPath href="#${pid}" startOffset="50%">${t}</textPath></text>`;
+    }
+  }
+
+  html += `<g id="fxlayer"></g>`;
+  html += `<g id="entlayer"></g>`;
+  html += `<rect x="0" y="0" width="${vbW.toFixed(1)}" height="${vbH.toFixed(1)}" fill="url(#vign)" pointer-events="none"/>`;
+  svg.innerHTML = html;
+  cellEls = [];
+  svg.querySelectorAll("g.cell").forEach(g => { cellEls[+g.dataset.i] = g; });
+}
+
+function cellClass(c){
+  if (c.wreck) return "cell water wrecked";
+  if (c.rev) return "cell water revealed";
+  return "cell water covered w" + ((c.r * 31 + c.c * 17) % 3);
+}
+
+function renderCell(c){
+  const g = cellEls[c.i];
+  if (!g || !c.water) return;
+  g.setAttribute("class", cellClass(c));
+  let inner = `<polygon class="hexbg" points="${HEXPTS}"/>`;
+  if (c.wreck) inner += WRECK_SVG;
+  else if (c.flag && !c.rev) inner += FLAG_SVG;
+  else if (c.rev && c.mine) inner += MINE_SVG;
+  else if (c.rev && c.n > 0) inner += `<text class="num n${Math.min(c.n,6)}" dy=".36em">${c.n}</text>`;
+  g.innerHTML = inner;
+}
+
+/* particles */
+function fxLayer(){ return $("board").querySelector("#fxlayer"); }
+function splashAt(c){
+  if (REDUCED) return;
+  const fx = fxLayer(); if (!fx) return;
+  const [cx, cy] = cellCenter(c);
+  const el = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  el.setAttribute("class", "fx-splash");
+  el.setAttribute("cx", cx); el.setAttribute("cy", cy); el.setAttribute("r", 7);
+  fx.appendChild(el);
+  setTimeout(() => el.remove(), 600);
+}
+function detonationFx(c){
+  if (REDUCED) return;
+  const fx = fxLayer(); if (!fx) return;
+  const [cx, cy] = cellCenter(c);
+  const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  ring.setAttribute("class", "fx-ring");
+  ring.setAttribute("cx", cx); ring.setAttribute("cy", cy); ring.setAttribute("r", 10);
+  fx.appendChild(ring);
+  setTimeout(() => ring.remove(), 700);
+}
+function sonarAt(c){
+  if (REDUCED) return;
+  const fx = fxLayer(); if (!fx) return;
+  const [cx, cy] = cellCenter(c);
+  const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  ring.setAttribute("class", "fx-sonar");
+  ring.setAttribute("cx", cx); ring.setAttribute("cy", cy); ring.setAttribute("r", 14);
+  fx.appendChild(ring);
+  setTimeout(() => ring.remove(), 1000);
+}
+
+/* convoy of tankers sails the opened channel, draining the backlog */
+function runConvoy(paths, done){
+  const myS = S;
+  const finish = () => { if (S === myS) done(); };
+  if (REDUCED || document.hidden || !paths.length){ later(finish, 500); return; }
+  const fx = fxLayer(); if (!fx){ later(finish, 500); return; }
+  const shipsPerLane = Math.max(1, Math.min(3, Math.ceil((S.backlog || 2) / paths.length)));
+  const ships = [];
+  paths.forEach((path, li) => {
+    const pts = path.map(cellCenter);
+    const segs = [];
+    let total = 0;
+    for (let i = 1; i < pts.length; i++){
+      const d = Math.hypot(pts[i][0] - pts[i-1][0], pts[i][1] - pts[i-1][1]);
+      segs.push(d); total += d;
+    }
+    for (let k = 0; k < shipsPerLane; k++){
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.setAttribute("class", "ship");
+      g.innerHTML = `<line class="wake" x1="-19" y1="1" x2="-9" y2="1" stroke-dasharray="3 3"/>` +
+                    `<path class="hull" d="M-8,-2 L6,-2 L9,1 L6,4 L-8,4 Z M-3,-5 L3,-5 L3,-2 L-3,-2 Z"/>`;
+      fx.appendChild(g);
+      ships.push({ g, wake: g.querySelector(".wake"), pts, segs, total,
+                   start: performance.now() + 480 * k + li * 240, dur: 2400, phase: k * 2.1 + li, doneFlag:false });
+    }
+  });
+  let remaining = ships.length;
+  const easeInOut = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  function pos(sh, t){
+    let dist = t * sh.total, i = 0;
+    while (i < sh.segs.length && dist > sh.segs[i]){ dist -= sh.segs[i]; i++; }
+    if (i >= sh.segs.length) i = sh.segs.length - 1, dist = sh.segs[i];
+    const [x1, y1] = sh.pts[i], [x2, y2] = sh.pts[i + 1];
+    const f = sh.segs[i] ? dist / sh.segs[i] : 0;
+    return [x1 + (x2 - x1) * f, y1 + (y2 - y1) * f, Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI];
+  }
+  function frame(now){
+    if (S !== myS){ ships.forEach(s => s.g.remove()); return; }
+    for (const sh of ships){
+      if (sh.doneFlag) continue;
+      const t = (now - sh.start) / sh.dur;
+      if (t < 0){ continue; }
+      if (t >= 1){
+        sh.doneFlag = true;
+        sh.g.remove();
+        if (S.backlog > 0){ S.backlog--; renderBacklog(false); }
+        SFX.horn();
+        remaining--;
+        continue;
+      }
+      const [x, y, a] = pos(sh, easeInOut(t));
+      const bob = Math.sin(now / 170 + sh.phase) * 0.7;
+      sh.g.setAttribute("transform", `translate(${x.toFixed(1)},${(y + bob).toFixed(1)}) rotate(${a.toFixed(1)})`);
+      sh.g.setAttribute("opacity", t < 0.06 ? (t / 0.06).toFixed(2) : "1");
+      sh.wake.setAttribute("stroke-dashoffset", (-(now / 45) % 6).toFixed(1));
+    }
+    if (remaining > 0) requestAnimationFrame(frame);
+    else later(finish, 350);
+  }
+  requestAnimationFrame(frame);
+}
+
+function renderBacklog(animateLast){
+  const wrap = $("slots");
+  const cap = S.L.cap;
+  let html = "";
+  const hot = S.backlog >= cap * 0.75;
+  for (let i = 0; i < cap; i++){
+    const filled = i < S.backlog;
+    const cls = "slot" + (filled ? " filled" : "") + (filled && hot ? " hot" : "") +
+                (animateLast && i === S.backlog - 1 ? " new" : "");
+    html += `<div class="${cls}">${filled ? ICONS.ship : ""}</div>`;
+  }
+  wrap.innerHTML = html;
+  $("backlogCount").innerHTML = `<b>${S.backlog}</b>/${cap}`;
+}
+
+function updateHud(){
+  $("minesLeft").textContent = String(Math.max(0, S.mineCount - S.flags)).padStart(2, "0");
+  $("hudName").textContent = S.L.name;
+  $("hudDate").textContent = S.L.code + " · " + S.L.date;
+}
+
+function setTicker(L){
+  const sep = "&nbsp;&nbsp;&nbsp;•••&nbsp;&nbsp;&nbsp;";
+  const one = L.ticker.join(sep) + sep;
+  const track = $("tickTrack");
+  track.innerHTML = one + one;
+  const secs = Math.max(24, Math.round(one.replace(/<[^>]+>/g, "").length * 0.30));
+  track.style.animationDuration = secs + "s";
+}
+
+/* ---------------- input ---------------- */
+(function bindBoardInput(){
+  const svg = $("board");
+  const presses = new Map();
+  const LONG_MS = 300, MOVE_PX = 12;
+
+  function drop(id){
+    const p = presses.get(id);
+    if (p){
+      clearTimeout(p.timer);
+      if (p.g) p.g.classList.remove("pressing");
+      presses.delete(id);
+    }
+  }
+  cancelAllPresses = function(){
+    for (const p of presses.values()){
+      clearTimeout(p.timer);
+      if (p.g) p.g.classList.remove("pressing");
+    }
+    presses.clear();
+  };
+  svg.addEventListener("pointerdown", e => {
+    ensureAudio();
+    if (!S || S.over) return;
+    const g = e.target.closest && e.target.closest("g.cell.water");
+    if (!g) return;
+    if (e.button === 2){ toggleFlag(+g.dataset.i); return; }   /* desktop right-click = flag */
+    drop(e.pointerId);
+    g.classList.add("pressing");
+    const p = { i:+g.dataset.i, x:e.clientX, y:e.clientY, longFired:false, s:S, g };
+    p.timer = setTimeout(() => {
+      if (presses.get(e.pointerId) !== p || p.s !== S) return;
+      const c = S.cells[p.i];
+      if (!c || c.rev || c.wreck) return;
+      p.longFired = true;
+      toggleFlag(p.i);
+    }, LONG_MS);
+    presses.set(e.pointerId, p);
+  });
+  svg.addEventListener("pointermove", e => {
+    const p = presses.get(e.pointerId);
+    if (!p) return;
+    if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > MOVE_PX) drop(e.pointerId);
+  });
+  svg.addEventListener("pointerup", e => {
+    const p = presses.get(e.pointerId);
+    if (!p) return;
+    drop(e.pointerId);
+    if (p.s !== S) return;
+    if (!p.longFired) tapCell(p.i);
+  });
+  svg.addEventListener("pointercancel", e => drop(e.pointerId));
+  svg.addEventListener("contextmenu", e => e.preventDefault());
+})();
+
+/* ---------------- modal ---------------- */
+function openModal(kind){
+  cancelAllPresses();
+  const L = S.L;
+  const kick = $("mKicker"), title = $("mTitle"), flavor = $("mFlavor"),
+        stats = $("mStats"), btns = $("mBtns");
+  stats.innerHTML = "";
+  btns.innerHTML = "";
+  const oldFact = stats.parentElement.querySelector(".fact");
+  if (oldFact) oldFact.remove();
+  const chip = t => `<span class="chip">${t}</span>`;
+  const sweepPct = Math.round(S.revealed / S.safeTotal * 100);
+
+  if (kind === "win"){
+    kick.className = "modal-kicker good"; kick.textContent = "Channel Open";
+    title.textContent = L.winTitle || "CONVOY THROUGH";
+    flavor.textContent = L.winFlavor ||
+      "The channel holds. The backlog drains through the corridor you swept.";
+    stats.innerHTML = chip(`Time <b>${fmtTime(S.totalMs)}</b>`) +
+                      chip(`Sweep <b>${sweepPct}%</b>`) +
+                      chip(`Wrecks <b>${S.wrecks}</b>`) +
+                      (S.shipsOut ? chip(`Ships through <b>${S.shipsOut}</b>`) : "") +
+                      (S.runnersStopped ? chip(`Minelayers intercepted <b>${S.runnersStopped}</b>`) : "") +
+                      (S.dronesDowned ? chip(`Drones intercepted <b>${S.dronesDowned}</b>`) : "") +
+                      (S.perfect ? `<span class="chip perfect">${ICONS.star} Perfect sweep</span>` : "") +
+                      (S.newBest ? `<span class="chip best">${ICONS.star} New best</span>` : "");
+    const fact = FACTS[(S.idx * 5 + Math.floor(S.totalMs / 1000)) % FACTS.length];
+    btns.insertAdjacentHTML("afterend", `<div class="fact"><b>DID YOU KNOW</b> · ${fact}</div>`);
+    if (S.idx < LEVELS.length - 1)
+      btns.innerHTML = `<button class="btn primary" id="mNext">Next Chapter</button>
+                        <button class="btn small" id="mReplay">Replay</button>
+                        <button class="btn small" id="mMenu">Patrol Log</button>`;
+    else
+      btns.innerHTML = `<button class="btn primary" id="mMenu">Patrol Log</button>
+                        <button class="btn small" id="mReplay">Replay</button>
+                        <button class="btn small" id="mTitleBtn">Title</button>`;
+  } else if (kind === "blocked"){
+    kick.className = "modal-kicker bad"; kick.textContent = "Channel Blocked";
+    title.textContent = "THE LANE IS SEALED";
+    flavor.textContent = "Between the minefield and the wrecks, no navigable channel remains. The sweep starts over.";
+    stats.innerHTML = chip(`Swept <b>${sweepPct}%</b>`) + chip(`Wrecks <b>${S.wrecks}</b>`);
+    btns.innerHTML = `<button class="btn primary" id="mRetry">Retry Sweep</button>
+                      <button class="btn small" id="mMenu">Patrol Log</button>`;
+  } else {
+    kick.className = "modal-kicker bad"; kick.textContent = "Backlog Full";
+    title.textContent = "STRAIT CLOSED";
+    flavor.textContent = "Too many tankers stack up at the approaches. Insurers pull cover, traffic halts, and the strait shuts down.";
+    stats.innerHTML = chip(`Swept <b>${sweepPct}%</b>`) +
+                      chip(`Arrived <b>${S.tankersArrived}</b>`) +
+                      (S.wrecks ? chip(`Wrecks <b>${S.wrecks} · +${S.wrecks * (L.wreckCost || 2)}</b>`) : "") +
+                      (S.detained ? chip(`Detained <b>${S.detained} · +${S.detained * ((L.convoy && L.convoy.cost) || 2)}</b>`) : "") +
+                      (S.struck ? chip(`Struck in fog <b>${S.struck} · +${S.struck * 2}</b>`) : "");
+    btns.innerHTML = `<button class="btn primary" id="mRetry">Retry Sweep</button>
+                      <button class="btn small" id="mMenu">Patrol Log</button>`;
+  }
+  $("modal").classList.add("open");
+  const on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
+  on("mNext", () => showBrief(S.idx + 1));
+  on("mRetry", () => startLevel(S.idx));
+  on("mReplay", () => startLevel(S.idx));
+  on("mMenu", () => { closeModal(); renderChapters(); show("scr-chapters"); });
+  on("mTitleBtn", () => { closeModal(); show("scr-title"); });
+}
+function closeModal(){ $("modal").classList.remove("open"); $("fmodal").classList.remove("open"); }
+
+/* ---------------- screens ---------------- */
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+function renderChapters(){
+  const wrap = $("chapList");
+  wrap.innerHTML = "";
+  LEVELS.forEach((L, i) => {
+    const unlocked = i <= PROG.u;
+    const cleared = i in PROG.best;
+    const card = document.createElement("button");
+    card.className = "chap-card" + (unlocked ? "" : " locked");
+    const dparts = L.date.split(" ");
+    let state;
+    if (cleared) state = `<span class="done">CLEARED ${fmtTime(PROG.best[i]*1000)}</span>` +
+                         (PROG.perfect[i] ? ` <span class="star">${ICONS.star}</span>` : "") +
+                         ` &nbsp;<span class="go">${ICONS.play} REPLAY</span>`;
+    else if (unlocked) state = `<span class="go">${ICONS.play} PLAY</span>`;
+    else state = `${ICONS.lock} LOCKED`;
+    card.innerHTML =
+      `<div><span class="chap-d1">${dparts[0]} ${dparts[dparts.length - 1]}</span></div>` +
+      `<div class="chap-d2">${(dparts[1] && dparts[1] !== dparts[dparts.length - 1] ? dparts[1].split("-")[0] : "0" + (i + 1))}</div>` +
+      `<div class="chap-code">${L.code} · ${L.sector}</div>` +
+      `<div class="chap-name">${L.name}</div>` +
+      `<div class="chap-sub">${L.sub}</div>` +
+      `<div class="chap-state">${state}</div>`;
+    if (unlocked) card.addEventListener("click", () => showBrief(i));
+    wrap.appendChild(card);
+  });
+}
+
+function showBrief(i){
+  if (i === 0 && !COACH.prologue && PROG.u === 0 && !(0 in PROG.best)){
+    openIntel("briefing");
+    return;
+  }
+  briefIdx = i;
+  const L = LEVELS[i];
+  closeModal();
+  $("briefDate").textContent = L.date;
+  $("briefName").textContent = L.code + " · " + L.name;
+  $("briefSector").textContent = "SECTOR · " + L.sector;
+  $("briefSub").textContent = L.sub;
+  $("briefWire").innerHTML = L.brief.map(([src, h]) =>
+    `<div class="wire-item"><span class="wire-src">${src}</span><span class="wire-h">${h}</span></div>`).join("");
+  const { cells } = buildCells(L.mask);
+  const water = cells.filter(c => c.water).length;
+  const mines = Math.round(water * L.minePct);
+  const lanes = computeLanes(cells, L.mask[0].length).length;
+  $("briefChips").innerHTML =
+    `<span class="chip">Sector <b>${water}</b> hexes</span>` +
+    `<span class="chip">Est. mines <b>${mines}</b></span>` +
+    `<span class="chip">Backlog cap <b>${L.cap}</b></span>` +
+    `<span class="chip">Lanes to open <b>${lanes}</b></span>` +
+    (L.reMine ? `<span class="chip" style="color:var(--red);border-color:rgba(255,92,77,.45)">Minelayers active</span>` : "");
+  show("scr-brief");
+}
+
+/* ---------------- buttons ---------------- */
+const FACTS = [
+  "The strait is just 21 nautical miles wide at its narrowest, between Iran and Oman's Musandam Peninsula.",
+  "Before the 2026 closure, about 20 million barrels of oil passed through every day: roughly a fifth of global consumption.",
+  "About a fifth of the world's liquefied natural gas, most of it from Qatar, ships through Hormuz.",
+  "Ships don't sail wherever they like: traffic runs in two 2-mile lanes separated by a 2-mile buffer, the Traffic Separation Scheme.",
+  "The strait is named for Hormuz Island, once seat of the Kingdom of Ormus, a medieval trading power.",
+  "A Portuguese fleet under Afonso de Albuquerque seized Hormuz in 1507; the fort still stands on the island.",
+  "A proverb of the age held: if the world were a ring, Ormus would be its jewel.",
+  "Naval mines are old technology that still works: cheap to lay, slow and dangerous to clear.",
+  "In 1988 the frigate USS Samuel B. Roberts struck an Iranian mine in the central Persian Gulf; the mine cost a tiny fraction of the repair bill it caused.",
+  "During the 1980s Tanker War, hundreds of merchant ships were attacked in the Gulf.",
+  "Minehunters find mines one at a time with sonar and divers; minesweepers clear whole lanes at once.",
+  "In 1991, mines struck two US warships, USS Princeton and USS Tripoli, in a single morning.",
+  "Oman's Musandam Peninsula, on the strait's south shore, is an exclave separated from the rest of Oman by the U.A.E.",
+  "The strait's main channels run 60 to 100 meters deep: comfortable water even for the largest supertankers."
+];
+
+const INTEL = {
+ "briefing": [
+  {
+   "t": "THE CHOKEPOINT",
+   "d": "The Strait of Hormuz is the only sea passage between the Persian Gulf and the open ocean. It is about 21 nautical miles wide at its narrowest point, and roughly a fifth of the world's oil and about a fifth of its liquefied natural gas move through it. There is no substitute route for most of that cargo. When the strait closes, the world economy feels it within days."
+  },
+  {
+   "t": "THE CLOSURE",
+   "d": "On February 28, 2026, Iran declared the strait closed and began laying naval mines, the first full closure in the waterway's history. Tankers stacked up at anchor on both sides while navies moved in to clear a way through. Every chapter in this campaign follows the real record of that crisis, from the first rumor of mines in July 2025 to the negotiations still running this week."
+  },
+  {
+   "t": "YOUR JOB",
+   "d": "You command a mine countermeasures unit. Your sonar cannot see a mine directly, but a surveyed cell reports how many mines sit in the water around it. Use those numbers to chart the danger and open a swept channel from the Persian Gulf in the west to the Gulf of Oman in the east. The tankers waiting behind you are your clock: run out of patience and the backlog wins."
+  },
+  {
+   "t": "HOW TO SWEEP",
+   "d": "Tap a cell to survey it. Hold a cell to buoy it as a suspected mine. Tap a satisfied number to sweep everything unbuoyed around it at once: fast, and exactly as dangerous as your buoys are honest. Striking a mine does not end the patrol, but the disabled hull blocks the channel and costs you tankers. You win the moment a continuous swept lane connects west to east."
+  }
+ ],
+ "history": [
+  {
+   "t": "THE KINGDOM OF ORMUS",
+   "d": "For centuries the island kingdom of Ormus ruled the strait that now bears its name, growing rich by taxing the trade in spices, pearls, and horses moving between India, Arabia, and Persia. Travelers described the barren island as one of the wealthiest markets on earth. A proverb of the age held that if the world were a ring, Ormus would be its jewel."
+  },
+  {
+   "t": "EMPIRES TAKE THE STRAIT",
+   "d": "In 1507 the Portuguese commander Afonso de Albuquerque seized Hormuz, and for over a century a fortress on the island anchored Portugal's grip on gulf trade. In 1622 Persia's Shah Abbas, using ships hired from the English East India Company, expelled the Portuguese and moved the commerce to a new port named for himself: Bandar Abbas. The lesson was set early: whoever holds the strait holds the gulf."
+  },
+  {
+   "t": "THE OIL AGE",
+   "d": "Oil was struck in Persia in 1908, the first major find in the Middle East, and within two generations the Persian Gulf held the deepest reservoirs of energy on earth. The strait at its mouth became the world's most important chokepoint: roughly a fifth of the world's oil and about a fifth of its liquefied natural gas pass through it. A regional waterway became a global artery."
+  },
+  {
+   "t": "1979: THE REVOLUTION",
+   "d": "The Islamic Revolution swept away the US-backed Shah, and Ayatollah Khomeini returned from exile to found the Islamic Republic. In November 1979, students seized the US embassy in Tehran and held 52 Americans for 444 days. Washington and Tehran severed relations and have never restored them."
+  },
+  {
+   "t": "THE IRAN-IRAQ WAR",
+   "d": "Iraq invaded Iran in September 1980, opening eight years of trench warfare, missile strikes on cities, and chemical attacks that killed hundreds of thousands. When both sides began striking gulf shipping to choke each other's oil revenue, the war spilled into the sea lanes and drew in outside navies. It ended in 1988 with a ceasefire and no victor."
+  },
+  {
+   "t": "THE LONG COLD CONFLICT",
+   "d": "After 1988, Washington and Tehran fought on with sanctions, covert operations, and proxies rather than declared war. The 2015 nuclear deal traded strict limits on Iran's program for sanctions relief, and for three years tankers and trade moved freely. The US withdrawal in 2018 restored maximum-pressure sanctions, and the slide toward confrontation resumed."
+  }
+ ],
+ "countries": [
+  {
+   "t": "IRAN",
+   "d": "Iran declared the strait closed on February 28, 2026 and enforced it with naval mines, fast-attack boats, and seizures, the first full closure in the waterway's history. It paired coercion with selectivity, granting passage to tankers bound for China, Russia, India, Iraq, and Pakistan while denying the rest. The strait is Iran's single greatest lever, and 2026 was the year it pulled it all the way."
+  },
+  {
+   "t": "UNITED STATES",
+   "d": "The US struck Iran's nuclear sites in June 2025, then answered the 2026 closure with a naval blockade of Iranian ports in April, sustained mine-clearing operations in the strait, and Project Freedom, a convoy system escorting tankers through cleared channels. For nearly five decades US doctrine held that Hormuz must stay open. In 2026 the world learned what that guarantee actually cost."
+  },
+  {
+   "t": "ISRAEL",
+   "d": "Israel opened the twelve-day war of June 2025 with surprise strikes on Iran's nuclear program, air defenses, and military leadership, absorbing waves of ballistic missiles in return. In 2026 it struck Iranian targets again alongside the United States. It has no coastline on the gulf, yet its confrontation with Iran did more than anything to push the strait toward closure."
+  },
+  {
+   "t": "OMAN",
+   "d": "The rocky Musandam peninsula, an Omani exclave, forms the strait's southern shore, and the shipping lanes run largely through Omani waters. Oman has spent decades as the region's quiet mediator, hosting back-channel contacts between Washington and Tehran, including nuclear talks in 2025. In July 2026, negotiations to end the closure convened, once again, in Muscat."
+  },
+  {
+   "t": "UNITED ARAB EMIRATES",
+   "d": "Fujairah, the UAE's port on the Gulf of Oman, sits just outside the strait and is one of the world's largest ship-fueling hubs, which made it both a lifeline and a target: tankers were limpet-mined off its coast in 2019. A pipeline from Abu Dhabi's fields can move about 1.5 million barrels a day to Fujairah, bypassing Hormuz entirely. In 2026 that bypass became one of the few taps the closure could not shut."
+  },
+  {
+   "t": "QATAR",
+   "d": "Qatar shares the world's largest gas field with Iran and ranks among the top exporters of liquefied natural gas on earth, nearly all of it shipped out through Hormuz. It also hosts Al Udeid, the largest US air base in the Middle East, which Iranian missiles targeted in June 2025 in retaliation for US strikes; the salvo was largely intercepted. Qatar's fortune and its exposure run through the same strait."
+  },
+  {
+   "t": "SAUDI ARABIA",
+   "d": "The kingdom's East-West pipeline can carry roughly five million barrels a day across the peninsula to Yanbu on the Red Sea, the largest bypass around Hormuz. But much of its export capacity still loads at gulf terminals inside the chokepoint, and the 2019 drone and missile attack on its Abqaiq processing plant, claimed by the Houthis and widely attributed to Iran, showed the infrastructure itself could be reached. In 2026 the pipeline ran full while the gulf berths waited."
+  },
+  {
+   "t": "CHINA",
+   "d": "China is the largest buyer of gulf crude and, by most estimates, the destination for the vast majority of Iran's sanctioned oil exports. When Iran closed the strait, it granted Chinese-bound tankers passage, an exception that preserved Tehran's last major customer and revenue stream. Beijing pressed publicly for de-escalation while its ships kept loading."
+  },
+  {
+   "t": "INDIA",
+   "d": "India imports a large share of its crude and gas through Hormuz and has escorted its own shipping in these waters since 2019 under Operation Sankalp, launched after that summer's tanker attacks. In 2026 Indian Navy escorts again shepherded Indian-flagged carriers, aided by Iran's decision to include India among the flags granted passage. Energy security, not alliance politics, set Delhi's course."
+  },
+  {
+   "t": "UK AND EUROPEAN NAVIES",
+   "d": "In July 2019, after Britain detained an Iranian tanker off Gibraltar, Iran's Revolutionary Guard seized the British-flagged Stena Impero in the strait and held it for two months. The episode spawned Western escort missions: a US-led coalition and a separate European-led operation patrolled the strait into the 2020s. Europe's navies returned in 2026 to a script they had already rehearsed."
+  }
+ ],
+ "proxies": [
+  {
+   "t": "THE AXIS OF RESISTANCE",
+   "d": "Iran's answer to conventional weakness was a network: Hezbollah in Lebanon, Hamas in Gaza, the Houthis in Yemen, and militias in Iraq and Syria, armed and funded from Tehran but locally rooted. The network let Iran apply pressure far from its borders while denying direct responsibility. By 2026 the axis was battered, but the strait gave Tehran a weapon that needed no proxy at all."
+  },
+  {
+   "t": "THE HOUTHIS",
+   "d": "From late 2023, Yemen's Houthis attacked commercial shipping in the Red Sea with missiles, drones, and explosive drone boats, striking dozens of vessels, sinking several, and killing seafarers. Global carriers rerouted around Africa, adding thousands of miles to each voyage. It was the dress rehearsal for Hormuz: proof that cheap weapons and credible threat can drive world shipping off a major artery."
+  },
+  {
+   "t": "HEZBOLLAH",
+   "d": "Founded in Lebanon in 1982 with Iranian backing, Hezbollah grew into one of the most heavily armed non-state forces in the world and Iran's principal deterrent against Israel. In 2024 an Israeli campaign of sabotaged pagers, airstrikes, and leadership killings gutted the organization, and a ceasefire followed. Its silence during the 2025 war measured how much the axis had lost."
+  },
+  {
+   "t": "HAMAS",
+   "d": "Hamas's October 7, 2023 attack on Israel, which killed some 1,200 people, and the devastating Gaza war that followed set off the chain of escalation that remade the region. Iran arms and funds the group but does not command it; the attack reportedly caught Tehran by surprise as well. Nearly everything on this timeline after 2023 traces part of its lineage to that morning."
+  },
+  {
+   "t": "IRAQ'S SHIA MILITIAS",
+   "d": "Iran-aligned militias inside Iraq's Popular Mobilization Forces spent 2023 and 2024 launching drones and rockets at US bases in Iraq, Syria, and Jordan, including a January 2024 strike that killed three American soldiers. The attacks gave Tehran a way to wear down US forces without declared war. During the 2026 crisis, every US base within their range sat one escalation away from a wider conflict."
+  },
+  {
+   "t": "THE SHADOW FLEET",
+   "d": "Hundreds of aging tankers with obscure owners, flags of convenience, and transponders switched off move sanctioned Iranian and Russian crude outside the legal maritime system. They rename, reflag, transfer cargo ship-to-ship at sea, and often sail without recognized insurance. In 2026 this stateless fleet was both a sanctions-busting lifeline and an uninsured hazard drifting near a minefield."
+  }
+ ],
+ "strategies": [
+  {
+   "t": "MAXIMUM PRESSURE",
+   "d": "The signature US strategy: use control of the dollar system and secondary sanctions to cut Iran's oil exports and banking off from the world, forcing a choice between economic collapse and negotiation. Imposed from 2018, it slashed Iran's official exports, though the shadow fleet clawed much of the trade back. Sanctions became the baseline condition onto which every later escalation was stacked."
+  },
+  {
+   "t": "MINING THE WATER",
+   "d": "A naval mine can cost a few thousand dollars and threaten a tanker worth a hundred million, and clearing one costs vastly more than laying it. Mining is the classic weapon of the weaker navy: it does not need to sink ships, only make insurers and captains believe it might. In 2026 it was the closure's enforcement mechanism of first resort."
+  },
+  {
+   "t": "THE BLOCKADE",
+   "d": "In April 2026 the United States imposed a naval blockade on Iran's ports, cutting its oil exports and answering closure with closure. Blockades are among the oldest tools of naval power and among the most legally fraught; international law has long treated them as acts of war. By spring 2026, each side was strangling the other's trade at sea."
+  },
+  {
+   "t": "WAR BY PROXY",
+   "d": "Arming and guiding non-state partners lets a state strike its enemies while disclaiming the blow, keeping retaliation ambiguous and escalation nominally under control. Iran built the region's most extensive proxy network; its adversaries answered with airstrikes, targeted killings, and sanctions on the network's financiers. The wars of 2023 to 2025 showed both the method's reach and its limits."
+  },
+  {
+   "t": "THE SHADOW WAR",
+   "d": "For two decades before the missiles flew openly, the conflict ran on espionage and sabotage: stolen nuclear archives, unexplained explosions at facilities, tankers damaged by unattributed charges. Its landmark was Stuxnet, the computer worm discovered in 2010 that wrecked centrifuges at Iran's Natanz plant, the first cyberweapon known to cause physical destruction. Neither side has officially acknowledged most of it."
+  },
+  {
+   "t": "TARGETED KILLING",
+   "d": "Between 2010 and 2020, at least five scientists tied to Iran's nuclear program were assassinated, the last by a remote-operated weapon; Iran blamed Israel, which never claimed the killings. In January 2020 a US drone strike at Baghdad airport killed General Qassem Soleimani, commander of Iran's Quds Force and architect of its proxy network. Targeted killing became an open instrument of the conflict, and the 2025 war began with more of it."
+  },
+  {
+   "t": "CHARGING FOR PASSAGE",
+   "d": "In 2026 Iran created a 'Persian Gulf Strait Authority' to license transits through the closed strait for a fee, converting a chokepoint into a toll booth. Selective passage doubled as foreign policy: friendly flags moved while others waited or paid. The precedent alarmed every maritime nation, because a strait that can be priced once can be priced again."
+  },
+  {
+   "t": "WAR BY PREMIUM",
+   "d": "Commercial ships cannot sail without insurance, which makes insurance a weapon: when war-risk premiums spike or protection-and-indemnity clubs withdraw cover, trade stops without a shot fired. In past gulf crises, the war-risk cost of a single transit has multiplied within weeks. Markets can close a strait faster than mines can, and reopen it just as quickly when confidence returns."
+  },
+  {
+   "t": "ELECTRONIC DECEPTION",
+   "d": "GPS jamming blinds navigation; spoofing is subtler, feeding ships false positions that can lure them off course, even toward territorial waters. AIS deception works in reverse, broadcasting false identities and locations so tankers appear to be somewhere they are not. Around Hormuz, mariners learned to distrust their screens and fall back on radar, lookouts, and paper charts."
+  }
+ ],
+ "technologies": [
+  {
+   "t": "NAVAL MINES",
+   "d": "Contact mines detonate when a hull strikes their horns, a design little changed in a century. Influence mines lie on the seabed and fire at a ship's magnetic, acoustic, or pressure signature, while limpet mines are attached directly to hulls by divers, as in the 2019 tanker attacks. A weapon costing thousands of dollars can stop commerce worth billions, which is the entire point."
+  },
+  {
+   "t": "MINE COUNTERMEASURES",
+   "d": "Hunting mines is slow, methodical, and dangerous: minehunters with low-magnetic hulls sweep the seabed with high-resolution sonar, then send remotely operated vehicles or clearance divers to identify and neutralize each contact. Clearing a channel takes weeks; convincing insurers it is truly clear takes longer. The imbalance is the mine's greatest weapon: days to lay, months to certify gone."
+  },
+  {
+   "t": "DRONE BOATS",
+   "d": "Unmanned surface vessels packed with explosives and steered by camera and satellite link turn cheap speedboats into precision weapons; the Houthis used them to strike and sink merchant ships in the Red Sea. Navies field the same technology defensively as unmanned minehunters. Swarms costing less than a single missile can force a warship to burn through its defenses."
+  },
+  {
+   "t": "ANTI-SHIP MISSILES",
+   "d": "Iran lines its gulf coast with mobile anti-ship cruise missile batteries, and the strait, only about 21 nautical miles wide at its narrowest, sits within range of all of them. Anti-ship ballistic missiles extend the threat across the whole gulf and beyond. Defenses exist, but each interceptor costs far more than the missile it stops, an exchange rate that favors the shore."
+  },
+  {
+   "t": "THE BUNKER BUSTER",
+   "d": "The GBU-57 Massive Ordnance Penetrator is a 30,000-pound bomb built to burrow through rock and reinforced concrete before detonating, and only the B-2 stealth bomber can carry it. In June 2025, B-2s dropped fourteen of them on Iran's buried enrichment sites at Fordow and Natanz. It was built for a single kind of target: sites buried too deep for anything else to reach."
+  },
+  {
+   "t": "GOING DARK",
+   "d": "Since 2004, large ships must carry AIS transponders broadcasting identity, position, and course, the signal behind every live shipping map. Switching AIS off, called going dark, hides a vessel from public tracking, though not from military radar. Around Hormuz, going dark can mean evading sanctions, avoiding targeting, or both; by 2026 the strait's approaches were full of ghosts."
+  },
+  {
+   "t": "GHOST COORDINATES",
+   "d": "GPS jamming drowns the satellite signal in noise; spoofing replaces it with a lie, making a ship's instruments report a position miles from the truth. Vessels near the strait have logged impossible tracks, positions jumping ashore or circling without moving. Crews fall back on radar fixes and visual bearings, navigating a 21st-century crisis with 20th-century skills."
+  },
+  {
+   "t": "WAR-RISK ECONOMICS",
+   "d": "Merchant ships carry hull insurance and protection-and-indemnity cover, and warzones add a third layer: war-risk premiums quoted per voyage as a percentage of the vessel's value. When underwriters raise rates or withdraw cover, cargo stops moving as surely as if the strait were physically shut. Insurance is the invisible infrastructure of world trade, and in 2026 it became a front line."
+  },
+  {
+   "t": "THE CONVOY",
+   "d": "Grouping merchant ships under warship escort is doctrine older than the World Wars: convoys concentrate defenses, complicate targeting, and force an attacker to fight a navy instead of a tanker. Operation Earnest Will used it in 1987 to shepherd reflagged Kuwaiti tankers through this same gulf. Project Freedom revived the playbook in 2026, an escort service through a minefield."
+  }
+ ],
+ "timeline": [
+  {
+   "t": "1979 THE REVOLUTION",
+   "d": "The Islamic Revolution topples the US-backed Shah, and Ayatollah Khomeini founds the Islamic Republic. In November, students storm the US embassy in Tehran and hold 52 Americans hostage for 444 days. The rupture between Washington and Tehran never heals."
+  },
+  {
+   "t": "1980 IRAN-IRAQ WAR BEGINS",
+   "d": "Iraq invades Iran in September, opening eight years of war that kill hundreds of thousands on both sides. Each nation attacks gulf shipping to strangle the other's oil revenue. The strait becomes a battlefield for the first time in the oil age."
+  },
+  {
+   "t": "1987-88 THE TANKER WAR",
+   "d": "With hundreds of merchant ships attacked, the US reflags Kuwaiti tankers and escorts them under Operation Earnest Will. In April 1988 the frigate USS Samuel B. Roberts strikes an Iranian mine in the central Persian Gulf and nearly sinks; the US answers with Operation Praying Mantis, its largest surface naval battle since World War II, sinking Iranian warships and destroying two oil platforms."
+  },
+  {
+   "t": "1988 IRAN AIR 655",
+   "d": "On July 3, the cruiser USS Vincennes, engaged with Iranian boats near the strait, shoots down Iran Air Flight 655, a civilian airliner on a scheduled route. All 290 people aboard die, including 66 children. The US calls it a tragic misidentification and later pays compensation without admitting fault; in Iran, the wound never closes."
+  },
+  {
+   "t": "2011 CLOSURE THREATS",
+   "d": "As sanctions tighten over its nuclear program, Iran threatens through 2011 and 2012 to close the strait if its oil exports are cut off. Washington declares closure a red line. The threat stays rhetorical, but the script for 2026 is written here."
+  },
+  {
+   "t": "2015 THE NUCLEAR DEAL",
+   "d": "Iran and six world powers sign the JCPOA: strict limits and inspections on Iran's nuclear program in exchange for relief from nuclear-related sanctions. Iranian oil returns to the market and the gulf enjoys a rare interval of calm. It lasts three years."
+  },
+  {
+   "t": "2018 THE US WITHDRAWAL",
+   "d": "The United States withdraws from the nuclear deal in May and reimposes sanctions under a policy of maximum pressure. Iran's official oil exports collapse, and within a year Tehran begins breaching the deal's enrichment limits. The countdown to confrontation restarts."
+  },
+  {
+   "t": "2019 TANKERS ATTACKED",
+   "d": "Limpet mines damage four tankers off Fujairah in May and two more in the Gulf of Oman in June; Iran denies responsibility. Iran downs a US surveillance drone, and in July the Revolutionary Guard seizes the British tanker Stena Impero after the UK detains an Iranian vessel off Gibraltar. Foreign navies begin escorting shipping through the strait again."
+  },
+  {
+   "t": "2020 SOLEIMANI KILLED",
+   "d": "A US drone strike at Baghdad airport kills General Qassem Soleimani, commander of Iran's Quds Force. Iran retaliates with ballistic missiles on US bases in Iraq, and days later its air defenses mistakenly shoot down a Ukrainian airliner near Tehran, killing 176. The two states step to the edge of open war, then back away."
+  },
+  {
+   "t": "2024 DIRECT FIRE",
+   "d": "After a strike on its consulate in Damascus, Iran launches more than 300 drones and missiles at Israel in April, its first ever direct attack; nearly all are intercepted. A second, larger ballistic missile barrage follows in October. The shadow war is shadow no longer."
+  },
+  {
+   "t": "2025 THE TWELVE-DAY WAR",
+   "d": "Israel strikes Iran's nuclear and military infrastructure on June 13; the US joins on June 22, hitting Fordow and Natanz with bunker-busters and Isfahan with cruise missiles. Iran fires back at Israel and at the US base in Qatar, and its parliament endorses closing Hormuz before a ceasefire takes hold on June 24. On July 1, reports citing US intelligence say Iran had loaded naval mines onto vessels in the gulf: the closure, rehearsed."
+  },
+  {
+   "t": "2026 THE CLOSURE",
+   "d": "On February 28, Iran declares the Strait of Hormuz closed and begins laying mines, the first full closure in the waterway's history. The US blockades Iranian ports in April and opens escorted convoy lanes as mine clearance grinds forward, while Iran licenses passage to selected flags. In July, negotiators gather in Muscat, and the world waits on the water."
+  }
+ ]
+};
+const INTEL_TABS = [["briefing","Briefing"],["history","History"],["countries","Countries"],["proxies","Proxies"],["strategies","Strategies"],["technologies","Technology"],["timeline","Timeline"]];
+let intelTab = "briefing";
+function renderIntel(){
+  $("intelTabs").innerHTML = INTEL_TABS.map(([k, label]) =>
+    `<button class="intel-tab${k === intelTab ? " on" : ""}" data-tab="${k}">${label}</button>`).join("");
+  let html = (INTEL[intelTab] || []).map(e =>
+    `<div class="intel-entry"><h4>${e.t}</h4><p>${e.d}</p></div>`).join("");
+  if (intelTab === "briefing")
+    html += `<div class="intel-cta"><button class="btn primary" id="btnPrologueBegin">Begin Chapter 1</button></div>`;
+  $("intelBody").innerHTML = html;
+  $("intelBody").scrollTop = 0;
+}
+function openIntel(tab){
+  intelTab = tab || "briefing";
+  renderIntel();
+  show("scr-prologue");
+}
+$("intelTabs").addEventListener("click", e => {
+  const b = e.target.closest(".intel-tab");
+  if (!b) return;
+  ensureAudio();
+  SFX.reveal(0);
+  intelTab = b.dataset.tab;
+  renderIntel();
+});
+$("intelBody").addEventListener("click", e => {
+  if (!e.target.closest("#btnPrologueBegin")) return;
+  COACH.prologue = 1;
+  try { localStorage.setItem("ormuz.coach2", JSON.stringify(COACH)); } catch(err){}
+  showBrief(0);
+});
+$("btnPrologue").addEventListener("click", () => openIntel("briefing"));
+$("btnPrologueBack").addEventListener("click", () => show("scr-title"));
+$("btnContinue").addEventListener("click", () => {
+  /* first-ever patrol routes through the prologue: teach the world, then the game */
+  if (!COACH.prologue && PROG.u === 0 && !(0 in PROG.best)){
+    openIntel("briefing");
+    return;
+  }
+  const next = Math.min(PROG.u, LEVELS.length - 1);
+  showBrief(next);
+});
+$("btnChapters").addEventListener("click", () => { renderChapters(); show("scr-chapters"); });
+$("btnChapBack").addEventListener("click", () => show("scr-title"));
+$("btnBriefBack").addEventListener("click", () => { renderChapters(); show("scr-chapters"); });
+$("btnBegin").addEventListener("click", () => startLevel(briefIdx));
+$("btnGameBack").addEventListener("click", () => {
+  stopClock();
+  clearPending();
+  cancelAllPresses();
+  S && (S.over = true);
+  clearEntities();
+  closeModal();
+  renderChapters();
+  show("scr-chapters");
+});
+let restartArm = 0;
+$("btnRestart").addEventListener("click", () => {
+  if (!S || S.over || !S.armed){ startLevel(S ? S.idx : 0); return; }
+  const now = performance.now();
+  if (now - restartArm < 2600){ restartArm = 0; startLevel(S.idx); return; }
+  restartArm = now;
+  toast("Tap restart again to abandon this sweep", 2600);
+});
+["btnGameBack", "btnChapBack", "btnBriefBack", "btnPrologueBack"].forEach(id => { $(id).innerHTML = ICONS.back; });
+$("btnRestart").innerHTML = ICONS.restart;
+$("btnMute").innerHTML = muted ? ICONS.soundOff : ICONS.soundOn;
+$("fmOk").addEventListener("click", () => {
+  $("fmodal").classList.remove("open");
+  if (S && S.armed && !S.over) startClock();
+});
+let muteLong = false, muteTimer = null;
+$("btnMute").addEventListener("pointerdown", () => {
+  muteLong = false;
+  clearTimeout(muteTimer);
+  muteTimer = setTimeout(() => {
+    muteLong = true;
+    ambMode = ambMode === "sonar" ? "sea" : ambMode === "sea" ? "off" : "sonar";
+    try { localStorage.setItem("ormuz.amb", ambMode); } catch(e){}
+    const b = $("btnAmb"); if (b) b.textContent = ambientLabel();
+    ambientStop();
+    if (clockId && !muted) ambientStart();
+    toast(ambientLabel(), 2600);
+    HAPTIC.medium();
+  }, 500);
+});
+["pointerup", "pointercancel", "pointerleave"].forEach(ev =>
+  $("btnMute").addEventListener(ev, () => clearTimeout(muteTimer)));
+$("btnMute").addEventListener("click", () => {
+  if (muteLong){ muteLong = false; return; }
+  muted = !muted;
+  try { localStorage.setItem("ormuz.mute", muted ? "1" : "0"); } catch(e){}
+  $("btnMute").innerHTML = muted ? ICONS.soundOff : ICONS.soundOn;
+  if (muted) ambientStop(); else if (clockId) ambientStart();
+});
+$("btnAmb").textContent = ambientLabel();
+if (DEV) $("titleKicker").textContent = "Straitrunner · DEV BUILD";
+$("btnAmb").addEventListener("click", () => {
+  ambMode = ambMode === "sonar" ? "sea" : ambMode === "sea" ? "off" : "sonar";
+  try { localStorage.setItem("ormuz.amb", ambMode); } catch(e){}
+  $("btnAmb").textContent = ambientLabel();
+  ambientStop();
+  if (clockId) ambientStart();
+  else if (ambMode !== "off"){
+    /* 3s preview so the choice is audible from the title screen */
+    ambientStart();
+    setTimeout(() => { if (!clockId) ambientStop(); }, 3000);
+  }
+});
+document.addEventListener("click", e => {
+  if (e.target.closest && e.target.closest("button")){ ensureAudio(); SFX.ui(); }
+}, true);
+
+/* ---------------- validation + debug ---------------- */
+function validateLevels(){
+  return LEVELS.map((L, li) => {
+    const widths = new Set(L.mask.map(r => r.length));
+    const { cells } = buildCells(L.mask);
+    const lanes = computeLanes(cells, L.mask[0].length);
+    const water = cells.filter(c => c.water).length;
+    /* orphan ponds: components not part of any lane */
+    const laneSet = new Set(lanes);
+    const orphan = new Set();
+    for (const c of cells) if (c.water && !laneSet.has(c.comp)) orphan.add(c.comp);
+    return {
+      level: li + 1, name: L.name,
+      uniformWidth: widths.size === 1,
+      water, mines: Math.round(water * L.minePct),
+      lanes: lanes.length, orphanPonds: orphan.size,
+      timeBudget: L.cap * L.interval + "s"
+    };
+  });
+}
+
+function setTheme(name){
+  if (!THEMES[name]) return;
+  currentTheme = name;
+  document.documentElement.dataset.theme = name;
+  try { localStorage.setItem("ormuz.theme2", name); } catch(e){}
+  if (S){
+    buildBoardSVG();
+    for (const c of S.cells)
+      if (c.water && (c.rev || c.flag || c.wreck)) renderCell(c);
+  }
+}
+
+window.__ORMUZ = {
+  get S(){ return S; },
+  LEVELS, validateLevels, startLevel, tapCell, toggleFlag, showBrief, setTheme,
+  spawnShip, spawnRunner, interceptRunner, tickShips, tickRunners,
+  get ships(){ return S && S.ships; }, get runners(){ return S && S.runners; },
+  cheatOpenChannel(){
+    if (!S || S.over) return;
+    if (!S.armed){
+      const first = S.cells.find(c => c.water && c.c === 0 && S.lanes.includes(c.comp));
+      placeMines(first); S.armed = true; startClock();
+    }
+    for (const laneId of S.lanes){
+      /* BFS over safe cells, reveal a shortest safe path */
+      const starts = S.cells.filter(c => c.water && c.comp === laneId && c.c === 0 && !c.mine && !c.wreck);
+      const prev = new Map(); const q = [...starts];
+      starts.forEach(c => prev.set(c.i, null));
+      let end = null;
+      while (q.length){
+        const c = q.shift();
+        if (c.c === S.cols - 1){ end = c; break; }
+        for (const nb of c.neigh){
+          if (nb.mine || nb.wreck || prev.has(nb.i)) continue;
+          prev.set(nb.i, c); q.push(nb);
+        }
+      }
+      let cur = end;
+      while (cur){ const cc = cur; cur = prev.get(cur.i); if (!cc.rev){ cc.flag = false; floodReveal(cc); } }
+    }
+    checkWin();
+  },
+  seedMine,
+  laneRobust: l => laneRobust(l),
+  mineIdx(){
+    if (!S) return -1;
+    if (!S.armed){
+      const first = S.cells.find(c => c.water);
+      placeMines(first); S.armed = true; startClock();
+    }
+    const m = S.cells.find(c => c.mine);
+    return m ? m.i : -1;
+  },
+  forceBacklog(n){ if (S) addBacklog(n); }
+};
+
+if (location.search.includes("debug")){
+  console.table(validateLevels());
+}
+
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("gesturechange", e => e.preventDefault());
+
+/* Dynamic Island / notch fallback: env(safe-area-inset-*) reports 0 inside
+   iframes (e.g. the claude.ai artifact) and on hosts missing
+   viewport-fit=cover. If a notch-era iPhone reports no inset in landscape,
+   reserve the gutter manually so the island never covers the HUD or board. */
+(function(){
+  if (!/iPhone/.test(navigator.userAgent)) return;
+  if (Math.max(screen.width, screen.height) < 812) return;   // pre-notch iPhones
+  const probe = document.createElement("div");
+  probe.style.cssText = "position:fixed;left:0;top:0;visibility:hidden;" +
+    "padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)";
+  document.body.appendChild(probe);
+  const apply = () => {
+    const cs = getComputedStyle(probe);
+    const measured = Math.max(parseFloat(cs.paddingLeft) || 0, parseFloat(cs.paddingRight) || 0);
+    const landscape = matchMedia("(orientation: landscape)").matches;
+    const missing = landscape && measured < 20;
+    document.documentElement.style.setProperty("--gutter", missing ? "59px" : "0px");
+    document.documentElement.style.setProperty("--gutter-b", missing ? "14px" : "0px");
+  };
+  apply();
+  matchMedia("(orientation: landscape)").addEventListener("change", () => setTimeout(apply, 80));
+  window.addEventListener("resize", () => setTimeout(apply, 80));
+})();
+
+/* ---------------- boot ---------------- */
+if ("serviceWorker" in navigator &&
+    location.protocol === "https:" &&
+    !["localhost","127.0.0.1"].includes(location.hostname)){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

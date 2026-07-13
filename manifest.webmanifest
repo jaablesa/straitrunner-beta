@@ -1,0 +1,15 @@
+{
+  "name": "Straitrunner: Hormuz",
+  "short_name": "Straitrunner",
+  "description": "Open the channel: a hex minesweeper set in the 2026 closure of the Strait of Hormuz.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#06121d",
+  "theme_color": "#06121d",
+  "icons": [
+    { "src": "icons/icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
