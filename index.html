@@ -195,6 +195,7 @@ h1.logo{font-size:52px;letter-spacing:.14em;font-weight:800;line-height:1;text-s
 .brief-sector{font-size:10px;letter-spacing:.24em;color:var(--faint);text-transform:uppercase}
 .brief-sub{font-size:12.5px;color:var(--dim);line-height:1.6}
 .mission{display:flex;gap:7px;flex-wrap:wrap}
+.mxchip{color:var(--red);border-color:rgba(255,92,77,.45)}
 .brief-right{display:flex;flex-direction:column;gap:10px;min-height:0}
 .wire{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column}
 .wire-head{font-size:9.5px;letter-spacing:.32em;color:var(--faint);padding:9px 14px;border-bottom:1px solid var(--line);text-transform:uppercase}
@@ -280,14 +281,19 @@ svg#board{width:100%;height:100%;touch-action:none}
 
 /* board layers */
 /* nothing decorative may swallow touches: only the hex cells are interactive */
-.chart-deco,.coastlayer,.caustics,.map-label,.goal-mark,.buoy,.buoy-mast,#fxlayer,.city,.intl-border{pointer-events:none}
+.chart-deco,.coastlayer,.caustics,.map-label,.goal-mark,.buoy,.buoy-mast,#fxlayer,.city,.intl-border,.deeplayer{pointer-events:none}
+.deephex{fill:rgba(16,42,60,.5);stroke:rgba(70,120,150,.14);stroke-width:1}
+[data-theme="ecdis"] .deephex{fill:rgba(6,26,34,.55);stroke:rgba(46,110,120,.16)}
+[data-theme="chart"] .deephex{fill:rgba(160,190,205,.25);stroke:rgba(90,120,140,.2)}
 .city circle{fill:#9fc3d8;opacity:.7}
 .port .portglow{fill:#ffd76a;opacity:.28;transform-box:fill-box;transform-origin:center;animation:portpulse 2.8s ease-in-out infinite}
 .port .portdot{fill:#ffd76a;opacity:.95}
 .port .ring{stroke:#ffd76a;opacity:.5}
 @keyframes portpulse{0%,100%{transform:scale(.7);opacity:.32}50%{transform:scale(1.35);opacity:.12}}
 .city .ring{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.35}
-.city text{font-size:6.5px;letter-spacing:1.3px;fill:#9fc3d8;opacity:.6;font-weight:600}
+.city text{font-size:8.5px;letter-spacing:1.4px;fill:#9fc3d8;opacity:.85;font-weight:700;
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  paint-order:stroke;stroke:#04100a;stroke-width:2.4px}
 .intl-border{fill:none;stroke:#9fc3d8;stroke-width:1;opacity:.3;stroke-dasharray:1 4;stroke-linecap:round}
 [data-theme="chart"] .city circle{fill:#3d3426;opacity:.85}
 [data-theme="chart"] .city .ring{stroke:#3d3426;opacity:.5}
@@ -295,7 +301,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 [data-theme="chart"] .intl-border{stroke:#5a4a2e;opacity:.55}
 [data-theme="ecdis"] .city circle{fill:#7fe9b6}
 [data-theme="ecdis"] .city .ring{stroke:#7fe9b6}
-[data-theme="ecdis"] .city text{fill:#7fe9b6;opacity:.6}
+[data-theme="ecdis"] .city text{fill:#9df5cd;opacity:.9;stroke:#04100a}
 [data-theme="ecdis"] .intl-border{stroke:#35e08a;opacity:.35}
 .op-area{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.14;stroke-dasharray:6 6}
 .chart-deco line{stroke:#9fc3d8;stroke-width:.5;opacity:.05}
@@ -303,9 +309,10 @@ svg#board{width:100%;height:100%;touch-action:none}
 .chart-deco .compass line{stroke:#9fc3d8;opacity:.3;stroke-width:.9}
 .chart-deco .compass path{fill:#9fc3d8;opacity:.3}
 .chart-deco .compass text{fill:#9fc3d8;opacity:.35;font-size:7px;text-anchor:middle}
-.map-label{font-weight:700;letter-spacing:3.2px;text-anchor:middle;pointer-events:none}
+.map-label{font-weight:700;letter-spacing:3.2px;text-anchor:middle;pointer-events:none;
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .map-label.onland{fill:#2c1e08;opacity:.55}
-.map-label.water{fill:#cfe6f4;opacity:.62;font-style:italic;font-weight:400;letter-spacing:4.6px;font-family:Georgia,"Times New Roman",serif;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
+.map-label.water{fill:#cfe6f4;opacity:.62;font-weight:600;letter-spacing:4.2px;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
 .map-label.islet{fill:#a9cee2;opacity:.42}
 .iconbtn svg{width:20px;height:20px}
 .slot svg{width:13px;height:7px;color:var(--amber)}
@@ -765,23 +772,23 @@ const LEVELS = [
       "JUL 2025 · <b>TEHRAN</b> · 'Psychological warfare': Iran denies any mines were deployed"
     ],
     minePct:.13, cap:10, interval:23, wreckCost:2,
-    labels:[["IRANIAN COASTLINE",.5,.2,0],["OMANI COASTLINE",.3,.72,0],["GULF OF OMAN",.66,.48,0],["STRAIT OF HORMUZ",.17,.33,0]],
+    labels:[["IRANIAN COASTLINE",.5,.2,0],["OMANI COASTLINE",.45,.76,0],["GULF OF OMAN",.66,.48,0],["STRAIT OF HORMUZ",.17,.33,0]],
     cities:[["JASK",.6,.1],["KHOR FAKKAN",.04,.7],["SOHAR",.3,.95]],
     border:[[.13,.72],[.09,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIII......",
-      "I~~~~~~~~~~~~~~~III.....",
-      "~~~~~~~~~~~~~~~~~~~~~...",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "O~~~~~~~~~~~~~~~~~~~~~~~",
-      "OOOO~~~~~~~~~~~~~~~~~...",
-      "OOOOOOOOO~~~~~.........."
+      "IIIIIIIIIIIIIII......",
+      "I~~~~~~~~~~~~~II.....",
+      "~~~~~~~~~~~~~~~~~~...",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "O~~~~~~~~~~~~~~~~~~~~",
+      "OOOO~~~~~~~~~~~~~~...",
+      "OOOOOOOO~~~~........."
     ]
   },
   {
@@ -809,19 +816,19 @@ const LEVELS = [
     cities:[["BANDAR ABBAS",.3,.06],["KHASAB",.3,.62]],
     border:[[.16,.55],[.1,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIIIIII",
-      "III~~~~~~~~~~~~~~~~IIIII",
-      "I~~~~~Q~~~~~QQ~~~~~~~III",
-      "~~~~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~Q~~~~~~~~~Q~~~~~~~~~",
-      "~~~~~OOO~~~~~~~~~~~~~~~~",
-      "~~OOOOOOOOO~~~~~~~~~~~~~",
-      "OOOOOOOOOOOOOO~~~~~~~~~.",
-      "OOOOOOOOOOOOOOOOO~~~~..."
+      "IIIIIIIIIIIIIIIIIIIII",
+      "III~~~~~~~~~~~~~~IIII",
+      "I~~~~~~~~~~Q~~~~~~III",
+      "~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~~~~~~~~~~~~~~~~~I",
+      "~~~~Q~~~~~~~Q~~~~~~~~",
+      "~~~~~OO~~~~~~~~~~~~~~",
+      "~~OOOOOOOO~~~~~~~~~~~",
+      "OOOOOOOOOOOO~~~~~~~~.",
+      "OOOOOOOOOOOOOOO~~~..."
     ]
   },
   {
@@ -848,19 +855,19 @@ const LEVELS = [
     cities:[["BANDAR ABBAS",.62,.06],["KHASAB",.28,.86]],
     border:[[.14,.72],[.1,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIIIIII",
-      "I~~~~~~~~~~~~~~~~~~~IIII",
-      "I~QQQQQQQQQQQ~~~~~~~~~~I",
-      "~~QQQQQQQ~~~~~~~~~~~~~~~",
-      "~~~QQ~~~~~~~~Q~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~OO~~~~~~~~~~~~~",
-      "O~~~~OOOOOOOO~~~~~~~~~~.",
-      "OOOOOOOOOOOOOOO~~~~....."
+      "IIIIIIIIIIIIIIIIIIIII",
+      "I~~~~~~~~~~~~~~~~IIII",
+      "I~QQQQQQQQQ~~~~~~~~~I",
+      "~~QQQQQQ~~~~~~~~~~~~~",
+      "~~~QQ~~~~~~Q~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~OO~~~~~~~~~~~",
+      "O~~~~OOOOOO~~~~~~~~~.",
+      "OOOOOOOOOOOOO~~~~...."
     ]
   },
   {
@@ -887,19 +894,19 @@ const LEVELS = [
     cities:[["BANDAR LENGEH",.3,.06],["RAS AL KHAIMAH",.42,.9]],
     border:[[.62,.7],[.56,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIIIIII",
-      "II~~~~~~~~~~~~~~~~~~IIII",
-      "~~~~Q~~~~~~Q~~~~~~~~~~~I",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~Q~~~~~Q~~~~~~Q~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~OO~~~~~~~~~~",
-      ".~~~~~~~~OOOOOOO~~~~~~~.",
-      ".OOOOOOOOOOOOOOOOO~~~..."
+      "IIIIIIIIIIIIIIIIIIIII",
+      "II~~~~~~~~~~~~~~~IIII",
+      "~~~~Q~~~~~~~~~~~~~~~I",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~Q~~~~Q~~~~~Q~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~OO~~~~~~~~~",
+      ".~~~~~~~OOOOOO~~~~~~.",
+      ".OOOOOOOOOOOOOO~~~..."
     ]
   },
   {
@@ -927,19 +934,19 @@ const LEVELS = [
     cities:[["BANDAR ABBAS",.62,.06],["KHASAB",.42,.72]],
     border:[[.28,.6],[.2,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIIIIII",
-      "I~~~~~~~~~~~~~~~~~~~~III",
-      "I~QQQQQQQ~~~~Q~~~~~~~III",
-      "~~~QQQQ~~~~~~~~Q~~~~~~~~",
-      "~~~~Q~~~~~~~~~~~~~~~~~~~",
-      "~~~~Q~~~~~~~~~~~~~~~~~~~",
-      "~~~~Q~~~~~~~~~~~~~~~~~~~",
-      "~~~~Q~~~~~~~~~~~~~~~~~~~",
-      "~~~~Q~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~OO~~~~~~~~~~~",
-      "~~~~~~~~OOOOOO~~~~~~~~~~",
-      ".~~~OOOOOOOOOOOO~~~~~~~.",
-      "OOOOOOOOOOOOOOOOOO~~~..."
+      "IIIIIIIIIIIIIIIIIIIII",
+      "I~~~~~~~~~~~~~~~~~III",
+      "I~QQQQQQ~~~Q~~~~~~III",
+      "~~~QQQ~~~~~~~Q~~~~~~~",
+      "~~~~Q~~~~~~~~~~~~~~~~",
+      "~~~~Q~~~~~~~~~~~~~~~~",
+      "~~~~Q~~~~~~~~~~~~~~~~",
+      "~~~~Q~~~~~~~~~~~~~~~~",
+      "~~~~Q~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~O~~~~~~~~~~",
+      "~~~~~~~OOOOO~~~~~~~~~",
+      ".~~~OOOOOOOOOO~~~~~~.",
+      "OOOOOOOOOOOOOOO~~~..."
     ]
   },
   {
@@ -965,19 +972,19 @@ const LEVELS = [
     cities:[["BANDAR ABBAS",.6,.05],["KHASAB",.2,.8]],
     border:[[.3,.75],[.24,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIIIIII",
-      "II~~~~~~~~~~~~~~~~~~~~II",
-      "~~~~~~Q~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "BBBBBBBBBBBBBBBBBBBBBBBB",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      ".~~OOOOOO~~~~~~~~~~~~~~.",
-      ".OOOOOOOOOOOOOOO~~~~~..."
+      "IIIIIIIIIIIIIIIIIIIII",
+      "II~~~~~~~~~~~~~~~~~II",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "BBBBBBBBBBBBBBBBBBBBB",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      ".~~OOOOO~~~~~~~~~~~~.",
+      ".OOOOOOOOOOOOO~~~~..."
     ]
   },
   {
@@ -1001,24 +1008,24 @@ const LEVELS = [
       "JUL 11 · <b>MUSCAT</b> · Foreign minister in Oman for strait security talks; escorted convoys keep a single lane alive",
       "JUL 12 · <b>AXIOS</b> · US military coordinates passage of about 20 commercial vessels through the strait in 24 hours"
     ],
-    minePct:.20, cap:12, interval:17, wreckCost:3, reMine:{every:2, max:5}, runners:{every:30, escape:6}, convoy:{every:18, max:4}, drones:{every:26},
+    minePct:.23, cap:12, interval:17, wreckCost:3, reMine:{every:2, max:5}, runners:{every:30, escape:6}, convoy:{every:18, max:4}, drones:{every:26},
     labels:[["IRANIAN COASTLINE",.5,.17,0],["OMANI COASTLINE",.62,.8,0],["ESCORTED CORRIDOR",.42,.62,0],["PERSIAN GULF",.12,.5,0],["GULF OF OMAN",.82,.42,0]],
     cities:[["JASK",.62,.06],["DIBBA",.1,.8],["SOHAR",.45,.95]],
     border:[[.2,.76],[.16,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIIIIII",
-      "IIIIII~~~~~~~~~~~~IIIIII",
-      "II~~~~~~~Q~~~~Q~~~~~~III",
-      "I~~~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~Q~~~~~~~~~~~~Q~~~~~~",
-      "~~~~~~~~~~Q~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~~~~",
-      "OO~~~~~~~~~~~~~~~~~~~~OO",
-      "OOOOOOOOOOOOOOOOOOOOOOOO"
+      "IIIIIIIIIIIIIIIIIIIII",
+      "IIIII~~~~~~~~~~IIIIII",
+      "II~~~~~~Q~~~Q~~~~~III",
+      "I~~~~~~~~~~~~~~~~~~~I",
+      "~~~~Q~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~Q~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~",
+      "OO~~~~~~~~~~~~~~~~~OO",
+      "OOOOOOOOOOOOOOOOOOOOO"
     ]
   }
 ];
@@ -1323,6 +1330,17 @@ function coach(key, msg, ms){
    Pauses the clock, shows an illustrated card, resumes on dismiss.
    Illustrations reference the board's SVG defs, so they are theme-correct. */
 const FM_IMG = {
+  sweep: `<svg viewBox="0 0 300 96">
+    <path d="M30,48 l10,-6 v12 Z" fill="#3ef29a" opacity=".9"/>
+    <g transform="translate(75,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/><text y="6" text-anchor="middle" font-size="16" fill="#3ef29a" font-weight="700">2</text></g>
+    <g transform="translate(115,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/><text y="6" text-anchor="middle" font-size="16" fill="#8df2df" font-weight="700">1</text></g>
+    <g transform="translate(155,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgA)" stroke="rgba(0,0,0,.4)"/><path d="M-3,6 L-3,-7 L6,-3.5 L-3,0" transform="translate(0,0)" fill="#f6a521"/></g>
+    <g transform="translate(195,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgB)" stroke="rgba(0,0,0,.4)"/></g>
+    <g transform="translate(235,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgA)" stroke="rgba(0,0,0,.4)"/></g>
+    <path d="M262,48 l10,-6 v12 Z" fill="#3ef29a" opacity=".9" transform="rotate(180 267 48)"/>
+    <text x="150" y="13" text-anchor="middle" font-size="11" fill="#3ef29a" letter-spacing="2">SURVEY · BUOY · CONNECT</text>
+    <text x="150" y="90" text-anchor="middle" font-size="10.5" fill="#9bc" letter-spacing="1.2">WEST TO EAST WINS · FIRST TAP ALWAYS SAFE</text>
+  </svg>`,
   drone: `<svg viewBox="0 0 300 96">
     <g transform="translate(220,58)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
     <g class="ship dship" transform="translate(220,58) scale(1.6)">
@@ -2663,6 +2681,18 @@ function buildBoardSVG(){
   html += `<rect class="op-area" x="3" y="3" width="${(vbW-6).toFixed(1)}" height="${(vbH-6).toFixed(1)}" rx="8"/>`;
   html += `</g>`;
 
+  /* off-sector notches read as deeper water, not black holes in the chart */
+  html += `<g class="deeplayer">`;
+  S.L.mask.forEach((rowStr, rr) => {
+    [...rowStr].forEach((ch, cc) => {
+      if (ch !== ".") return;
+      const fake = { r: rr, c: cc };
+      const [dx, dy] = cellCenter(fake);
+      html += `<polygon class="deephex" points="${HEXPTS}" transform="translate(${dx.toFixed(1)},${dy.toFixed(1)})"/>`;
+    });
+  });
+  html += `</g>`;
+
   /* water cells */
   for (const c of S.cells){
     if (!c.water) continue;
@@ -2765,11 +2795,15 @@ function buildBoardSVG(){
       if (d2 < bd){ bd = d2; best = [x, y]; }
     }
     if (!best) continue;
-    /* names hang left of the light near the east edge so they never run off the chart */
+    /* names step away from chart edges: horizontal flip near the east edge,
+       vertical flip near the top and bottom strips */
     const flip = best[0] > vbW * 0.78;
+    const ty = best[1] < vbH * 0.14 ? 13 : (best[1] > vbH * 0.84 ? -9 : 2.5);
+    const tx = ty === 2.5 ? (flip ? -9 : 9) : 0;
+    const anchor = ty === 2.5 ? (flip ? ' text-anchor="end"' : "") : ' text-anchor="middle"';
     html += `<g class="city port" transform="translate(${best[0].toFixed(1)},${best[1].toFixed(1)})">` +
             `<circle class="portglow" r="7"/><circle class="portdot" r="2.3"/><circle class="ring" r="4.2"/>` +
-            `<text x="${flip ? -8 : 8}" y="2.5"${flip ? ' text-anchor="end"' : ""}>PORT OF ${cname}</text></g>`;
+            `<text x="${tx}" y="${ty}"${anchor}>PORT OF ${cname}</text></g>`;
   }
   /* dashed international boundary (U.A.E. | Oman on the Musandam exclave) */
   if (S.L.border){
@@ -3134,12 +3168,16 @@ function showBrief(i){
   const water = cells.filter(c => c.water).length;
   const mines = Math.round(water * L.minePct);
   const lanes = computeLanes(cells, L.mask[0].length).length;
+  const mxChip = txt => `<span class="chip mxchip">${txt}</span>`;
   $("briefChips").innerHTML =
     `<span class="chip">Sector <b>${water}</b> hexes</span>` +
     `<span class="chip">Est. mines <b>${mines}</b></span>` +
     `<span class="chip">Backlog cap <b>${L.cap}</b></span>` +
-    `<span class="chip">Lanes to open <b>${lanes}</b></span>` +
-    (L.reMine ? `<span class="chip" style="color:var(--red);border-color:rgba(255,92,77,.45)">Minelayers active</span>` : "");
+    (lanes > 1 ? mxChip("Two lanes") : `<span class="chip">Lanes to open <b>${lanes}</b></span>`) +
+    (L.reMine ? mxChip("Re-seeding") : "") +
+    (L.runners ? mxChip("Minelayers") : "") +
+    (L.convoy ? mxChip("Convoys underway") : "") +
+    (L.drones ? mxChip("Drones overhead") : "");
   show("scr-brief");
 }
 
@@ -3407,41 +3445,34 @@ const INTEL_TABS = [["briefing","Briefing"],["manual","Field Manual"],["history"
    the real events that justify it, and play tips. Mirrored in docs/mechanics.md.
    Entries unlock as their chapter unlocks; DEV builds see everything. */
 const MECHANICS = [
-  { key:"sweep", name:"THE SWEEP", ch:1, img:null,
-    real:"After the July 1, 2025 Reuters report that Iran had loaded naval mines onto vessels, mine countermeasures became the strait's decisive craft: survey, chart, and prove a channel clean. Your numbers are sonar surveys; your buoys are charted contacts.",
-    tips:["Your first tap is always safe; open in the middle of a lane, not against a coast.",
-      "You never need to sweep everything. Win by CONNECTING west to east with surveyed water.",
-      "Tap a satisfied number (its buoys match its count) to sweep everything else around it at once."] },
+  { key:"sweep", name:"THE SWEEP", ch:1, img:"sweep",
+    real:"Naval mines are cleared the slow way: minehunters map the seabed with high-resolution sonar, classify every contact, and send divers or remote vehicles to each one. Clearing a channel takes weeks; convincing insurers it is truly clean takes longer. After the July 1, 2025 report that Iran had loaded mines onto vessels, this craft became the strait's decisive skill.",
+    how:"Tap to survey a hex; its number counts mines in adjacent water. Hold to drop a buoy on a suspected mine. Tap a satisfied number to sweep everything unbuoyed around it. Your first tap is always safe. You win by CONNECTING the west edge to the east edge with surveyed water; you never need to clear the whole board.",
+    tips:["Open mid-lane, then read the numbers before touching anything near them."] },
   { key:"wreck", name:"WRECKS AND THE BACKLOG", ch:1, img:"wreck",
-    real:"In 1988 the frigate USS Samuel B. Roberts hit an Iranian mine in the central Persian Gulf; the ship survived, the repair bill dwarfed the mine. In 2026, every incident stacked tankers at the anchorages while insurers pulled cover: pressure measured in waiting hulls.",
-    tips:["A mine hit does not end the patrol; the wreck blocks that hex forever and tankers join the backlog.",
-      "Repeated wrecks cost more each time. Slow down after a mistake.",
-      "The backlog bar is the only way to lose. Watch it, not the clock."] },
+    real:"Mines rarely sink big ships; they disable them. In 1988 the USS Samuel B. Roberts hit an Iranian mine in the central Persian Gulf and stayed afloat, but the repair cost dwarfed the mine a thousandfold. The real currency of a strait crisis is delay: hulls waiting at anchor while insurers refuse cover.",
+    how:"A mine hit never ends the patrol. The wreck blocks that hex for the rest of the level, nearby numbers re-count, and tankers join the backlog. Repeated wrecks cost more each time. The backlog filling is the only way to lose.",
+    tips:["Watch the backlog bar, not the clock; slow down after a mistake."] },
   { key:"minelayer", name:"RE-SEEDING", ch:2, img:"reMine",
-    real:"From March 10, 2026, US intelligence reported Iran planting naval mines at scale, and CENTCOM warned mariners that cleared water could be re-seeded overnight. Sixteen minelayers were reported destroyed at work, which means there were sixteen minelayers.",
-    tips:["Fresh mines only ever appear in deep fog, never beside water you have already surveyed. Opened numbers never lie.",
-      "The mine counter climbing is your cue: the board is aging. Finish the channel before it thickens.",
-      "Re-seeding follows the tanker clock. A faster sweep sees fewer new mines."] },
+    real:"A minefield is not a fixed obstacle; it is maintained like a garden. From March 10, 2026, US intelligence reported Iran re-seeding cleared water overnight at industrial scale, with sixteen minelayers reported destroyed in the act. CENTCOM's warning to mariners became doctrine: swept does not mean safe forever.",
+    how:"As tankers arrive, fresh mines slip into unswept water, always in deep fog with zero surveyed neighbors, so numbers you have opened never lie. The mine counter climbing is the tell.",
+    tips:["A faster sweep sees fewer new mines; do not stockpile risk by stalling."] },
   { key:"runner", name:"MINELAYERS (VISIBLE)", ch:4, img:"minelayer",
-    real:"Under the April 2026 blockade, minelayers slipped out of Iranian coastal water under cover of dark while escorts moved to cut them off. In the game, one surfaces with a blinking beacon and makes for unswept sea.",
-    tips:["TAP the ship to intercept it: the mine never enters the water and one backlog slot clears.",
-      "The reward is real but so is the risk: a missed tap lands on fog. Aim carefully or let it go.",
-      "They surface near the Iranian coast; if you are sweeping the south, you have more warning time."] },
+    real:"Blockades leak. Under the April 2026 blockade of Iranian ports, small craft slipped out under cover of dark to lay fresh mines, and escorts raced to cut them off before the cargo went in the water. Sixteen never made it home.",
+    how:"A minelayer surfaces near the Iranian coast with a blinking beacon and makes for unswept water. TAP the ship to intercept it: no mine is laid and one backlog slot clears. If it escapes, it lays one honest mine and slips away.",
+    tips:["A missed tap lands on fog; aim carefully or let it go."] },
   { key:"dship", name:"DESPERATE TANKERS", ch:5, img:"dship",
-    real:"By May 2026 convoys stopped waiting for fully swept water, and the IRGC seized tankers that lingered: MSC Epaminondas, MSC Francesca, Ocean Koi. Masters pushed into half-swept channels rather than anchor another week.",
-    tips:["Tankers follow your swept water east. Sweep AHEAD of the convoy; a stranded ship gambles into the fog or gets detained.",
-      "Water near the Iranian coast is patrolled hardest. A southern channel is longer but safer for the ships behind you.",
-      "Every ship that exits east eases the backlog by one. The closer your frontier is to the east mouth, the safer their run."] },
+    real:"By May 2026, anchored convoys stopped waiting for perfectly swept water; masters weighed the cost of another week at anchor against the odds of a mine and sailed. The IRGC seized ships that lingered in contested water: MSC Epaminondas, MSC Francesca, Ocean Koi. Desperation, priced per voyage.",
+    how:"Tankers enter west and follow your swept water east. Water near the Iranian coast risks detention per hex. A tanker stranded at your frontier will gamble into the fog if the east mouth is close, or be detained if it is not. Ships that exit east ease the backlog by one.",
+    tips:["Sweep AHEAD of the convoy; the closer your frontier is to the east, the safer their run."] },
   { key:"lanes2", name:"TWO LANES", ch:6, img:"lanes2",
-    real:"On June 27, 2026 a widened two-way route opened near Oman: a traffic separation scheme with a buoyed median, built to end the one-lane chokehold. Both directions had to move for the strait to count as open.",
-    tips:["Both lanes need their own unbroken channel. The buoyed median never connects them.",
-      "Opening your FIRST lane starts one-way traffic and clears part of the backlog. Scout both, open the cheaper one first.",
-      "Mines re-seed in both lanes; do not abandon the second lane to fog for too long."] },
+    real:"Modern straits run like highways: a Traffic Separation Scheme with inbound and outbound lanes divided by a buffer no ship may cross. The widened route opened near Oman on June 27, 2026 was exactly this, and the strait only counted as open when traffic moved BOTH ways.",
+    how:"A buoyed median splits the sector into two independent lanes; each needs its own west-east channel. Opening the first lane starts one-way traffic and clears part of the backlog.",
+    tips:["Scout both lanes early, then open the cheaper one first for the relief."] },
   { key:"drone", name:"ONE-WAY DRONES", ch:7, img:"drone",
-    real:"In the July 2026 re-escalation, Iranian missiles and a drone struck three merchant ships in the strait, the first direct attacks on the convoys themselves. Unlike patrols, drones do not care how far from the coast a ship sails.",
-    tips:["Drones launch at a moving tanker and fly straight, over land and sea. TAP the drone, not the ship.",
-      "You have a few seconds from the launch whine to impact. Keep one thumb free in Chapter 7.",
-      "A drone that loses its target ditches harmlessly; a moving convoy is a harder convoy to hit."] }
+    real:"One-way attack drones changed sea denial: a few thousand dollars of airframe threatening a hundred-million-dollar hull, launched from a coast, guided to a moving target. The 2021 Mercer Street attack previewed it; in the July 2026 re-escalation, missiles and a drone struck three merchant ships in the strait itself.",
+    how:"Drones launch from the Iranian coast at a live tanker and fly straight, over land and sea, anywhere on the board. TAP the drone to intercept it. If it reaches a ship that has not moved on, the tanker is disabled and towed off.",
+    tips:["Tap the drone, not the ship; the launch whine is your warning."] }
 ];
 let intelTab = "briefing";
 function renderIntel(){
@@ -3460,6 +3491,7 @@ function renderIntel(){
           .replace(/url\(#mineGrad\)/g, "#c23b2e")
           .replace(/url\(#revGrad\)/g, "rgba(62,242,154,.10)")}</div>` : "") +
         `<p><b>The record:</b> ${m.real}</p>` +
+        `<p class="mx-tips"><b>How it works:</b> ${m.how}</p>` +
         `<p class="mx-tips"><b>Tips:</b></p><ul class="mx-list">` +
         m.tips.map(tip => `<li>${tip}</li>`).join("") + `</ul></div>`;
     }).join("");
