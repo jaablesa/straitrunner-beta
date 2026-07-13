@@ -164,6 +164,15 @@ h1.logo{font-size:52px;letter-spacing:.14em;font-weight:800;line-height:1;text-s
 .intel-entry p{font-size:11.5px;color:var(--dim);line-height:1.6}
 .intel-entry p b{color:var(--ink)}
 .intel-cta{grid-column:1/-1;display:flex;justify-content:center;padding:6px 0}
+.mx-ch{font-size:9px;letter-spacing:.2em;color:var(--amber);border:1px solid rgba(246,165,33,.4);border-radius:4px;padding:1.5px 5px;vertical-align:2px;margin-left:6px}
+.mx-img{margin:7px 0 8px}
+.mx-img svg{width:100%;max-width:280px;height:auto;display:block;border:1px solid var(--line);border-radius:8px;background:rgba(2,10,16,.5)}
+.mx-tips{margin-top:7px}
+.mx-list{margin:3px 0 0 16px;font-size:11.5px;color:var(--dim);line-height:1.55}
+.mx-list li{margin-bottom:3px}
+.mx-locked{opacity:.45}
+.mx-dev{grid-column:1/-1;border-color:rgba(246,165,33,.5)}
+.mx-dev p{color:var(--amber);font-size:10.5px;letter-spacing:.08em}
 .fact{
   font-size:11px;color:var(--faint);line-height:1.55;font-style:italic;
   border-left:2px solid var(--line);padding-left:10px;margin:0 6px 16px;text-align:left;
@@ -870,7 +879,7 @@ const LEVELS = [
       "APR 21 · <b>IMO</b> · Some 20,000 mariners and 2,000 ships remain stranded in the Gulf",
       "APR · <b>ANALYSTS</b> · The largest disruption to world energy supply since the 1970s"
     ],
-    minePct:.195, cap:12, interval:18, wreckCost:3, reMine:{every:3, max:3}, runners:{every:30, escape:6},
+    minePct:.185, cap:12, interval:18, wreckCost:3, reMine:{every:3, max:3}, runners:{every:30, escape:6},
     labels:[["IRANIAN COASTLINE",.5,.17,0],["TUNBS",.36,.44,1],["ABU MUSA",.1,.46,1],["U.A.E. COASTLINE",.4,.78,0],["PERSIAN GULF",.42,.3,0],["STRAIT OF HORMUZ",.8,.44,0]],
     cities:[["BANDAR LENGEH",.3,.06],["RAS AL KHAIMAH",.42,.9]],
     border:[[.62,.7],[.56,1.0]],
@@ -948,7 +957,7 @@ const LEVELS = [
       "JUN 22 · <b>CNBC</b> · Shipping stalls after Iran declares the key waterway closed again",
       "JUN 27 · <b>JMIC</b> · Widened route through the strait announced near Oman: traffic in both directions"
     ],
-    minePct:.15, cap:13, interval:18, wreckCost:3, reMine:{every:2, max:5}, runners:{every:32, escape:6}, convoy:{every:20, max:4},
+    minePct:.145, cap:13, interval:20, wreckCost:3, reMine:{every:3, max:4}, runners:{every:36, escape:6}, convoy:{every:24, max:3},
     labels:[["IRANIAN COASTLINE",.5,.17,0],["MUSANDAM COAST",.3,.82,0],["SEPARATION SCHEME",.5,.5,0],["PERSIAN GULF",.16,.27,0],["GULF OF OMAN",.78,.28,0]],
     cities:[["BANDAR ABBAS",.6,.05],["KHASAB",.2,.8]],
     border:[[.3,.75],[.24,1.0]],
@@ -988,7 +997,7 @@ const LEVELS = [
       "JUL 11 · <b>MARKETS</b> · War-risk premiums at eight times pre-crisis rates; six P&I clubs restrict cover for Gulf transits",
       "JUL 11 · <b>MUSCAT</b> · Foreign minister in Oman for strait security talks; escorted convoys keep a single lane alive"
     ],
-    minePct:.21, cap:12, interval:17, wreckCost:3, reMine:{every:2, max:5}, runners:{every:30, escape:6}, convoy:{every:18, max:4}, drones:{every:26},
+    minePct:.20, cap:12, interval:17, wreckCost:3, reMine:{every:2, max:5}, runners:{every:30, escape:6}, convoy:{every:18, max:4}, drones:{every:26},
     labels:[["IRANIAN COASTLINE",.5,.17,0],["OMANI COASTLINE",.62,.8,0],["ESCORTED CORRIDOR",.42,.62,0],["PERSIAN GULF",.12,.5,0],["GULF OF OMAN",.82,.42,0]],
     cities:[["JASK",.62,.06],["DIBBA",.1,.8],["SOHAR",.45,.95]],
     border:[[.2,.76],[.16,1.0]],
@@ -1336,7 +1345,8 @@ const FM_IMG = {
     <g transform="translate(225,72)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.8)" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
     <line x1="40" y1="49" x2="260" y2="49" stroke="#f6a521" stroke-width="1.5" stroke-dasharray="5 5"/>
     <circle cx="90" cy="49" r="2.4" fill="#f6a521"/><circle cx="150" cy="49" r="2.4" fill="#f6a521"/><circle cx="210" cy="49" r="2.4" fill="#f6a521"/>
-    <text x="150" y="12" text-anchor="middle" font-size="11" fill="#3ef29a" letter-spacing="2">LANE 1 + LANE 2</text>
+    <text x="150" y="12" text-anchor="middle" font-size="11" fill="#3ef29a" letter-spacing="2">LANE 1 + LANE 2 · BOTH MUST OPEN</text>
+    <text x="150" y="93" text-anchor="middle" font-size="10" fill="#f6a521" letter-spacing="1.2">FIRST LANE OPEN = BACKLOG EASES</text>
   </svg>`,
   wreck: `<svg viewBox="0 0 300 96">
     <g transform="translate(75,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
@@ -1345,7 +1355,7 @@ const FM_IMG = {
     <path d="M138,52 L147,43 M147,52 L138,43 M153,52 L162,43 M162,52 L153,43" stroke="#ff9d8a" stroke-width="2"/>
     <path d="M141,55 L159,55 L156,59 L144,59 Z" fill="#8a4a2e"/>
     <text x="150" y="14" text-anchor="middle" font-size="11" fill="#ff5d45" letter-spacing="2">HULL DAMAGED</text>
-    <text x="150" y="90" text-anchor="middle" font-size="10.5" fill="#f6a521" letter-spacing="1.5">HEX BLOCKED · TANKERS JOIN THE BACKLOG</text>
+    <text x="150" y="90" text-anchor="middle" font-size="10.5" fill="#f6a521" letter-spacing="1.2">EACH FURTHER WRECK COSTS MORE</text>
   </svg>`,
   minelayer: `<svg viewBox="0 0 300 96">
     <g transform="translate(50,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
@@ -1365,18 +1375,22 @@ const FM_IMG = {
     <text x="207" y="88" text-anchor="middle" font-size="10.5" fill="#9bc" letter-spacing="1.5">UNSWEPT WATER</text>
   </svg>`,
   dship: `<svg viewBox="0 0 300 96">
-    <g transform="translate(45,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
-    <g transform="translate(80,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
-    <g transform="translate(115,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
-    <g transform="translate(150,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
-    <g transform="translate(220,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgA)" stroke="rgba(0,0,0,.4)"/></g>
-    <g class="ship dship" transform="translate(115,48) scale(1.7)">
+    <g transform="translate(40,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.9)" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(72,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.9)" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(104,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.9)" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(168,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.9)" fill="url(#wgA)" stroke="rgba(0,0,0,.4)"/></g>
+    <g transform="translate(200,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.9)" fill="url(#wgB)" stroke="rgba(0,0,0,.4)"/></g>
+    <g transform="translate(232,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.9)" fill="url(#wgA)" stroke="rgba(0,0,0,.4)"/></g>
+    <g class="ship dship" transform="translate(104,48) scale(1.6)">
       <line class="wake" x1="-19" y1="1" x2="-9" y2="1" stroke-dasharray="3 3"/>
       <path class="hull" d="M-8,-2 L6,-2 L9,1 L6,4 L-8,4 Z M-3,-5 L3,-5 L3,-2 L-3,-2 Z"/>
     </g>
-    <circle cx="185" cy="48" r="16" fill="none" stroke="#ff5d45" stroke-width="1.8" opacity=".85"/>
-    <text x="150" y="14" text-anchor="middle" font-size="11" fill="#f6a521" letter-spacing="2">FOLLOWS YOUR SWEPT WATER</text>
-    <text x="185" y="88" text-anchor="middle" font-size="10.5" fill="#ff5d45" letter-spacing="1.5">STRANDED = DETAINED</text>
+    <line x1="126" y1="48" x2="252" y2="48" stroke="#ff5d45" stroke-width="1.4" stroke-dasharray="4 4" opacity=".85"/>
+    <path d="M256,48 l-7,-4.5 v9 Z" fill="#3ef29a"/>
+    <circle cx="200" cy="48" r="6.5" fill="url(#mineGrad)" opacity=".9"/>
+    <text x="150" y="13" text-anchor="middle" font-size="11" fill="#f6a521" letter-spacing="2">FOLLOWS YOUR SWEPT WATER</text>
+    <text x="150" y="76" text-anchor="middle" font-size="10.5" fill="#ff5d45" letter-spacing="1.2">STRANDED = GAMBLES INTO THE FOG</text>
+    <text x="150" y="90" text-anchor="middle" font-size="10.5" fill="#3ef29a" letter-spacing="1.2">SURVIVES EAST = BACKLOG EASES</text>
   </svg>`,
   reMine: `<svg viewBox="0 0 300 96">
     <g transform="translate(90,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="url(#wgA)" stroke="rgba(0,0,0,.4)"/></g>
@@ -1722,9 +1736,9 @@ function detonate(c){
   fl.classList.add("on");
   $("boardWrap").classList.add("shake");
   setTimeout(() => $("boardWrap").classList.remove("shake"), 550);
-  const cost = (S.L.wreckCost || 2) + Math.min(3, S.wrecks - 1);
+  const cost = (S.L.wreckCost || 2) + Math.min(2, Math.max(0, S.wrecks - 2));
   if (!fieldManual("wreck", "HULL DAMAGED",
-    `A mine went off under the sweep. The patrol continues, but the wreck blocks that hex for the rest of the level, nearby numbers re-count, and ${cost} tankers join the backlog. Each further wreck costs one more, so slow down before you spend another.`,
+    `A mine went off under the sweep. The patrol continues, but the wreck blocks that hex for the rest of the level, nearby numbers re-count, and ${cost} tankers join the backlog. Repeated wrecks cost more each time, so slow down before you spend another.`,
     FM_IMG.wreck))
     toast(`Hull damaged · the wreck blocks that hex and ${cost} tankers join the backlog`, 5000);
   addBacklog(cost);
@@ -1789,7 +1803,7 @@ function checkWin(){
       if (S.lanes.length > 1 && !S.lanes.every((l2, k2) => S.laneOpen[k2] || connectedLane(l2))){
         SFX.lane();
         if (S.backlog > 0){
-          S.backlog = Math.max(0, S.backlog - 3);
+          S.backlog = Math.max(0, S.backlog - 4);
           renderBacklog(false);
         }
         toast(`Lane ${S.laneOpen.filter(Boolean).length}/${S.lanes.length} open · one-way traffic moves and the backlog eases`, 5000);
@@ -1931,6 +1945,11 @@ function entLayer(){ return $("board").querySelector("#entlayer"); }
    rendered invisible on device), the attribute renders everywhere. */
 const entAnims = new Set();
 let entRaf = 0;
+/* shortest-arc angle interpolation, so ships turn instead of snapping */
+function lerpAng(a0, a1, t){
+  let d = ((a1 - a0 + 540) % 360) - 180;
+  return a0 + d * t;
+}
 function entFrame(now){
   entRaf = 0;
   for (const a of entAnims){
@@ -1941,7 +1960,11 @@ function entFrame(now){
     if (t >= 1 && a.bob && now - (a.lastW || 0) < 90) continue;
     a.lastW = now;
     const bob = a.bob ? Math.sin(now / 190 + a.phase) * 0.6 : 0;
-    a.g.setAttribute("transform", `translate(${x.toFixed(1)},${(y + bob).toFixed(1)}) rotate(${a.ang.toFixed(1)})`);
+    const ang = lerpAng(a.ang0 ?? a.ang, a.ang, Math.min(1, t / 0.35));
+    /* westward headings mirror across the hull axis so the superstructure
+       stays topside; rotate(180) alone rendered vessels upside down */
+    const flip = Math.cos(a.ang * Math.PI / 180) < -0.05 ? " scale(1,-1)" : "";
+    a.g.setAttribute("transform", `translate(${x.toFixed(1)},${(y + bob).toFixed(1)}) rotate(${ang.toFixed(1)})${flip}`);
     if (t >= 1 && !a.bob) entAnims.delete(a);
   }
   if (entAnims.size) entRaf = requestAnimationFrame(entFrame);
@@ -1950,21 +1973,25 @@ function entKick(){ if (!entRaf && entAnims.size) entRaf = requestAnimationFrame
 
 function placeEnt(g, from, to, snap, dur){
   const [x, y] = cellCenter(to);
-  let ang = 0;
+  let a = g._anim;
+  let ang = a ? a.ang : 0;
   if (from !== to){
     const [fx, fy] = cellCenter(from);
     ang = Math.atan2(y - fy, x - fx) * 180 / Math.PI;
   }
-  let a = g._anim;
   if (!a){
     a = g._anim = { g, phase: Math.random() * 6.28, bob: g.classList.contains("dship") && !REDUCED };
     if (a.bob) entAnims.add(a);   /* bobbing ships stay animated even at rest */
   }
   const [fx0, fy0] = (snap || from === to) ? [x, y] : cellCenter(from);
+  a.ang0 = snap ? ang : (a.ang ?? ang);
   a.x0 = fx0; a.y0 = fy0; a.x1 = x; a.y1 = y; a.ang = ang;
   a.start = performance.now();
   a.dur = (snap || REDUCED) ? 1 : (dur || 1100);
-  if (a.dur === 1) g.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${ang.toFixed(1)})`);
+  if (a.dur === 1){
+    const flip = Math.cos(ang * Math.PI / 180) < -0.05 ? " scale(1,-1)" : "";
+    g.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${ang.toFixed(1)})${flip}`);
+  }
   entAnims.add(a);
   entKick();
 }
@@ -3370,13 +3397,73 @@ const INTEL = {
   }
  ]
 };
-const INTEL_TABS = [["briefing","Briefing"],["history","History"],["countries","Countries"],["proxies","Proxies"],["strategies","Strategies"],["technologies","Technology"],["timeline","Timeline"]];
+const INTEL_TABS = [["briefing","Briefing"],["manual","Field Manual"],["history","History"],["countries","Countries"],["proxies","Proxies"],["strategies","Strategies"],["technologies","Technology"],["timeline","Timeline"]];
+
+/* The Field Manual reference: every mechanic, the chapter that introduces it,
+   the real events that justify it, and play tips. Mirrored in docs/mechanics.md.
+   Entries unlock as their chapter unlocks; DEV builds see everything. */
+const MECHANICS = [
+  { key:"sweep", name:"THE SWEEP", ch:1, img:null,
+    real:"After the July 1, 2025 Reuters report that Iran had loaded naval mines onto vessels, mine countermeasures became the strait's decisive craft: survey, chart, and prove a channel clean. Your numbers are sonar surveys; your buoys are charted contacts.",
+    tips:["Your first tap is always safe; open in the middle of a lane, not against a coast.",
+      "You never need to sweep everything. Win by CONNECTING west to east with surveyed water.",
+      "Tap a satisfied number (its buoys match its count) to sweep everything else around it at once."] },
+  { key:"wreck", name:"WRECKS AND THE BACKLOG", ch:1, img:"wreck",
+    real:"In 1988 the frigate USS Samuel B. Roberts hit an Iranian mine in the central Persian Gulf; the ship survived, the repair bill dwarfed the mine. In 2026, every incident stacked tankers at the anchorages while insurers pulled cover: pressure measured in waiting hulls.",
+    tips:["A mine hit does not end the patrol; the wreck blocks that hex forever and tankers join the backlog.",
+      "Repeated wrecks cost more each time. Slow down after a mistake.",
+      "The backlog bar is the only way to lose. Watch it, not the clock."] },
+  { key:"minelayer", name:"RE-SEEDING", ch:2, img:"reMine",
+    real:"From March 10, 2026, US intelligence reported Iran planting naval mines at scale, and CENTCOM warned mariners that cleared water could be re-seeded overnight. Sixteen minelayers were reported destroyed at work, which means there were sixteen minelayers.",
+    tips:["Fresh mines only ever appear in deep fog, never beside water you have already surveyed. Opened numbers never lie.",
+      "The mine counter climbing is your cue: the board is aging. Finish the channel before it thickens.",
+      "Re-seeding follows the tanker clock. A faster sweep sees fewer new mines."] },
+  { key:"runner", name:"MINELAYERS (VISIBLE)", ch:4, img:"minelayer",
+    real:"Under the April 2026 blockade, minelayers slipped out of Iranian coastal water under cover of dark while escorts moved to cut them off. In the game, one surfaces with a blinking beacon and makes for unswept sea.",
+    tips:["TAP the ship to intercept it: the mine never enters the water and one backlog slot clears.",
+      "The reward is real but so is the risk: a missed tap lands on fog. Aim carefully or let it go.",
+      "They surface near the Iranian coast; if you are sweeping the south, you have more warning time."] },
+  { key:"dship", name:"DESPERATE TANKERS", ch:5, img:"dship",
+    real:"By May 2026 convoys stopped waiting for fully swept water, and the IRGC seized tankers that lingered: MSC Epaminondas, MSC Francesca, Ocean Koi. Masters pushed into half-swept channels rather than anchor another week.",
+    tips:["Tankers follow your swept water east. Sweep AHEAD of the convoy; a stranded ship gambles into the fog or gets detained.",
+      "Water near the Iranian coast is patrolled hardest. A southern channel is longer but safer for the ships behind you.",
+      "Every ship that exits east eases the backlog by one. The closer your frontier is to the east mouth, the safer their run."] },
+  { key:"lanes2", name:"TWO LANES", ch:6, img:"lanes2",
+    real:"On June 27, 2026 a widened two-way route opened near Oman: a traffic separation scheme with a buoyed median, built to end the one-lane chokehold. Both directions had to move for the strait to count as open.",
+    tips:["Both lanes need their own unbroken channel. The buoyed median never connects them.",
+      "Opening your FIRST lane starts one-way traffic and clears part of the backlog. Scout both, open the cheaper one first.",
+      "Mines re-seed in both lanes; do not abandon the second lane to fog for too long."] },
+  { key:"drone", name:"ONE-WAY DRONES", ch:7, img:"drone",
+    real:"In the July 2026 re-escalation, Iranian missiles and a drone struck three merchant ships in the strait, the first direct attacks on the convoys themselves. Unlike patrols, drones do not care how far from the coast a ship sails.",
+    tips:["Drones launch at a moving tanker and fly straight, over land and sea. TAP the drone, not the ship.",
+      "You have a few seconds from the launch whine to impact. Keep one thumb free in Chapter 7.",
+      "A drone that loses its target ditches harmlessly; a moving convoy is a harder convoy to hit."] }
+];
 let intelTab = "briefing";
 function renderIntel(){
   $("intelTabs").innerHTML = INTEL_TABS.map(([k, label]) =>
     `<button class="intel-tab${k === intelTab ? " on" : ""}" data-tab="${k}">${label}</button>`).join("");
-  let html = (INTEL[intelTab] || []).map(e =>
-    `<div class="intel-entry"><h4>${e.t}</h4><p>${e.d}</p></div>`).join("");
+  let html;
+  if (intelTab === "manual"){
+    html = MECHANICS.map(m => {
+      const unlocked = DEV || (m.ch - 1) <= PROG.u || (m.ch - 1) in PROG.best;
+      if (!unlocked)
+        return `<div class="intel-entry mx-locked"><h4>?????</h4><p>Unlocks in Chapter ${m.ch}.</p></div>`;
+      return `<div class="intel-entry">` +
+        `<h4>${m.name} <span class="mx-ch">CH ${m.ch}</span></h4>` +
+        (m.img && FM_IMG[m.img] ? `<div class="mx-img">${FM_IMG[m.img]
+          .replace(/url\(#wg[ABC]\)/g, "rgba(38,80,100,.55)")
+          .replace(/url\(#mineGrad\)/g, "#c23b2e")
+          .replace(/url\(#revGrad\)/g, "rgba(62,242,154,.10)")}</div>` : "") +
+        `<p><b>The record:</b> ${m.real}</p>` +
+        `<p class="mx-tips"><b>Tips:</b></p><ul class="mx-list">` +
+        m.tips.map(tip => `<li>${tip}</li>`).join("") + `</ul></div>`;
+    }).join("");
+    if (DEV) html = `<div class="intel-entry mx-dev"><p>DEV BUILD: all entries visible. Players unlock each entry with its chapter.</p></div>` + html;
+  } else {
+    html = (INTEL[intelTab] || []).map(e =>
+      `<div class="intel-entry"><h4>${e.t}</h4><p>${e.d}</p></div>`).join("");
+  }
   if (intelTab === "briefing")
     html += `<div class="intel-cta"><button class="btn primary" id="btnPrologueBegin">Begin Chapter 1</button></div>`;
   $("intelBody").innerHTML = html;
