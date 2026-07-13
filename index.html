@@ -177,7 +177,7 @@ h1.logo{font-size:52px;letter-spacing:.14em;font-weight:800;line-height:1;text-s
 .mx-dev p{color:var(--amber);font-size:10.5px;letter-spacing:.08em}
 .fact{
   font-size:11px;color:var(--faint);line-height:1.55;font-style:italic;
-  border-left:2px solid var(--line);padding-left:10px;margin:0 6px 16px;text-align:left;
+  border-left:2px solid var(--line);padding-left:10px;margin:16px 6px 8px;text-align:left;
 }
 .fact b{color:var(--dim);font-style:normal;letter-spacing:.08em}
 
@@ -196,6 +196,9 @@ h1.logo{font-size:52px;letter-spacing:.14em;font-weight:800;line-height:1;text-s
 .brief-sub{font-size:12.5px;color:var(--dim);line-height:1.6}
 .mission{display:flex;gap:7px;flex-wrap:wrap}
 .mxchip{color:var(--red);border-color:rgba(255,92,77,.45)}
+#btnHard{margin-left:auto}
+#btnHard.hardon{color:var(--red);border-color:rgba(255,92,77,.55);background:rgba(255,92,77,.08)}
+.hardtag{color:var(--red);font-weight:700;letter-spacing:.06em}
 .brief-right{display:flex;flex-direction:column;gap:10px;min-height:0}
 .wire{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column}
 .wire-head{font-size:9.5px;letter-spacing:.32em;color:var(--faint);padding:9px 14px;border-bottom:1px solid var(--line);text-transform:uppercase}
@@ -220,7 +223,7 @@ h1.logo{font-size:52px;letter-spacing:.14em;font-weight:800;line-height:1;text-s
   .modal-flavor{font-size:11.5px;line-height:1.5;margin-bottom:8px}
   .modal-stats{margin-bottom:8px;gap:6px}
   .modal-stats .chip{font-size:10px;padding:5px 9px}
-  .fact{font-size:10px;margin:0 4px 8px;line-height:1.45}
+  .fact{font-size:10px;margin:13px 4px 6px;line-height:1.45}
   .modal-btns .btn{font-size:11.5px;padding:10px 14px;letter-spacing:.1em}
   .brief-left .btn{padding:11px 18px}
   .intel-entry{padding:9px 11px}
@@ -662,6 +665,7 @@ text.num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font
     <div class="chap-head">
       <button class="iconbtn" id="btnChapBack">‹</button>
       <h2>Patrol Log · 2026</h2>
+      <button class="btn small" id="btnHard" aria-label="Toggle hard mode"></button>
     </div>
     <div class="chap-row" id="chapList"></div>
   </section>
@@ -771,7 +775,7 @@ const LEVELS = [
       "JUL 2025 · <b>UKMTO</b> · Mariners advised to report drifting objects; survey operations begin in the eastern approaches",
       "JUL 2025 · <b>TEHRAN</b> · 'Psychological warfare': Iran denies any mines were deployed"
     ],
-    minePct:.13, cap:10, interval:23, wreckCost:2,
+    minePct:.14, cap:10, interval:21, wreckCost:2,
     labels:[["IRANIAN COASTLINE",.5,.2,0],["OMANI COASTLINE",.45,.76,0],["GULF OF OMAN",.66,.48,0],["STRAIT OF HORMUZ",.17,.33,0]],
     cities:[["JASK",.6,.1],["KHOR FAKKAN",.04,.7],["SOHAR",.3,.95]],
     border:[[.13,.72],[.09,1.0]],
@@ -811,7 +815,7 @@ const LEVELS = [
       "MAR 10 · <b>US INTELLIGENCE</b> · Iran has begun planting naval mines in the strait; 16 minelayers destroyed",
       "MAR 10 · <b>CENTCOM</b> · Warning to mariners: cleared water may be re-seeded overnight; sweep and re-sweep"
     ],
-    minePct:.165, cap:11, interval:20, wreckCost:2, reMine:{every:4, max:2},
+    minePct:.175, cap:11, interval:19, wreckCost:2, reMine:{every:4, max:2},
     labels:[["IRANIAN COASTLINE",.55,.18,0],["LARAK",.26,.26,1],["HORMUZ",.54,.26,1],["MUSANDAM",.2,.72,1],["PERSIAN GULF",.19,.36,0],["GULF OF OMAN",.78,.42,0]],
     cities:[["BANDAR ABBAS",.3,.06],["KHASAB",.3,.62]],
     border:[[.16,.55],[.1,1.0]],
@@ -850,7 +854,7 @@ const LEVELS = [
       "MAR 27 · <b>WIRE</b> · Mayuree Naree, on fire since the 11th, runs aground on Qeshm Island",
       "MAR 27 · <b>UN</b> · Humanitarian and fertilizer shipments approved for transit"
     ],
-    minePct:.18, cap:12, interval:18, wreckCost:3, reMine:{every:3, max:3},
+    minePct:.19, cap:12, interval:17, wreckCost:3, reMine:{every:3, max:3},
     labels:[["IRANIAN COASTLINE",.6,.17,0],["QESHM",.22,.3,1],["LARAK",.56,.48,1],["MUSANDAM",.4,.78,1],["PERSIAN GULF",.17,.62,0],["STRAIT OF HORMUZ",.68,.4,0]],
     cities:[["BANDAR ABBAS",.62,.06],["KHASAB",.28,.86]],
     border:[[.14,.72],[.1,1.0]],
@@ -889,7 +893,7 @@ const LEVELS = [
       "APR 21 · <b>IMO</b> · Some 20,000 mariners and 2,000 ships remain stranded in the Gulf",
       "APR · <b>ANALYSTS</b> · The largest disruption to world energy supply since the 1970s"
     ],
-    minePct:.185, cap:12, interval:18, wreckCost:3, reMine:{every:3, max:3}, runners:{every:30, escape:6},
+    minePct:.195, cap:12, interval:17, wreckCost:3, reMine:{every:3, max:3}, runners:{every:30, escape:6},
     labels:[["IRANIAN COASTLINE",.5,.17,0],["TUNBS",.36,.44,1],["ABU MUSA",.1,.46,1],["U.A.E. COASTLINE",.4,.78,0],["PERSIAN GULF",.42,.3,0],["STRAIT OF HORMUZ",.8,.44,0]],
     cities:[["BANDAR LENGEH",.3,.06],["RAS AL KHAIMAH",.42,.9]],
     border:[[.62,.7],[.56,1.0]],
@@ -929,7 +933,7 @@ const LEVELS = [
       "MAY 8 · <b>WIRE</b> · Tanker Ocean Koi seized for “trying to disrupt oil exports”",
       "MAY · <b>LLOYD'S LIST</b> · Convoy insurance written voyage by voyage, at rates no one prints"
     ],
-    minePct:.19, cap:12, interval:18, wreckCost:3, reMine:{every:3, max:4}, runners:{every:34, escape:6}, convoy:{every:22, max:3},
+    minePct:.20, cap:12, interval:17, wreckCost:3, reMine:{every:3, max:4}, runners:{every:34, escape:6}, convoy:{every:22, max:3},
     labels:[["IRANIAN COASTLINE",.55,.18,0],["QESHM",.12,.22,1],["MUSANDAM",.56,.82,1],["PERSIAN GULF",.14,.52,0],["GULF OF OMAN",.78,.45,0]],
     cities:[["BANDAR ABBAS",.62,.06],["KHASAB",.42,.72]],
     border:[[.28,.6],[.2,1.0]],
@@ -967,7 +971,7 @@ const LEVELS = [
       "JUN 22 · <b>CNBC</b> · Shipping stalls after Iran declares the key waterway closed again",
       "JUN 27 · <b>JMIC</b> · Widened route through the strait announced near Oman: traffic in both directions"
     ],
-    minePct:.145, cap:13, interval:20, wreckCost:3, reMine:{every:3, max:4}, runners:{every:36, escape:6}, convoy:{every:24, max:3},
+    minePct:.155, cap:13, interval:19, wreckCost:3, reMine:{every:3, max:4}, runners:{every:36, escape:6}, convoy:{every:24, max:3},
     labels:[["IRANIAN COASTLINE",.5,.17,0],["MUSANDAM COAST",.3,.82,0],["SEPARATION SCHEME",.5,.5,0],["PERSIAN GULF",.16,.27,0],["GULF OF OMAN",.78,.28,0]],
     cities:[["BANDAR ABBAS",.6,.05],["KHASAB",.2,.8]],
     border:[[.3,.75],[.24,1.0]],
@@ -1148,6 +1152,21 @@ function saveProgress(p){
 }
 let PROG = loadProgress();
 if (!PROG.perfect) PROG.perfect = {};
+if (!PROG.hardBest) PROG.hardBest = {};
+let HARD = false;
+try { HARD = localStorage.getItem("ormuz.hard") === "1"; } catch(e){}
+function hardUnlocked(){ return DEV || (6 in PROG.best); }
+/* hard mode: denser fields, faster clock, busier traffic, no second-wreck grace */
+function hardened(L){
+  const H = Object.assign({}, L);
+  H.minePct = Math.min(0.27, L.minePct + 0.03);
+  H.interval = Math.max(12, L.interval - 3);
+  if (L.reMine) H.reMine = { every: Math.max(2, L.reMine.every - 1), max: L.reMine.max + 2 };
+  if (L.runners) H.runners = { every: Math.max(20, L.runners.every - 6), escape: 5 };
+  if (L.convoy) H.convoy = Object.assign({}, L.convoy, { every: Math.max(14, L.convoy.every - 4) });
+  if (L.drones) H.drones = { every: Math.max(18, L.drones.every - 6) };
+  return H;
+}
 const DEV = /[?&]dev\b/.test(location.search);
 if (DEV) PROG.u = 99;   /* all chapters unlocked; saveProgress is a no-op in dev */
 
@@ -1593,7 +1612,7 @@ function placeMines(safe){
 
 /* ---------------- game flow ---------------- */
 function startLevel(idx){
-  const L = LEVELS[idx];
+  const L = HARD && hardUnlocked() ? hardened(LEVELS[idx]) : LEVELS[idx];
   const { cells, grid } = buildCells(L.mask);
   const cols = L.mask[0].length;
   const lanes = computeLanes(cells, cols);
@@ -1611,7 +1630,8 @@ function startLevel(idx){
     ships:[], runners:[], holds:[], shipTimer:0, runnerTimer:0,
     shipsOut:0, runnersStopped:0, runnerMines:0, detained:0, critWarned:false, taps:0,
     drones:[], droneTimer:0, dronesDowned:0, struck:0,
-    cycleMs:0, totalMs:0, lastT:0
+    cycleMs:0, totalMs:0, lastT:0,
+    hard: HARD && hardUnlocked()
   };
   /* distance from each water cell to the Iranian coast (for detention risk) */
   S.iranDist = (() => {
@@ -1758,7 +1778,7 @@ function detonate(c){
   fl.classList.add("on");
   $("boardWrap").classList.add("shake");
   setTimeout(() => $("boardWrap").classList.remove("shake"), 550);
-  const cost = (S.L.wreckCost || 2) + Math.min(2, Math.max(0, S.wrecks - 2));
+  const cost = (S.L.wreckCost || 2) + Math.min(2, Math.max(0, S.wrecks - (S.hard ? 1 : 2)));
   if (!fieldManual("wreck", "HULL DAMAGED",
     `A mine went off under the sweep. The patrol continues, but the wreck blocks that hex for the rest of the level, nearby numbers re-count, and ${cost} tankers join the backlog. Repeated wrecks cost more each time, so slow down before you spend another.`,
     FM_IMG.wreck))
@@ -1845,12 +1865,18 @@ function checkWin(){
     if (c.water && c.mine && !c.flag){ c.flag = true; S.flags++; renderCell(c); }
   updateHud();
   const secs = Math.round(S.totalMs / 1000);
-  PROG.u = Math.max(PROG.u, Math.min(S.idx + 1, LEVELS.length - 1));
-  if (S.idx === LEVELS.length - 1) PROG.u = LEVELS.length;
-  S.newBest = !(S.idx in PROG.best) || secs < PROG.best[S.idx];
-  if (S.newBest) PROG.best[S.idx] = secs;
-  S.perfect = (S.revealed >= S.safeTotal) && S.wrecks === 0;
-  if (S.perfect) PROG.perfect[S.idx] = true;
+  if (S.hard){
+    S.newBest = !(S.idx in PROG.hardBest) || secs < PROG.hardBest[S.idx];
+    if (S.newBest) PROG.hardBest[S.idx] = secs;
+    S.perfect = (S.revealed >= S.safeTotal) && S.wrecks === 0;
+  } else {
+    PROG.u = Math.max(PROG.u, Math.min(S.idx + 1, LEVELS.length - 1));
+    if (S.idx === LEVELS.length - 1) PROG.u = LEVELS.length;
+    S.newBest = !(S.idx in PROG.best) || secs < PROG.best[S.idx];
+    if (S.newBest) PROG.best[S.idx] = secs;
+    S.perfect = (S.revealed >= S.safeTotal) && S.wrecks === 0;
+    if (S.perfect) PROG.perfect[S.idx] = true;
+  }
   saveProgress(PROG);
   HAPTIC.success();
   SFX.win();
@@ -3070,7 +3096,8 @@ function openModal(kind){
     title.textContent = L.winTitle || "CONVOY THROUGH";
     flavor.textContent = L.winFlavor ||
       "The channel holds. The backlog drains through the corridor you swept.";
-    stats.innerHTML = chip(`Time <b>${fmtTime(S.totalMs)}</b>`) +
+    stats.innerHTML = (S.hard ? `<span class="chip" style="color:var(--red);border-color:rgba(255,92,77,.5)">HARD</span>` : "") +
+                      chip(`Time <b>${fmtTime(S.totalMs)}</b>`) +
                       chip(`Sweep <b>${sweepPct}%</b>`) +
                       chip(`Wrecks <b>${S.wrecks}</b>`) +
                       (S.shipsOut ? chip(`Ships through <b>${S.shipsOut}</b>`) : "") +
@@ -3133,7 +3160,8 @@ function renderChapters(){
     card.className = "chap-card" + (unlocked ? "" : " locked");
     const dparts = L.date.split(" ");
     let state;
-    if (cleared) state = `<span class="done">CLEARED ${fmtTime(PROG.best[i]*1000)}</span>` +
+    const hardTag = i in PROG.hardBest ? ` <span class="hardtag">HARD ${fmtTime(PROG.hardBest[i]*1000)}</span>` : "";
+    if (cleared) state = `<span class="done">CLEARED ${fmtTime(PROG.best[i]*1000)}</span>` + hardTag +
                          (PROG.perfect[i] ? ` <span class="star">${ICONS.star}</span>` : "") +
                          ` &nbsp;<span class="go">${ICONS.play} REPLAY</span>`;
     else if (unlocked) state = `<span class="go">${ICONS.play} PLAY</span>`;
@@ -3535,7 +3563,28 @@ $("btnContinue").addEventListener("click", () => {
   const next = Math.min(PROG.u, LEVELS.length - 1);
   showBrief(next);
 });
-$("btnChapters").addEventListener("click", () => { renderChapters(); show("scr-chapters"); });
+function hardLabel(){
+  if (!hardUnlocked()) return "Hard mode · locked";
+  return HARD ? "Mode · HARD" : "Mode · Patrol";
+}
+function renderHardBtn(){
+  const b = $("btnHard");
+  b.textContent = hardLabel();
+  b.classList.toggle("hardon", HARD && hardUnlocked());
+}
+$("btnHard").addEventListener("click", () => {
+  if (!hardUnlocked()){
+    toast("Clear all seven chapters to unlock Hard mode", 3600);
+    return;
+  }
+  HARD = !HARD;
+  try { localStorage.setItem("ormuz.hard", HARD ? "1" : "0"); } catch(e){}
+  renderHardBtn();
+  toast(HARD ?
+    "HARD mode · denser minefields, a faster clock, busier traffic, less forgiveness" :
+    "Patrol mode · standard campaign difficulty", 4200);
+});
+$("btnChapters").addEventListener("click", () => { renderChapters(); renderHardBtn(); show("scr-chapters"); });
 $("btnChapBack").addEventListener("click", () => show("scr-title"));
 $("btnBriefBack").addEventListener("click", () => { renderChapters(); show("scr-chapters"); });
 $("btnBegin").addEventListener("click", () => startLevel(briefIdx));
