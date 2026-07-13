@@ -1349,6 +1349,27 @@ function coach(key, msg, ms){
    Pauses the clock, shows an illustrated card, resumes on dismiss.
    Illustrations reference the board's SVG defs, so they are theme-correct. */
 const FM_IMG = {
+  buoy: `<svg viewBox="0 0 300 96">
+    <g transform="translate(110,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/><text y="7" text-anchor="middle" font-size="18" fill="#3ef29a" font-weight="700">2</text></g>
+    <g transform="translate(150,26)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.92)" fill="url(#wgA)" stroke="rgba(0,0,0,.4)"/><path d="M-2,7 L-2,-8 L7,-4 L-2,0" fill="#f6a521"/></g>
+    <g transform="translate(150,70)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" transform="scale(.92)" fill="url(#wgB)" stroke="rgba(0,0,0,.4)"/><path d="M-2,7 L-2,-8 L7,-4 L-2,0" fill="#f6a521"/></g>
+    <g transform="translate(190,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <g transform="translate(230,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/></g>
+    <circle cx="110" cy="48" r="26" fill="none" stroke="#3ef29a" stroke-width="1.4" stroke-dasharray="3 4" opacity=".9"/>
+    <text x="150" y="12" text-anchor="middle" font-size="11" fill="#f6a521" letter-spacing="1.6">HOLD = BUOY A SUSPECT</text>
+    <text x="150" y="92" text-anchor="middle" font-size="10.5" fill="#3ef29a" letter-spacing="1.2">BUOYS MATCH? TAP THE NUMBER TO SWEEP</text>
+  </svg>`,
+  backlog: `<svg viewBox="0 0 300 96">
+    <rect x="30" y="34" width="240" height="4" rx="2" fill="#0e2436"/>
+    <rect x="30" y="34" width="150" height="4" rx="2" fill="#f6a521"/>
+    <g transform="translate(0,50)">` +
+    Array.from({length: 10}, (_, i) =>
+      `<rect x="${30 + i * 24.5}" y="0" width="20" height="16" rx="3" fill="${i < 3 ? "rgba(246,165,33,.16)" : "rgba(11,29,44,.7)"}" stroke="${i < 3 ? "rgba(246,165,33,.5)" : "#17384f"}"/>` +
+      (i < 3 ? `<path d="M${36 + i * 24.5},10 h8 l2,2 h-12 Z M${38.5 + i * 24.5},7 h3 v3 h-3 Z" fill="#f6a521"/>` : "")
+    ).join("") + `</g>
+    <text x="150" y="16" text-anchor="middle" font-size="11" fill="#f6a521" letter-spacing="1.6">ONE TANKER JOINS EVERY FEW SECONDS</text>
+    <text x="150" y="92" text-anchor="middle" font-size="10.5" fill="#ff5d45" letter-spacing="1.2">BACKLOG FULL = STRAIT CLOSED</text>
+  </svg>`,
   sweep: `<svg viewBox="0 0 300 96">
     <path d="M30,48 l10,-6 v12 Z" fill="#3ef29a" opacity=".9"/>
     <g transform="translate(75,48)"><polygon points="17.3,10 0,20 -17.3,10 -17.3,-10 0,-20 17.3,-10" fill="rgba(62,242,154,.10)" stroke="rgba(62,242,154,.4)"/><text y="6" text-anchor="middle" font-size="16" fill="#3ef29a" font-weight="700">2</text></g>
@@ -1668,7 +1689,11 @@ function startLevel(idx){
   setTicker(L);
   closeModal();
   show("scr-game");
-  if (idx === 0) coach("start", "Open a channel of swept hexes from the WEST edge to the EAST edge · your first tap is always safe", 6500);
+  if (idx === 0 &&
+      !fieldManual("fmSweep", "THE SWEEP",
+        "You command the mine countermeasures patrol. Tap water to survey it: each number counts the mines hiding in the six hexes around it. Your first tap is always safe. Open a connected channel of surveyed water from the WEST edge to the EAST edge to reopen the strait; you never need to clear the whole map.",
+        FM_IMG.sweep))
+    coach("start", "Open a channel of swept hexes from the WEST edge to the EAST edge · your first tap is always safe", 6500);
   if (S.lanes.length > 1)
     fieldManual("lanes2", "TWO LANES, BOTH MUST OPEN",
       "A buoyed separation line splits this sector into two shipping lanes, and both need their own swept channel from west to east. Opening the FIRST lane starts one-way traffic and clears part of the backlog, so scout both lanes and open the cheaper one first.",
@@ -1678,6 +1703,10 @@ function startLevel(idx){
 function tapCell(i){
   if (!S || S.over) return;
   S.taps++;
+  if (S.taps === 2)
+    fieldManual("fmBuoy", "BUOYS AND THE CHORD",
+      "Numbers are your sonar. When you know a hex hides a mine, HOLD it to drop a buoy. When a number has as many buoys around it as its count, tap the number itself to sweep every other hex around it at once. Fast, and exactly as honest as your buoys.",
+      FM_IMG.buoy);
   const c = S.cells[i];
   if (!c || !c.water || c.wreck) return;
   if (c.rev){ chord(c); return; }
@@ -1905,7 +1934,10 @@ function tickClock(){
   if (S.cycleMs >= cyc){
     S.cycleMs -= cyc;
     SFX.tanker();
-    coach("tanker", "A tanker joined the backlog · open the channel before it fills");
+    if (!fieldManual("fmBacklog", "THE TANKER BACKLOG",
+        "A tanker just joined the queue at the mouth of the strait. One arrives every few seconds; the thin bar in the HUD counts down to the next. If the backlog ever fills, insurers pull cover and the patrol fails. Only the backlog can end the sweep.",
+        FM_IMG.backlog))
+      coach("tanker", "A tanker joined the backlog · open the channel before it fills");
     S.tankersArrived++;
     addBacklog(1);
     if (S.over) return;
