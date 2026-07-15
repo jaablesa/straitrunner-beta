@@ -66,7 +66,19 @@ body{
 @keyframes rot{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
 #rotate h2{font-size:16px;letter-spacing:.28em;text-transform:uppercase}
 #rotate p{font-size:12.5px;color:var(--dim);max-width:260px;line-height:1.6}
-@media (orientation: portrait){ #rotate{display:flex} }
+/* Portrait fallback: rotation-locked phones and in-app browsers (X, WhatsApp)
+   never rotate the viewport, so render the whole app sideways instead; the
+   player just holds the phone horizontally. Keyed to coarse pointers so a
+   tall desktop window still gets the rotate prompt. */
+@media (orientation: portrait) and (pointer: coarse){
+  body{
+    width:100vh;height:100vw;
+    width:100dvh;height:100dvw;
+    transform:rotate(90deg) translate(0,-100%);
+    transform-origin:top left;
+  }
+}
+@media (orientation: portrait) and (pointer: fine){ #rotate{display:flex} }
 
 /* ---------- screens ---------- */
 .screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;
@@ -112,6 +124,7 @@ body{
 h1.logo{font-size:52px;letter-spacing:.14em;font-weight:800;line-height:1;text-shadow:0 6px 30px rgba(246,165,33,.18)}
 .tagline{font-size:12px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
 .title-btns{display:flex;gap:12px;margin-top:16px}
+.title-tools{display:flex;gap:8px}
 .howto{margin-top:14px;font-size:12px;color:var(--dim);line-height:1.7;max-width:480px}
 .howto b{color:var(--ink)}
 .finenote{margin-top:8px;font-size:10px;color:var(--faint);max-width:440px;line-height:1.5}
@@ -209,7 +222,12 @@ h1.logo{font-size:52px;letter-spacing:.14em;font-weight:800;line-height:1;text-s
 .wire-h{font-size:12px;line-height:1.5;color:var(--ink)}
 
 /* ---------- phone-height compaction: every landscape iPhone is <=430px tall ---------- */
-@media (max-height: 450px){
+@media (max-height: 450px), (orientation: portrait) and (pointer: coarse) and (max-width: 450px){
+  .howto{margin-top:9px;font-size:11px;line-height:1.55}
+  .finenote{margin-top:6px;font-size:9px;max-width:400px}
+  .followline{margin-top:5px;font-size:9px}
+  .title-btns{margin-top:12px}
+  h1.logo{font-size:44px}
   .brief-grid{gap:12px;padding:6px 14px calc(10px + var(--sab))}
   .brief-left{justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;gap:9px;padding-right:2px}
   .brief-left .btn{position:sticky;bottom:0;flex-shrink:0;margin-top:auto;box-shadow:0 -10px 18px rgba(2,8,14,.55)}
@@ -642,8 +660,10 @@ html[lang="es"] .ticker::before{content:"EN VIVO"}
         <b>Tap</b> to sweep &nbsp;·&nbsp; <b>Hold</b> to flag &nbsp;·&nbsp; connect the <b>Persian Gulf</b> to the <b>Gulf of Oman</b><br>
         with a channel of swept hexes before the tanker backlog fills.
       </div>
-      <button class="btn small" id="btnAmb">Ambience · Sonar Room</button>
-      <button class="btn small" id="btnLang" aria-label="Language / Idioma">Language · English</button>
+      <div class="title-tools">
+        <button class="btn small" id="btnAmb">Ambience · Sonar Room</button>
+        <button class="btn small" id="btnLang" aria-label="Language / Idioma">Language · English</button>
+      </div>
       <div class="finenote" id="finenote">
         Seven chapters follow the real record, from the first rumor of mines to this week.
         Headlines are paraphrased from the reported record of those dates.
@@ -2577,15 +2597,18 @@ function clearEntities(){
 }
 
 function gamePaused(){
+  /* portrait on touch devices renders sideways and stays playable; only the
+     fine-pointer rotate prompt actually covers the board */
   return $("fmodal").classList.contains("open") ||
-         (matchMedia && matchMedia("(orientation: portrait)").matches);
+         (matchMedia && matchMedia("(orientation: portrait) and (pointer: fine)").matches);
 }
 document.addEventListener("visibilitychange", () => {
   if (!S || S.over || !S.armed) return;
   if (document.hidden) stopClock(); else if (!gamePaused()) startClock();
 });
-/* the rotate prompt must also stop the tanker clock, not just cover it */
-matchMedia("(orientation: portrait)").addEventListener("change", e => {
+/* the rotate prompt must also stop the tanker clock, not just cover it
+   (touch devices never see the prompt; they play sideways instead) */
+matchMedia("(orientation: portrait) and (pointer: fine)").addEventListener("change", e => {
   if (!S || S.over || !S.armed) return;
   if (e.matches) stopClock();
   else if (!document.hidden && !$("fmodal").classList.contains("open")) startClock();
@@ -3871,7 +3894,9 @@ document.addEventListener("gesturechange", e => e.preventDefault());
     const cs = getComputedStyle(probe);
     const measured = Math.max(parseFloat(cs.paddingLeft) || 0, parseFloat(cs.paddingRight) || 0);
     const landscape = matchMedia("(orientation: landscape)").matches;
-    const missing = landscape && measured < 20;
+    /* sideways mode (locked portrait): the island sits along the app's left
+       edge but the portrait left/right insets read 0, so reserve manually */
+    const missing = (landscape && measured < 20) || !landscape;
     document.documentElement.style.setProperty("--gutter", missing ? "59px" : "0px");
     document.documentElement.style.setProperty("--gutter-b", missing ? "14px" : "0px");
   };
