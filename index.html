@@ -418,6 +418,7 @@ text.num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font
   background:linear-gradient(90deg, rgba(3,10,16,.9) 70%, transparent);
   color:var(--red);font-size:8.5px;font-weight:800;letter-spacing:.28em;
 }
+html[lang="es"] .ticker::before{content:"EN VIVO"}
 .tick-track{display:inline-block;font-size:11.5px;color:var(--dim);letter-spacing:.04em;animation:tick linear infinite}
 .tick-track b{color:var(--amber);font-weight:700}
 @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
@@ -607,8 +608,8 @@ text.num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font
 
   <div id="rotate">
     <div class="phone"></div>
-    <h2>Rotate your device</h2>
-    <p>HORMUZ charts the whole strait, west to east. Turn your phone sideways to play.</p>
+    <h2 id="rotateH">Rotate your device</h2>
+    <p id="rotateP">HORMUZ charts the whole strait, west to east. Turn your phone sideways to play.</p>
   </div>
 
   <!-- ============ TITLE ============ -->
@@ -631,18 +632,19 @@ text.num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font
     <div class="title-inner">
       <div class="kicker" id="titleKicker">Straitrunner</div>
       <h1 class="logo">HORMUZ</h1>
-      <div class="tagline">Open the Channel</div>
+      <div class="tagline" id="tagline">Open the Channel</div>
       <div class="title-btns">
         <button class="btn primary" id="btnContinue">Start Patrol</button>
         <button class="btn" id="btnChapters">Chapters</button>
         <button class="btn" id="btnPrologue">Intel</button>
       </div>
-      <div class="howto">
+      <div class="howto" id="howto">
         <b>Tap</b> to sweep &nbsp;·&nbsp; <b>Hold</b> to flag &nbsp;·&nbsp; connect the <b>Persian Gulf</b> to the <b>Gulf of Oman</b><br>
         with a channel of swept hexes before the tanker backlog fills.
       </div>
       <button class="btn small" id="btnAmb">Ambience · Sonar Room</button>
-      <div class="finenote">
+      <button class="btn small" id="btnLang" aria-label="Language / Idioma">Language · English</button>
+      <div class="finenote" id="finenote">
         Seven chapters follow the real record, from the first rumor of mines to this week.
         Headlines are paraphrased from the reported record of those dates.
       </div>
@@ -654,7 +656,7 @@ text.num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font
   <section class="screen" id="scr-prologue">
     <div class="chap-head">
       <button class="iconbtn" id="btnPrologueBack" aria-label="Back"></button>
-      <h2>Intel</h2>
+      <h2 id="intelH">Intel</h2>
       <div class="intel-tabs" id="intelTabs"></div>
     </div>
     <div class="intel-body" id="intelBody"></div>
@@ -664,7 +666,7 @@ text.num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font
   <section class="screen" id="scr-chapters">
     <div class="chap-head">
       <button class="iconbtn" id="btnChapBack">‹</button>
-      <h2>Patrol Log · 2026</h2>
+      <h2 id="chapH">Patrol Log · 2026</h2>
       <button class="btn small" id="btnHard" aria-label="Toggle hard mode"></button>
     </div>
     <div class="chap-row" id="chapList"></div>
@@ -678,7 +680,7 @@ text.num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font
     <div class="brief-grid">
       <div class="brief-left">
         <div>
-          <div class="brief-tag">Situation Report</div>
+          <div class="brief-tag" id="briefTag">Situation Report</div>
           <div class="brief-date" id="briefDate"></div>
           <div class="brief-name" id="briefName"></div>
           <div class="brief-sector" id="briefSector"></div>
@@ -689,7 +691,7 @@ text.num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font
       </div>
       <div class="brief-right">
         <div class="wire">
-          <div class="wire-head">News Wire · Those Days</div>
+          <div class="wire-head" id="wireHead">News Wire · Those Days</div>
           <div class="wire-body" id="briefWire"></div>
         </div>
       </div>
@@ -723,7 +725,7 @@ text.num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;font
 
     <div class="modal" id="fmodal">
       <div class="modal-card">
-        <div class="modal-kicker good">Field Manual</div>
+        <div class="modal-kicker good fmKick">Field Manual</div>
         <div class="modal-title" id="fmTitle"></div>
         <div id="fmImg"></div>
         <div class="modal-flavor" id="fmBody"></div>
@@ -1181,6 +1183,31 @@ if (DEV) PROG.u = 99;   /* all chapters unlocked; saveProgress is a no-op in dev
 let AC = null;
 let muted = false;
 try { muted = localStorage.getItem("ormuz.mute") === "1"; } catch(e){}
+
+/* ---------------- language ---------------- */
+let LANG = "en";
+try {
+  LANG = localStorage.getItem("ormuz.lang") ||
+         (((navigator.language || "").toLowerCase().indexOf("es") === 0) ? "es" : "en");
+} catch(e){}
+const isES = () => LANG === "es";
+/* ES bundle is generated from docs of record; see docs/i18n note */
+const ES = /*__ES_BUNDLE__*/{"levels":[{"code":"CAPÍTULO 1","name":"EL RUMOR","date":"JUN-JUL 2025","sector":"ACCESOS AL GOLFO DE OMÁN","sub":"La guerra de doce días terminó y el alto el fuego se sostiene, apenas. Entonces llega el informe de inteligencia: durante los combates de junio, Irán cargó minas navales en buques dentro del Golfo. Nadie puede decir si alguna entró al agua. Alguien tiene que sacar un buque de sondeo y averiguarlo, en silencio, antes de que lo hagan las aseguradoras.","winTitle":"EL RUMOR ERA CIERTO","winFlavor":"El sondeo las encuentra: una dispersión escasa, despejada en silencio antes de que el mercado escuche una palabra. Las minas nunca fueron la pregunta. La pregunta era cuándo alguien decidiría usarlas.","brief":[["Reuters · 1 Jul","Inteligencia de EEUU: Irán cargó minas navales en buques en el Golfo Pérsico tras los ataques de junio"],["UKMTO","Aviso: transitar con cautela y reportar objetos flotantes a los buques de guerra de la coalición"],["Aseguradoras","Las primas de riesgo de guerra siguen tercamente altas tras el alto el fuego; los suscriptores exigen sondeos con discreción"],["Teherán","Funcionarios descartan los reportes de minas como 'guerra psicológica' y niegan cualquier despliegue"]],"ticker":["JUN 24 2025 · <b>AGENCIAS<\/b> · La guerra de doce días termina en un frágil alto el fuego; el estrecho siguió abierto, por poco","JUL 1 2025 · <b>REUTERS<\/b> · Inteligencia de EEUU afirma que Irán cargó minas navales en buques en el Golfo Pérsico en junio","JUL 2025 · <b>ASEGURADORAS<\/b> · Las primas de riesgo de guerra se niegan a bajar a niveles de preguerra; se exigen sondeos en Fujairah","JUL 2025 · <b>UKMTO<\/b> · Se recomienda a los marinos reportar objetos a la deriva; comienzan operaciones de sondeo en los accesos orientales","JUL 2025 · <b>TEHERÁN<\/b> · 'Guerra psicológica': Irán niega que se hayan desplegado minas"]},{"code":"CAPÍTULO 2","name":"MINAS EN EL AGUA","date":"FEB 28 - MAR 12 2026","sector":"LA ANGOSTURA MINADA","sub":"Basta una mañana para que el mundo cambie: la 'Operation Epic Fury' antes del amanecer, y al caer la noche la IRGC transmite que el estrecho está cerrado. En dos semanas los tanqueros han apagado sus señales, las aseguradoras han huido y la inteligencia está segura: los minadores trabajan la angostura de noche. Cada canal que despejas puede sembrarse de nuevo a tus espaldas.","winTitle":"UN CANAL, POR HOY","winFlavor":"La angostura es transitable esta noche. Pero la inteligencia contó dieciséis minadores destruidos en plena faena, lo que significa que había dieciséis minadores. Nadie cree que el campo vaya a seguir despejado.","brief":[["CENTCOM","'Operation Epic Fury': ataques de EEUU e Israel por todo Irán; en cuestión de horas la IRGC declara cerrado el estrecho"],["UKMTO","Poco después de la medianoche del 2 de marzo, ni un solo tanquero en el estrecho transmite posición AIS"],["Inteligencia EEUU","Irán ha comenzado a sembrar minas navales; 16 minadores destruidos en plena faena en la angostura"],["Mercados","El crudo Brent supera los 100 dólares por primera vez en cuatro años, rumbo a un pico de 126"]],"ticker":["FEB 28 · <b>AGENCIAS<\/b> · EEUU e Israel lanzan la “Operation Epic Fury” contra sitios militares y nucleares por todo Irán","FEB 28 · <b>RADIO IRGC<\/b> · “No se permite el paso de buques por el Estrecho de Ormuz”","MAR 2 · <b>UKMTO<\/b> · El AIS se apaga en todo el estrecho poco después de la medianoche","MAR 5 · <b>CLUBES P&I<\/b> · Retirada la cobertura de protección e indemnización para los tránsitos por Ormuz","MAR 8 · <b>MERCADOS<\/b> · El Brent supera los 100 dólares y toca un pico de 126: la mayor subida mensual registrada","MAR 10 · <b>INTELIGENCIA EEUU<\/b> · Irán ha comenzado a sembrar minas navales en el estrecho; 16 minadores destruidos","MAR 10 · <b>CENTCOM<\/b> · Aviso a los marinos: el agua despejada puede resembrarse de un día para otro; barrer y volver a barrer"]},{"code":"CAPÍTULO 3","name":"CIERRE TOTAL","date":"MAR 27 2026","sector":"EL CANAL DE QESHM","sub":"Teherán deja de fingir que el cierre es negociable: cerrado para cualquiera que sirva a EEUU, Israel o sus aliados, abierto para cinco naciones elegidas. Un buque siniestrado yace varado en Qeshm como prueba de lo que puede hacer el campo minado. Los destructores de CENTCOM comienzan a despejar, y abrir el canal al sur de Qeshm te toca a ti.","winTitle":"EL CANAL RESISTE","winFlavor":"Al sur de Qeshm el agua vuelve a ser honesta. Veinte mil marinos siguen esperando dentro del Golfo, y cada uno de ellos oyó que este canal se abrió.","brief":[["IRGC","Estrecho cerrado para todo buque con origen o destino en puertos de EEUU, Israel y sus aliados"],["CENTCOM","Comienzan en los accesos las operaciones de limpieza de minas encabezadas por destructores"],["Teherán","Paso concedido a China, Rusia, India, Irak y Pakistán; aprobada la carga humanitaria de la ONU"],["Agencias","El buque siniestrado Mayuree Naree encalla en la isla de Qeshm tras semanas a la deriva"]],"ticker":["MAR 14-24 · <b>ARMADA INDIA<\/b> · “Operation Sankalp”: cinco buques de GLP escoltados a la salida por el Golfo de Omán","MAR 26 · <b>TEHERÁN<\/b> · Anunciada la lista de paso: China, Rusia, India, Irak, Pakistán","MAR 27 · <b>IRGC<\/b> · Cierre extendido a todo buque que sirva a puertos de EEUU, Israel y sus aliados","MAR 27 · <b>CENTCOM<\/b> · Comienzan las operaciones de limpieza de minas con destructores","MAR 27 · <b>AGENCIAS<\/b> · El Mayuree Naree, en llamas desde el día 11, encalla en la isla de Qeshm","MAR 27 · <b>ONU<\/b> · Aprobado el tránsito de cargamentos humanitarios y de fertilizantes"]},{"code":"CAPÍTULO 4","name":"DESPEJAR EL ESTRECHO","date":"ABR 11-21 2026","sector":"LOS ACCESOS OCCIDENTALES","sub":"Los destructores estadounidenses entran al estrecho por primera vez desde que empezó la guerra, y dos días después el bloqueo de los puertos de Irán se cierra de golpe tras ellos. Dentro del Golfo hay dos mil buques y veinte mil marinos atrapados, y el agua que despejas hoy es su única salida.","winTitle":"UNA SALIDA","winFlavor":"Los accesos occidentales están abiertos. En algún lugar a tus espaldas, dos mil tripulaciones sacan cuentas de combustible, víveres y qué tan rápido pueden levar anclas.","brief":[["Casa Blanca","Las fuerzas de EEUU han empezado a 'despejar' el estrecho, dice el presidente; los destructores entran a la angostura"],["CENTCOM","Bloqueo de los puertos iraníes desde el 13 de abril; el tránsito hacia puertos no iraníes sigue sin trabas"],["IMO","Unos 20,000 marinos y 2,000 buques atrapados en el Golfo Pérsico"],["Agencias","Una breve reapertura para la marina mercante se derrumba en días; se reimponen las restricciones"]],"ticker":["ABR 11 · <b>CASA BLANCA<\/b> · Destructores de la Armada de EEUU entran al estrecho mientras Washington promete reabrir la vía","ABR 13 · <b>CENTCOM<\/b> · Comienza el bloqueo naval de los puertos y aguas costeras de Irán","ABR 14 · <b>CENTCOM<\/b> · Minadores burlan el bloqueo al amparo de la oscuridad; las escoltas maniobran para cortarles el paso","ABR 17 · <b>AGENCIAS<\/b> · La breve reapertura para la marina mercante se derrumba; se reimponen las restricciones","ABR 21 · <b>IMO<\/b> · Unos 20,000 marinos y 2,000 buques siguen atrapados en el Golfo","ABR · <b>ANALISTAS<\/b> · La mayor disrupción del suministro energético mundial desde los años setenta"]},{"code":"CAPÍTULO 5","name":"PROJECT FREEDOM","date":"MAY 4-8 2026","sector":"RUTA DEL CONVOY","sub":"Project Freedom: los buques de guerra se forman y la flota atrapada empieza a moverse, en fila india, por aguas que tienes que despejar más rápido de lo que los minadores pueden envenenarlas. A los dos días, las escoltas hacen una pausa por la diplomacia, y cada capitán en el Golfo contiene la respiración.","winTitle":"EL CONVOY PASA","winFlavor":"Salieron en una fila que se perdía más allá del horizonte, y cada buque que superó la angostura fue un argumento para terminar esto.","brief":[["Armada EEUU","'Project Freedom': buques de guerra escoltan convoyes mercantes fuera del Golfo"],["Teherán","Se crea una 'Autoridad del Estrecho del Golfo Pérsico' para licenciar y cobrar los tránsitos"],["Agencias","La IRGC retiene tanqueros apresados, entre ellos el MSC Epaminondas y el MSC Francesca"],["Casa Blanca","Escoltas en pausa tras 'grandes avances' hacia un acuerdo"]],"ticker":["MAY 4 · <b>ARMADA EEUU<\/b> · Comienza “Project Freedom”: convoyes escoltados fuera del Golfo Pérsico","MAY 5 · <b>TEHERÁN<\/b> · Irán crea una “Autoridad del Estrecho del Golfo Pérsico” para licenciar tránsitos","MAY 5 · <b>AVISO A CAPITANES<\/b> · Los convoyes dejan de esperar: algunos capitanes se adentran en aguas a medio barrer antes que fondear otra semana","MAY 6 · <b>CASA BLANCA<\/b> · Misión de escolta en pausa, citando “grandes avances” hacia un acuerdo","MAY 6 · <b>AGENCIAS<\/b> · Patrulleras abordan y detienen a todo tanquero sorprendido merodeando fuera de los canales barridos","MAY 8 · <b>AGENCIAS<\/b> · El tanquero Ocean Koi apresado por “intentar perturbar las exportaciones de petróleo”","MAY · <b>LLOYD'S LIST<\/b> · El seguro de convoy se suscribe viaje por viaje, a tasas que nadie publica"]},{"code":"CAPÍTULO 6","name":"LA RUTA AMPLIADA","date":"JUN 17-27 2026","sector":"SEPARACIÓN DE TRÁFICO","sub":"Un memorando termina la guerra sobre el papel. Irán declara de todos modos un último cierre, y entonces la respuesta llega dibujada en una carta náutica: una ruta ampliada cerca de Omán, dos carriles, ambas direcciones, desafiando a cualquiera a cerrarla otra vez. Abre ambos carriles y haz que el papel sea real.","winTitle":"EL ESTRECHO VIVE","winFlavor":"Ambos carriles resisten y el tráfico se mueve en dos direcciones por primera vez desde febrero. El estrecho está abierto.","brief":[["Agencias","Los presidentes de EEUU e Irán firman un memorando de entendimiento que pone fin a la guerra y a los bloqueos"],["Teherán","20 de junio: Irán vuelve a declarar cerrado el estrecho, citando violaciones israelíes"],["JMIC","Se abre cerca de Omán una ruta ampliada de doble sentido que rompe el control de Irán sobre la vía"],["Lloyd's List","Los suscriptores regresan, carril por carril, al triple de las tasas antiguas"]],"ticker":["JUN 11 · <b>AL JAZEERA<\/b> · Irán cierra el Estrecho de Ormuz: ¿pero no estaba ya cerrado?","JUN 17 · <b>AGENCIAS<\/b> · Firmado el memorando de entendimiento: terminan la guerra y los bloqueos","JUN 20 · <b>TEHERÁN<\/b> · Irán dice que el estrecho vuelve a estar cerrado por violaciones del alto el fuego","JUN 22 · <b>CNBC<\/b> · El tráfico marítimo se estanca después de que Irán declara cerrada de nuevo la vía clave","JUN 27 · <b>JMIC<\/b> · Anunciada una ruta ampliada por el estrecho cerca de Omán: tráfico en ambas direcciones"]},{"code":"CAPÍTULO 7","name":"LA RECAÍDA","date":"JUL 8-12 2026","sector":"EL CORREDOR ESCOLTADO","sub":"Diecinueve días. Eso duró la paz antes de que los misiles alcanzaran tres buques mercantes y los ataques se reanudaran en ambas orillas. El tráfico se ha desplomado a un goteo que se arrastra por un único canal escoltado pegado a la costa omaní, mientras los diplomáticos lo intentan de nuevo en Mascate. Mantén el corredor respirando. Es el único que queda.","winTitle":"EL CORREDOR RESISTE","winFlavor":"El canal escoltado sobrevive a la noche. Las conversaciones continúan en Mascate, y el estrecho sigue abierto convoy a convoy.","brief":[["Agencias","Se rompe el alto el fuego: tres buques mercantes alcanzados en el estrecho; EEUU ataca decenas de objetivos; Irán responde en cinco países"],["Lloyd's List","Los cruces rastreables por el estrecho se paralizan en la práctica"],["Mascate","Se abren conversaciones de seguridad mientras Washington exige un compromiso público de cesar los ataques a la marina mercante"],["Mercados","Primas de riesgo de guerra a ocho veces las tasas previas a la crisis; seis clubes P&I restringen la cobertura"]],"ticker":["JUL 5 · <b>PORTWATCH<\/b> · La ruta ya reducida a 34 tránsitos diarios frente a los 88 normales antes de que se reanudaran los ataques","JUL 7 · <b>AGENCIAS<\/b> · Misiles iraníes y un dron alcanzan tres buques mercantes en el estrecho; EEUU golpea objetivos costeros en respuesta","JUL 8 · <b>AGENCIAS<\/b> · EEUU ataca decenas de objetivos por todo Irán por segundo día","JUL 9 · <b>AGENCIAS<\/b> · Se reportan represalias iraníes contra sitios en Bahréin, Kuwait, Qatar, Jordania e Irak","JUL 10 · <b>AL JAZEERA<\/b> · El tráfico por Ormuz se paraliza mientras EEUU e Irán reanudan los combates","JUL 11 · <b>MERCADOS<\/b> · Primas de riesgo de guerra a ocho veces las tasas previas a la crisis; seis clubes P&I restringen la cobertura para tránsitos del Golfo","JUL 11 · <b>MASCATE<\/b> · El canciller en Omán para conversaciones de seguridad del estrecho; los convoyes escoltados mantienen vivo un solo canal","JUL 12 · <b>AXIOS<\/b> · Fuerzas de EEUU coordinan el paso de unos 20 buques comerciales por el estrecho en 24 horas"]}],"intel":{"briefing":[{"t":"EL CUELLO DE BOTELLA","d":"El Estrecho de Ormuz es el único paso marítimo entre el Golfo Pérsico y el océano abierto. Tiene unas 21 millas náuticas de ancho en su punto más angosto, y por él circulan aproximadamente una quinta parte del petróleo mundial y cerca de una quinta parte de su gas natural licuado. No existe ruta sustituta para la mayor parte de esa carga. Cuando el estrecho se cierra, la economía mundial lo siente en cuestión de días."},{"t":"EL CIERRE","d":"El 28 de febrero de 2026, Irán declaró cerrado el estrecho y comenzó a colocar minas navales, el primer cierre total en la historia de esta vía marítima. Los tanqueros se acumularon fondeados a ambos lados mientras las armadas entraban a despejar un paso. Cada capítulo de esta campaña sigue el registro real de esa crisis, desde el primer rumor de minas en julio de 2025 hasta las negociaciones que continúan esta misma semana."},{"t":"TU MISIÓN","d":"Comandas una unidad de medidas contra minas. Tu sonar no puede ver una mina directamente, pero una celda sondeada informa cuántas minas hay en el agua a su alrededor. Usa esos números para cartografiar el peligro y abrir un canal barrido desde el Golfo Pérsico, al oeste, hasta el Golfo de Omán, al este. Los tanqueros que esperan detrás de ti son tu reloj: si se agota la paciencia, la fila gana."},{"t":"CÓMO BARRER","d":"Toca una celda para sondearla. Mantén presionada una celda para balizarla como mina sospechosa. Toca un número ya satisfecho por sus balizas para barrer de una vez todo lo que no esté balizado a su alrededor: rápido, y exactamente tan peligroso como honestas sean tus balizas. Chocar con una mina no termina la patrulla, pero el casco inhabilitado bloquea el canal y te cuesta tanqueros. Ganas en el momento en que un canal barrido continuo conecta el oeste con el este."}],"history":[{"t":"EL REINO DE ORMUS","d":"Durante siglos, el reino insular de Ormus dominó el estrecho que hoy lleva su nombre, y se enriqueció gravando el comercio de especias, perlas y caballos que circulaba entre la India, Arabia y Persia. Los viajeros describían la isla árida como uno de los mercados más ricos de la tierra. Un proverbio de la época decía que, si el mundo fuera un anillo, Ormus sería su joya."},{"t":"IMPERIOS TOMAN EL ESTRECHO","d":"En 1507, el comandante portugués Afonso de Albuquerque tomó Ormuz, y durante más de un siglo una fortaleza en la isla ancló el dominio portugués sobre el comercio del golfo. En 1622, el sah Abás de Persia, con barcos alquilados a la Compañía Inglesa de las Indias Orientales, expulsó a los portugueses y trasladó el comercio a un nuevo puerto bautizado en su honor: Bandar Abbas. La lección quedó fijada desde temprano: quien domina el estrecho domina el golfo."},{"t":"LA ERA DEL PETRÓLEO","d":"El petróleo brotó en Persia en 1908, el primer gran hallazgo de Medio Oriente, y en dos generaciones el Golfo Pérsico concentraba los yacimientos de energía más profundos de la tierra. El estrecho en su desembocadura se convirtió en el punto de estrangulamiento más importante del mundo: por él pasan aproximadamente una quinta parte del petróleo mundial y cerca de una quinta parte de su gas natural licuado. Una vía regional se volvió una arteria global."},{"t":"1979: LA REVOLUCIÓN","d":"La Revolución Islámica barrió al sah respaldado por Estados Unidos, y el ayatolá Jomeini regresó del exilio para fundar la República Islámica. En noviembre de 1979, estudiantes tomaron la embajada de EEUU en Teherán y retuvieron a 52 estadounidenses durante 444 días. Washington y Teherán rompieron relaciones y nunca las han restablecido."},{"t":"LA GUERRA IRÁN-IRAK","d":"Irak invadió Irán en septiembre de 1980 y abrió ocho años de guerra de trincheras, ataques con misiles contra ciudades y ataques químicos que mataron a cientos de miles de personas. Cuando ambos bandos empezaron a atacar el tráfico marítimo del golfo para asfixiar los ingresos petroleros del otro, la guerra se derramó sobre las rutas de navegación y arrastró a armadas externas. Terminó en 1988 con un alto el fuego y sin vencedor."},{"t":"EL LARGO CONFLICTO FRÍO","d":"Después de 1988, Washington y Teherán siguieron enfrentándose con sanciones, operaciones encubiertas y grupos interpuestos en lugar de una guerra declarada. El acuerdo nuclear de 2015 cambió límites estrictos al programa iraní por alivio de sanciones, y durante tres años los tanqueros y el comercio se movieron con libertad. El retiro de Estados Unidos en 2018 restauró las sanciones de máxima presión, y el deslizamiento hacia la confrontación se reanudó."}],"countries":[{"t":"IRÁN","d":"Irán declaró cerrado el estrecho el 28 de febrero de 2026 y lo impuso con minas navales, lanchas rápidas de ataque e incautaciones, el primer cierre total en la historia de esta vía marítima. Combinó la coerción con la selectividad: concedió paso a los tanqueros con destino a China, Rusia, India, Irak y Pakistán y se lo negó al resto. El estrecho es la mayor palanca de Irán, y 2026 fue el año en que la accionó a fondo."},{"t":"ESTADOS UNIDOS","d":"Estados Unidos atacó las instalaciones nucleares de Irán en junio de 2025 y luego respondió al cierre de 2026 con un bloqueo naval de los puertos iraníes en abril, operaciones sostenidas de desminado en el estrecho y 'Project Freedom', un sistema de convoyes que escoltaba tanqueros por canales despejados. Durante casi cinco décadas, la doctrina estadounidense sostuvo que Ormuz debía permanecer abierto. En 2026 el mundo supo lo que realmente costaba esa garantía."},{"t":"ISRAEL","d":"Israel abrió la guerra de doce días de junio de 2025 con ataques sorpresa contra el programa nuclear, las defensas aéreas y la cúpula militar de Irán, y absorbió oleadas de misiles balísticos como respuesta. En 2026 volvió a atacar objetivos iraníes junto a Estados Unidos. No tiene costa en el golfo, pero su confrontación con Irán fue lo que más empujó el estrecho hacia el cierre."},{"t":"OMÁN","d":"La rocosa península de Musandam, un exclave omaní, forma la orilla sur del estrecho, y los carriles de navegación pasan en gran parte por aguas omaníes. Omán lleva décadas como el mediador discreto de la región, albergando contactos extraoficiales entre Washington y Teherán, incluidas conversaciones nucleares en 2025. En julio de 2026, las negociaciones para poner fin al cierre se reunieron, una vez más, en Mascate."},{"t":"EMIRATOS ÁRABES UNIDOS","d":"Fujairah, el puerto emiratí sobre el Golfo de Omán, queda justo afuera del estrecho y es uno de los mayores centros de abastecimiento de combustible para buques del mundo, lo que lo volvió a la vez salvavidas y objetivo: en 2019, varios tanqueros sufrieron ataques con minas lapa frente a su costa. Un oleoducto desde los campos de Abu Dabi puede mover cerca de 1.5 millones de barriles diarios hasta Fujairah, evitando Ormuz por completo. En 2026 ese desvío se convirtió en una de las pocas llaves que el cierre no pudo cerrar."},{"t":"QATAR","d":"Qatar comparte con Irán el mayor yacimiento de gas del mundo y figura entre los principales exportadores de gas natural licuado de la tierra, casi todo embarcado a través de Ormuz. También alberga Al Udeid, la mayor base aérea de EEUU en Medio Oriente, que los misiles iraníes atacaron en junio de 2025 en represalia por los ataques estadounidenses; la salva fue interceptada en su mayor parte. La fortuna de Qatar y su exposición pasan por el mismo estrecho."},{"t":"ARABIA SAUDITA","d":"El oleoducto Este-Oeste del reino puede transportar unos cinco millones de barriles diarios a través de la península hasta Yanbu, en el Mar Rojo, el mayor desvío alrededor de Ormuz. Pero buena parte de su capacidad de exportación aún carga en terminales del golfo, dentro del punto de estrangulamiento, y el ataque de 2019 con drones y misiles contra su planta de procesamiento de Abqaiq, reivindicado por los hutíes y atribuido en general a Irán, demostró que la propia infraestructura podía ser alcanzada. En 2026 el oleoducto funcionó a plena capacidad mientras los muelles del golfo esperaban."},{"t":"CHINA","d":"China es el mayor comprador de crudo del golfo y, según la mayoría de las estimaciones, el destino de la gran mayoría de las exportaciones de petróleo sancionado de Irán. Cuando Irán cerró el estrecho, concedió paso a los tanqueros con destino a China, una excepción que preservó al último gran cliente de Teherán y su flujo de ingresos. Pekín presionó públicamente por la desescalada mientras sus barcos seguían cargando."},{"t":"INDIA","d":"India importa una gran parte de su crudo y su gas a través de Ormuz y escolta su propio tráfico marítimo en estas aguas desde 2019 bajo la 'Operation Sankalp', lanzada tras los ataques a tanqueros de aquel verano. En 2026, las escoltas de la Armada india volvieron a acompañar a los buques de bandera india, ayudadas por la decisión de Irán de incluir a India entre las banderas con paso concedido. La seguridad energética, no la política de alianzas, marcó el rumbo de Nueva Delhi."},{"t":"REINO UNIDO Y ARMADAS EUROPEAS","d":"En julio de 2019, después de que el Reino Unido detuviera un tanquero iraní frente a Gibraltar, la Guardia Revolucionaria de Irán (IRGC) apresó en el estrecho al Stena Impero, de bandera británica, y lo retuvo durante dos meses. El episodio dio origen a misiones de escolta occidentales: una coalición liderada por EEUU y una operación separada liderada por Europa patrullaron el estrecho hasta bien entrada la década de 2020. Las armadas de Europa regresaron en 2026 a un guion que ya habían ensayado."}],"proxies":[{"t":"EL EJE DE LA RESISTENCIA","d":"La respuesta de Irán a su debilidad convencional fue una red: Hezbolá en Líbano, Hamás en Gaza, los hutíes en Yemen y milicias en Irak y Siria, armadas y financiadas desde Teherán pero con raíces locales. La red le permitió a Irán ejercer presión lejos de sus fronteras mientras negaba responsabilidad directa. Para 2026 el eje estaba maltrecho, pero el estrecho le dio a Teherán un arma que no necesitaba intermediario alguno."},{"t":"LOS HUTÍES","d":"Desde fines de 2023, los hutíes de Yemen atacaron el tráfico comercial en el mar Rojo con misiles, drones y lanchas no tripuladas cargadas de explosivos: alcanzaron decenas de buques, hundieron varios y mataron a marinos. Las navieras globales desviaron sus rutas alrededor de África, sumando miles de millas a cada viaje. Fue el ensayo general de Ormuz: la prueba de que armas baratas y una amenaza creíble pueden sacar al comercio marítimo mundial de una arteria principal."},{"t":"HEZBOLÁ","d":"Fundado en Líbano en 1982 con respaldo iraní, Hezbolá se convirtió en una de las fuerzas no estatales más armadas del mundo y en el principal elemento disuasorio de Irán frente a Israel. En 2024, una campaña israelí de bíperes saboteados, ataques aéreos y asesinatos de sus líderes desmanteló la organización, y siguió un alto el fuego. Su silencio durante la guerra de 2025 midió cuánto había perdido el eje."},{"t":"HAMÁS","d":"El ataque de Hamás contra Israel del 7 de octubre de 2023, que mató a unas 1,200 personas, y la devastadora guerra de Gaza que siguió desataron la cadena de escaladas que rehizo la región. Irán arma y financia al grupo, pero no lo comanda; según los reportes, el ataque también tomó por sorpresa a Teherán. Casi todo lo que aparece en esta cronología después de 2023 remonta parte de su origen a esa mañana."},{"t":"MILICIAS CHIITAS DE IRAK","d":"Las milicias alineadas con Irán dentro de las Fuerzas de Movilización Popular de Irak pasaron 2023 y 2024 lanzando drones y cohetes contra bases estadounidenses en Irak, Siria y Jordania, incluido un ataque en enero de 2024 que mató a tres soldados estadounidenses. Los ataques le dieron a Teherán una forma de desgastar a las fuerzas de Estados Unidos sin una guerra declarada. Durante la crisis de 2026, cada base estadounidense dentro de su alcance quedó a una sola escalada de distancia de un conflicto más amplio."},{"t":"LA FLOTA FANTASMA","d":"Cientos de tanqueros envejecidos, con dueños opacos, banderas de conveniencia y transpondedores apagados, mueven crudo iraní y ruso sancionado fuera del sistema marítimo legal. Cambian de nombre, cambian de bandera, transfieren carga de buque a buque en altamar y a menudo navegan sin seguro reconocido. En 2026 esta flota apátrida era a la vez un salvavidas contra las sanciones y un peligro sin asegurar a la deriva junto a un campo minado."}],"strategies":[{"t":"PRESIÓN MÁXIMA","d":"La estrategia insignia de Estados Unidos: usar el control del sistema del dólar y las sanciones secundarias para aislar del mundo las exportaciones de petróleo y la banca de Irán, forzando a elegir entre el colapso económico y la negociación. Impuesta desde 2018, redujo drásticamente las exportaciones oficiales de Irán, aunque la flota fantasma recuperó buena parte del comercio. Las sanciones se volvieron la condición de base sobre la que se apiló cada escalada posterior."},{"t":"MINAR LAS AGUAS","d":"Una mina naval puede costar unos pocos miles de dólares y amenazar a un tanquero que vale cien millones, y despejarla cuesta muchísimo más que colocarla. El minado es el arma clásica de la armada más débil: no necesita hundir buques, solo hacer creer a aseguradores y capitanes que podría hacerlo. En 2026 fue el primer recurso para imponer el cierre."},{"t":"EL BLOQUEO","d":"En abril de 2026 Estados Unidos impuso un bloqueo naval a los puertos de Irán, cortando sus exportaciones de petróleo y respondiendo al cierre con otro cierre. Los bloqueos están entre las herramientas más antiguas del poder naval y entre las más delicadas legalmente; el derecho internacional los ha tratado desde hace mucho como actos de guerra. Para la primavera boreal de 2026, cada bando estrangulaba el comercio marítimo del otro."},{"t":"GUERRA POR DELEGACIÓN","d":"Armar y dirigir a socios no estatales le permite a un Estado golpear a sus enemigos mientras niega la autoría, manteniendo la represalia ambigua y la escalada nominalmente bajo control. Irán construyó la red de aliados por delegación más extensa de la región; sus adversarios respondieron con ataques aéreos, asesinatos selectivos y sanciones a los financistas de la red. Las guerras de 2023 a 2025 mostraron tanto el alcance del método como sus límites."},{"t":"LA GUERRA EN LA SOMBRA","d":"Durante las dos décadas previas a que los misiles volaran abiertamente, el conflicto corrió por el espionaje y el sabotaje: archivos nucleares robados, explosiones sin explicación en instalaciones, tanqueros dañados por cargas sin autor conocido. Su hito fue Stuxnet, el gusano informático descubierto en 2010 que arruinó centrifugadoras en la planta iraní de Natanz, la primera ciberarma conocida que causó destrucción física. Ninguno de los dos bandos ha reconocido oficialmente la mayor parte."},{"t":"ASESINATO SELECTIVO","d":"Entre 2010 y 2020, al menos cinco científicos vinculados al programa nuclear de Irán fueron asesinados, el último con un arma operada a distancia; Irán culpó a Israel, que nunca reivindicó los asesinatos. En enero de 2020, un ataque estadounidense con dron en el aeropuerto de Bagdad mató al general Qasem Soleimani, comandante de la Fuerza Quds de Irán y arquitecto de su red de aliados. El asesinato selectivo se volvió un instrumento abierto del conflicto, y la guerra de 2025 comenzó con más de lo mismo."},{"t":"COBRAR POR EL PASO","d":"En 2026 Irán creó una 'Autoridad del Estrecho del Golfo Pérsico' para licenciar tránsitos por el estrecho cerrado a cambio de una tarifa, convirtiendo un punto de estrangulamiento en una caseta de peaje. El paso selectivo funcionó también como política exterior: las banderas amigas se movían mientras las demás esperaban o pagaban. El precedente alarmó a todas las naciones marítimas, porque a un estrecho al que se le puede poner precio una vez se le puede poner precio otra vez."},{"t":"GUERRA DE PRIMAS","d":"Los buques comerciales no pueden navegar sin seguro, y eso convierte el seguro en un arma: cuando las primas de riesgo de guerra se disparan o los clubes de protección e indemnización retiran la cobertura, el comercio se detiene sin un solo disparo. En crisis anteriores del golfo, el costo de riesgo de guerra de un solo tránsito se multiplicó en cuestión de semanas. Los mercados pueden cerrar un estrecho más rápido que las minas, y reabrirlo con la misma velocidad cuando vuelve la confianza."},{"t":"ENGAÑO ELECTRÓNICO","d":"La interferencia del GPS ciega la navegación; la suplantación (spoofing) es más sutil: alimenta a los buques con posiciones falsas que pueden desviarlos de su rumbo, incluso hacia aguas territoriales. El engaño del AIS funciona a la inversa, transmitiendo identidades y ubicaciones falsas para que los tanqueros parezcan estar donde no están. En torno a Ormuz, los marinos aprendieron a desconfiar de sus pantallas y a volver al radar, los vigías y las cartas de papel."}],"technologies":[{"t":"MINAS NAVALES","d":"Las minas de contacto detonan cuando un casco golpea sus cuernos, un diseño casi sin cambios en un siglo. Las minas de influencia reposan en el lecho marino y se activan con la firma magnética, acústica o de presión de un buque, mientras que las minas lapa son adheridas directamente al casco por buzos, como en los ataques a tanqueros de 2019. Un arma que cuesta miles de dólares puede detener un comercio que vale miles de millones, y ese es justamente el punto."},{"t":"CONTRAMEDIDAS DE MINAS","d":"Cazar minas es lento, metódico y peligroso: los cazaminas de casco de baja firma magnética barren el lecho marino con sonar de alta resolución y luego envían vehículos operados a distancia o buzos de desminado a identificar y neutralizar cada contacto. Despejar un canal toma semanas; convencer a los aseguradores de que de verdad está limpio toma más. El desequilibrio es la mayor arma de la mina: días para colocarla, meses para certificar que ya no está."},{"t":"LANCHAS DRON","d":"Las embarcaciones de superficie no tripuladas, cargadas de explosivos y guiadas por cámara y enlace satelital, convierten lanchas rápidas baratas en armas de precisión; los hutíes las usaron para atacar y hundir buques mercantes en el mar Rojo. Las armadas despliegan la misma tecnología en defensa, como cazaminas no tripulados. Enjambres que cuestan menos que un solo misil pueden obligar a un buque de guerra a quemar sus defensas."},{"t":"MISILES ANTIBUQUE","d":"Irán cubre su costa del golfo con baterías móviles de misiles de crucero antibuque, y el estrecho, de apenas unas 21 millas náuticas en su punto más angosto, queda dentro del alcance de todas ellas. Los misiles balísticos antibuque extienden la amenaza a todo el golfo y más allá. Las defensas existen, pero cada interceptor cuesta mucho más que el misil que detiene, una relación de costos que favorece a la costa."},{"t":"LA BOMBA ANTIBÚNKER","d":"La GBU-57 Massive Ordnance Penetrator es una bomba de 30,000 libras construida para abrirse paso por roca y concreto reforzado antes de detonar, y solo el bombardero furtivo B-2 puede cargarla. En junio de 2025, los B-2 lanzaron catorce de ellas sobre los sitios de enriquecimiento enterrados de Irán en Fordow y Natanz. Fue construida para un solo tipo de objetivo: sitios enterrados a demasiada profundidad para que cualquier otra cosa los alcance."},{"t":"NAVEGAR A OSCURAS","d":"Desde 2004, los buques grandes deben llevar transpondedores AIS que transmiten identidad, posición y rumbo, la señal detrás de cada mapa de tráfico marítimo en vivo. Apagar el AIS, lo que se conoce como navegar a oscuras, oculta al buque del rastreo público, aunque no del radar militar. En torno a Ormuz, ir a oscuras puede significar evadir sanciones, evitar ser blanco, o ambas cosas; para 2026 las aproximaciones del estrecho estaban llenas de fantasmas."},{"t":"COORDENADAS FANTASMA","d":"La interferencia del GPS ahoga la señal satelital en ruido; la suplantación la reemplaza con una mentira, haciendo que los instrumentos de un buque reporten una posición a millas de la verdad. Buques cerca del estrecho han registrado trayectorias imposibles: posiciones que saltan a tierra o que giran en círculos sin moverse. Las tripulaciones vuelven a las posiciones de radar y las marcaciones visuales, navegando una crisis del siglo XXI con destrezas del siglo XX."},{"t":"ECONOMÍA DEL RIESGO DE GUERRA","d":"Los buques mercantes llevan seguro de casco y cobertura de protección e indemnización, y las zonas de guerra agregan una tercera capa: primas de riesgo de guerra cotizadas por viaje como porcentaje del valor del buque. Cuando los aseguradores suben las tarifas o retiran la cobertura, la carga deja de moverse con la misma certeza que si el estrecho estuviera físicamente cerrado. El seguro es la infraestructura invisible del comercio mundial, y en 2026 se convirtió en una línea del frente."},{"t":"EL CONVOY","d":"Agrupar buques mercantes bajo escolta de buques de guerra es una doctrina más vieja que las guerras mundiales: los convoyes concentran las defensas, complican la puntería del atacante y lo obligan a enfrentarse a una armada en lugar de a un tanquero. La operación 'Earnest Will' lo usó en 1987 para conducir tanqueros kuwaitíes reabanderados por este mismo golfo. 'Project Freedom' revivió el manual en 2026: un servicio de escolta a través de un campo minado."}],"timeline":[{"t":"1979 LA REVOLUCIÓN","d":"La Revolución Islámica derroca al sah respaldado por Estados Unidos, y el ayatolá Jomeini funda la República Islámica. En noviembre, estudiantes asaltan la embajada estadounidense en Teherán y retienen a 52 estadounidenses como rehenes durante 444 días. La ruptura entre Washington y Teherán nunca sana."},{"t":"1980 GUERRA IRÁN-IRAK","d":"Irak invade Irán en septiembre y abre ocho años de guerra que matan a cientos de miles en ambos bandos. Cada nación ataca el tráfico marítimo del golfo para estrangular los ingresos petroleros de la otra. El estrecho se convierte en campo de batalla por primera vez en la era del petróleo."},{"t":"1987-88 GUERRA DE TANQUEROS","d":"Con cientos de buques mercantes atacados, Estados Unidos reabandera tanqueros kuwaitíes y los escolta bajo la operación 'Earnest Will'. En abril de 1988, la fragata USS Samuel B. Roberts choca con una mina iraní en el centro del Golfo Pérsico y casi se hunde; Estados Unidos responde con la operación 'Praying Mantis', su mayor batalla naval de superficie desde la Segunda Guerra Mundial, hundiendo buques de guerra iraníes y destruyendo dos plataformas petroleras."},{"t":"1988 IRAN AIR 655","d":"El 3 de julio, el crucero USS Vincennes, en combate con lanchas iraníes cerca del estrecho, derriba el vuelo 655 de Iran Air, un avión civil de línea en ruta programada. Mueren las 290 personas a bordo, incluidos 66 niños. Estados Unidos lo llama una trágica identificación errónea y más tarde paga compensaciones sin admitir culpa; en Irán, la herida nunca cierra."},{"t":"2011 AMENAZAS DE CIERRE","d":"Mientras las sanciones se endurecen por su programa nuclear, Irán amenaza a lo largo de 2011 y 2012 con cerrar el estrecho si se cortan sus exportaciones de petróleo. Washington declara que el cierre es una línea roja. La amenaza se queda en retórica, pero el guion de 2026 se escribe aquí."},{"t":"2015 EL ACUERDO NUCLEAR","d":"Irán y seis potencias mundiales firman el JCPOA: límites estrictos e inspecciones sobre el programa nuclear iraní a cambio del alivio de las sanciones nucleares. El petróleo iraní vuelve al mercado y el golfo disfruta de un raro intervalo de calma. Dura tres años."},{"t":"2018 LA RETIRADA DE EEUU","d":"Estados Unidos se retira del acuerdo nuclear en mayo y reimpone sanciones bajo una política de presión máxima. Las exportaciones oficiales de petróleo de Irán se desploman, y en menos de un año Teherán empieza a incumplir los límites de enriquecimiento del acuerdo. La cuenta regresiva hacia la confrontación se reinicia."},{"t":"2019 TANQUEROS ATACADOS","d":"Minas lapa dañan cuatro tanqueros frente a Fujairah en mayo y dos más en el Golfo de Omán en junio; Irán niega responsabilidad. Irán derriba un dron de vigilancia estadounidense, y en julio la IRGC apresa el tanquero británico Stena Impero después de que el Reino Unido detuviera un buque iraní frente a Gibraltar. Las armadas extranjeras vuelven a escoltar el tráfico por el estrecho."},{"t":"2020 MUERTE DE SOLEIMANI","d":"Un ataque estadounidense con dron en el aeropuerto de Bagdad mata al general Qasem Soleimani, comandante de la Fuerza Quds de Irán. Irán responde con misiles balísticos contra bases estadounidenses en Irak, y días después su defensa antiaérea derriba por error un avión de línea ucraniano cerca de Teherán, matando a 176 personas. Los dos Estados se asoman al borde de la guerra abierta y luego retroceden."},{"t":"2024 FUEGO DIRECTO","d":"Tras un ataque a su consulado en Damasco, Irán lanza más de 300 drones y misiles contra Israel en abril, su primer ataque directo en la historia; casi todos son interceptados. En octubre sigue una segunda andanada de misiles balísticos, aún mayor. La guerra en la sombra deja de ser sombra."},{"t":"2025 LA GUERRA DE DOCE DÍAS","d":"Israel golpea la infraestructura nuclear y militar de Irán el 13 de junio; Estados Unidos se suma el 22 de junio, atacando Fordow y Natanz con bombas antibúnker e Isfahán con misiles de crucero. Irán devuelve el fuego contra Israel y contra la base estadounidense en Qatar, y su parlamento respalda cerrar Ormuz antes de que un alto el fuego se asiente el 24 de junio. El 1 de julio, reportes que citan a la inteligencia estadounidense dicen que Irán había cargado minas navales en buques en el golfo: el cierre, ensayado."},{"t":"2026 EL CIERRE","d":"El 28 de febrero, Irán declara cerrado el Estrecho de Ormuz y empieza a colocar minas, el primer cierre total en la historia de esta vía marítima. Estados Unidos bloquea los puertos iraníes en abril y abre corredores de convoyes escoltados mientras el desminado avanza a paso lento, y entretanto Irán licencia el paso a banderas seleccionadas. En julio, los negociadores se reúnen en Mascate, y el mundo espera sobre el agua."}]},"mechanics":[{"key":"sweep","name":"EL BARRIDO","real":"Las minas navales se despejan por la vía lenta: los cazaminas cartografían el lecho marino con sonar de alta resolución, clasifican cada contacto y envían buzos o vehículos operados a distancia a cada uno. Despejar un canal toma semanas; convencer a las aseguradoras de que está realmente limpio toma más. Tras el reporte del 1 de julio de 2025 de que Irán había cargado minas en embarcaciones, este oficio se volvió la destreza decisiva del estrecho.","how":"Toca para sondear un hexágono; su número cuenta las minas en las aguas adyacentes. Mantén presionado para colocar una baliza sobre una presunta mina. Toca un número con sus balizas completas para barrer todo lo no balizado a su alrededor. Tu primer toque siempre es seguro. Ganas al CONECTAR el borde oeste con el borde este con aguas sondeadas; nunca necesitas despejar todo el tablero.","tips":["Abre por el centro del sector, luego lee los números antes de tocar nada cerca de ellos."]},{"key":"wreck","name":"PECIOS Y LA FILA","real":"Las minas rara vez hunden buques grandes; los inhabilitan. En 1988 el USS Samuel B. Roberts chocó con una mina iraní en el centro del Golfo Pérsico y se mantuvo a flote, pero la reparación costó mil veces más que la mina. La verdadera moneda de una crisis del estrecho es la demora: cascos esperando fondeados mientras las aseguradoras niegan cobertura.","how":"Chocar con una mina nunca termina la patrulla. El pecio bloquea ese hexágono por el resto del nivel, los números cercanos se recalculan y se suman tanqueros a la fila. Cada pecio sucesivo cuesta más. Que la fila se llene es la única forma de perder.","tips":["Vigila la barra de la fila, no el reloj; baja el ritmo después de un error."]},{"key":"minelayer","name":"RESIEMBRA","real":"Un campo minado no es un obstáculo fijo; se mantiene como un jardín. Desde el 10 de marzo de 2026, la inteligencia de EEUU reportó que Irán resembraba de noche las aguas despejadas a escala industrial, con dieciséis minadores reportados como destruidos en el acto. La advertencia de CENTCOM a los navegantes se volvió doctrina: barrido no significa seguro para siempre.","how":"A medida que llegan tanqueros, minas nuevas se deslizan en aguas sin sondear, siempre en niebla profunda con cero vecinos sondeados, así que los números que ya abriste nunca mienten. El contador de minas subiendo es la señal.","tips":["Un barrido más rápido ve menos minas nuevas; no acumules riesgo por demorarte."]},{"key":"runner","name":"MINADORES (VISIBLES)","real":"Los bloqueos tienen fugas. Bajo el bloqueo de los puertos iraníes de abril de 2026, pequeñas embarcaciones salían al amparo de la oscuridad para colocar minas nuevas, y las escoltas corrían a cortarles el paso antes de que la carga entrara al agua. Dieciséis nunca volvieron a puerto.","how":"Un minador aparece cerca de la costa iraní con una baliza parpadeante y se dirige a aguas sin sondear. TOCA el buque para interceptarlo: no se coloca ninguna mina y se libera un lugar en la fila. Si escapa, coloca una mina honesta y se esfuma.","tips":["Un toque fallido cae en la niebla; apunta con cuidado o déjalo ir."]},{"key":"dship","name":"TANQUEROS DESESPERADOS","real":"Para mayo de 2026, los convoyes fondeados dejaron de esperar aguas perfectamente barridas; los capitanes sopesaron el costo de otra semana al ancla contra las probabilidades de una mina y zarparon. La IRGC apresó buques que se demoraban en aguas disputadas: MSC Epaminondas, MSC Francesca, Ocean Koi. Desesperación, cotizada por travesía.","how":"Los tanqueros entran por el oeste y siguen tus aguas barridas hacia el este. Las aguas cercanas a la costa iraní arriesgan una detención por hexágono. Un tanquero varado en tu frontera apostará a la niebla si la boca este está cerca, o será detenido si no lo está. Los buques que salen por el este alivian la fila en uno.","tips":["Barre POR DELANTE del convoy; cuanto más cerca del este esté tu frontera, más segura su travesía."]},{"key":"lanes2","name":"DOS CARRILES","real":"Los estrechos modernos funcionan como autopistas: un Esquema de Separación de Tráfico con carriles de entrada y de salida divididos por una franja que ningún buque puede cruzar. La ruta ampliada abierta cerca de Omán el 27 de junio de 2026 era exactamente eso, y el estrecho solo contó como abierto cuando el tráfico se movió en AMBOS sentidos.","how":"Una mediana balizada divide el sector en dos carriles independientes; cada uno necesita su propio canal de oeste a este. Abrir el primer carril inicia el tráfico en un solo sentido y despeja parte de la fila.","tips":["Explora ambos carriles temprano y abre primero el más barato: el alivio llega antes."]},{"key":"drone","name":"DRONES DE SOLO IDA","real":"Los drones de ataque de solo ida cambiaron la negación del uso del mar: unos miles de dólares de fuselaje amenazando un casco de cien millones, lanzados desde una costa, guiados hacia un blanco en movimiento. El ataque al Mercer Street en 2021 lo anticipó; en la nueva escalada de julio de 2026, misiles y un dron alcanzaron tres buques mercantes en el propio estrecho.","how":"Los drones despegan desde la costa iraní contra un tanquero en marcha y vuelan en línea recta, sobre tierra y mar, a cualquier punto del tablero. TOCA el dron para interceptarlo. Si alcanza un buque que no se ha movido, el tanquero queda inhabilitado y es remolcado fuera.","tips":["Toca el dron, no el buque; el zumbido del lanzamiento es tu aviso."]}],"facts":["El estrecho mide apenas 21 millas náuticas de ancho en su punto más angosto, entre Irán y la península omaní de Musandam.","Antes del cierre de 2026, pasaban cada día unos 20 millones de barriles de petróleo: aproximadamente una quinta parte del consumo mundial.","Alrededor de una quinta parte del gas natural licuado del mundo, la mayor parte de Qatar, se embarca por Ormuz.","Los buques no navegan por donde quieren: el tráfico corre por dos carriles de 2 millas separados por una franja de 2 millas, el Esquema de Separación de Tráfico.","El estrecho toma su nombre de la isla de Ormuz, antigua sede del Reino de Ormus, una potencia comercial medieval.","Una flota portuguesa al mando de Afonso de Albuquerque tomó Ormuz en 1507; el fuerte sigue en pie en la isla.","Un proverbio de la época decía: si el mundo fuera un anillo, Ormus sería su joya.","Las minas navales son tecnología vieja que aún funciona: baratas de colocar, lentas y peligrosas de despejar.","En 1988 la fragata USS Samuel B. Roberts chocó con una mina iraní en el centro del Golfo Pérsico; la mina costó una fracción mínima de la factura de reparación que causó.","Durante la Guerra de los Tanqueros de los años ochenta, cientos de buques mercantes fueron atacados en el Golfo.","Los cazaminas encuentran las minas una por una con sonar y buzos; los barreminas despejan carriles enteros de una vez.","En 1991, dos buques de guerra de EEUU, el USS Princeton y el USS Tripoli, chocaron con minas en una sola mañana.","La península de Musandam, en la orilla sur del estrecho, es un exclave de Omán separado del resto del país por los E.A.U.","Los canales principales del estrecho tienen de 60 a 100 metros de profundidad: aguas cómodas incluso para los supertanqueros más grandes."],"captions":{"HOLD = BUOY A SUSPECT":"MANTÉN = BALIZA","BUOYS MATCH? TAP THE NUMBER TO SWEEP":"¿COINCIDEN LAS BALIZAS? TOCA EL NÚMERO","ONE TANKER JOINS EVERY FEW SECONDS":"UN TANQUERO CADA POCOS SEGUNDOS","BACKLOG FULL = STRAIT CLOSED":"FILA LLENA = PASO CERRADO","SURVEY · BUOY · CONNECT":"SONDEA · BALIZA · UNE","WEST TO EAST WINS · FIRST TAP ALWAYS SAFE":"OESTE A ESTE GANA · PRIMER TOQUE SEGURO","TAP TO INTERCEPT":"TOCA E INTERCEPTA","HIT = TANKER DISABLED":"IMPACTO = AVERÍA","LANE 1 + LANE 2 · BOTH MUST OPEN":"CARRIL 1 + CARRIL 2 · ABRE AMBOS","FIRST LANE OPEN = BACKLOG EASES":"1ER CARRIL ABIERTO = FILA BAJA","HULL DAMAGED":"CASCO DAÑADO","EACH FURTHER WRECK COSTS MORE":"CADA PECIO EXTRA CUESTA MÁS","UNSWEPT WATER":"SIN SONDEAR","FOLLOWS YOUR SWEPT WATER":"SIGUE TUS AGUAS BARRIDAS","STRANDED = GAMBLES INTO THE FOG":"VARADO = APUESTA A LA NIEBLA","SURVIVES EAST = BACKLOG EASES":"SALE AL ESTE = LA FILA BAJA","NEW MINE IN UNSWEPT WATER":"MINA NUEVA EN LA NIEBLA","OPENED NUMBERS NEVER LIE":"NÚMERO ABIERTO NO MIENTE"},"maplabels":{"IRANIAN COASTLINE":"COSTA IRANÍ","OMANI COASTLINE":"COSTA OMANÍ","GULF OF OMAN":"GOLFO DE OMÁN","STRAIT OF HORMUZ":"ESTRECHO DE ORMUZ","HORMUZ":"ORMUZ","PERSIAN GULF":"GOLFO PÉRSICO","U.A.E. COASTLINE":"COSTA E.A.U.","MUSANDAM COAST":"COSTA MUSANDAM","SEPARATION SCHEME":"ZONA DE SEPARACIÓN","ESCORTED CORRIDOR":"CORREDOR ESCOLTADO"},"ui":{"tagline":"Abre el Canal","startPatrol":"Iniciar Patrulla","chapters":"Capítulos","intel":"Intel","howto":"<b>Toca<\/b> para barrer &nbsp;·&nbsp; <b>Mantén presionado<\/b> para balizar &nbsp;·&nbsp; conecta el <b>Golfo Pérsico<\/b> con el <b>Golfo de Omán<\/b><br>con un canal de hexágonos barridos antes de que se llene la fila de tanqueros.","finenote":"Siete capítulos siguen el registro real, desde el primer rumor de minas hasta esta semana. Los titulares están parafraseados del registro informado de esas fechas.","follow":"Sigue el desarrollo · @jabreu89 · Próximamente en el App Store","ambSonar":"Sala de Sonar","ambSea":"Mar Abierto","ambOff":"Apagado","patrolLog":"Bitácora de Patrulla · 2026","hardLocked":"Modo Duro · bloqueado","modePatrol":"Modo · Patrulla","modeHard":"Modo · DURO","hardLockToast":"Despeja los siete capítulos para desbloquear el Modo Duro","hardOnToast":"Modo DURO · campos minados más densos, reloj más rápido, más tráfico, menos margen de error","hardOffToast":"Modo Patrulla · dificultad estándar de campaña","cleared":"DESPEJADO","replay":"REPETIR","play":"JUGAR","locked":"BLOQUEADO","hardTag":"DURO","situationReport":"Informe de Situación","sector":"SECTOR","newsWire":"Cable de Noticias · Aquellos Días","beginSweep":"Iniciar Barrido","chipSector":"Sector <b>{n}<\/b> hex","chipMines":"Minas est. <b>{n}<\/b>","chipCap":"Tope de fila <b>{n}<\/b>","chipLanes":"Carriles por abrir <b>{n}<\/b>","chipTwoLanes":"Dos carriles","chipReseed":"Resiembra","chipMinelayers":"Minadores","chipConvoys":"Convoyes en marcha","chipDrones":"Drones en vuelo","kickerOpen":"Canal Abierto","kickerBlocked":"Canal Bloqueado","kickerFull":"Fila Llena","winTitleDefault":"EL CONVOY PASA","winFlavorDefault":"El canal resiste. La fila se vacía por el corredor que barriste.","blockedTitle":"EL CANAL ESTÁ SELLADO","blockedFlavor":"Entre el campo minado y los pecios, no queda canal navegable. El barrido empieza de nuevo.","closedTitle":"ESTRECHO CERRADO","closedFlavor":"Demasiados tanqueros se acumulan en las aproximaciones. Las aseguradoras retiran la cobertura, el tráfico se detiene y el estrecho se cierra.","chipTime":"Tiempo","chipSweep":"Barrido","chipWrecks":"Pecios","chipShips":"Buques que pasaron","chipIntercepts":"Minadores interceptados","chipDronesDown":"Drones interceptados","chipPerfect":"Barrido perfecto","chipBest":"Nuevo récord","chipArrived":"Arribados","chipDetained":"Detenidos","chipStruck":"Averiados en niebla","chipBacklog":"Fila","didYouKnow":"SABÍAS QUE","btnNext":"Siguiente Capítulo","btnReplay":"Repetir","btnPatrolLog":"Bitácora de Patrulla","btnRetry":"Reintentar Barrido","btnTitle":"Título","fieldManualKicker":"Manual de Campo","understood":"Entendido","clockPaused":"El reloj está en pausa mientras lees.","intelTitle":"Intel","beginCh1":"Iniciar Capítulo 1","tabBriefing":"Informe","tabManual":"Manual de Campo","tabHistory":"Historia","tabCountries":"Países","tabProxies":"Proxies","tabStrategies":"Estrategias","tabTechnology":"Tecnología","tabTimeline":"Cronología","mxRecord":"El registro:","mxHow":"Cómo funciona:","mxTips":"Consejos:","mxUnlocks":"Se desbloquea en el Capítulo {n}.","mxLockedName":"?????","mxDev":"VERSIÓN DEV: todas las entradas visibles. Los jugadores desbloquean cada entrada con su capítulo.","chapterWord":"CAPÍTULO","live":"EN VIVO","rotateTitle":"Gira tu dispositivo","rotateBody":"ORMUZ traza el estrecho completo, de oeste a este. Gira tu teléfono en horizontal para jugar.","portOf":"PUERTO DE ","laneOpenToast":"Carril {a}/{b} abierto · el tráfico avanza en un sentido y la fila baja","backlogCritical":"Fila crítica · quedan {n} espacios antes de que el estrecho se cierre","restartConfirm":"Toca reiniciar otra vez para abandonar este barrido","ambHint":"Ambiente activado · mantén presionado el botón de sonido para cambiarlo o silenciarlo","coachStart":"Abre un canal de hexágonos barridos desde el borde OESTE hasta el borde ESTE · tu primer toque siempre es seguro","coachNumbers":"Los números cuentan las minas adyacentes · mantén presionado un hexágono para balizarlo","coachChord":"Balizado · toca un número revelado cuando sus balizas coincidan para despejar a su alrededor","coachTanker":"Un tanquero se sumó a la fila · abre el canal antes de que se llene","wreckToast":"Casco dañado · el pecio bloquea ese hexágono y {n} tanqueros se suman a la fila","seedCoach":"Minador activo · una mina nueva acaba de entrar al agua · vigila el contador","seedToast":"Minador activo · una mina nueva entró al agua","runnerToast":"Minador en el canal · toca el buque para interceptarlo","runnerOutCoach":"Minador interceptado · su carga nunca llega al agua y se libera un espacio en la fila","runnerOutToastFreed":"Minador interceptado · la fila baja en uno","runnerOutToast":"Minador interceptado","escapeLaid":"El minador se escabulle hacia aguas sin sondear · el sonar detecta minado reciente","escapeQuiet":"El minador se escabulle hacia aguas sin sondear y queda en silencio","dshipToast":"Tanquero en marcha por tu canal","dshipOutCoach":"Tanquero a mar abierto · cada buque que sale baja la fila en uno","stallToast":"Tanquero al final del agua barrida · abre un paso adelante o se meterá en la niebla","gambleCoach":"El tanquero deja de esperar y se mete en aguas sin sondear · sale por el este si sobrevive a la niebla","gambleToast":"Un tanquero se mete en la niebla","struckToast":"Un tanquero arriesgado encuentra una mina por las malas · el pecio queda cartografiado, 2 se suman a la fila","detainCoach":"Patrullas iraníes detienen al tanquero y lo remolcan · {n} se suman a la fila y la operación bloquea ese hexágono por un tiempo","detainMidToast":"Patrullas iraníes sacan a un tanquero del canal · es remolcado bajo escolta","detainToast":"Tanquero varado detenido por patrullas iraníes","droneHitToast":"Un dron logra pasar · el tanquero queda inhabilitado y es remolcado, 2 se suman a la fila","droneMissToast":"El dron pierde su objetivo y cae al agua","droneOutCoach":"Dron interceptado antes de alcanzar el convoy","droneOutToast":"Dron interceptado","fmSweepTitle":"EL BARRIDO","fmSweepBody":"Comandas la patrulla de contramedidas de minas. Toca el agua para sondearla: cada número cuenta las minas ocultas en los seis hexágonos a su alrededor. Tu primer toque siempre es seguro. Abre un canal conectado de agua sondeada desde el borde OESTE hasta el borde ESTE para reabrir el estrecho; nunca necesitas despejar todo el mapa.","fmBuoyTitle":"BALIZAS Y BARRIDO EN CADENA","fmBuoyBody":"Los números son tu sonar. Cuando sepas que un hexágono oculta una mina, MANTENLO PRESIONADO para soltar una baliza. Cuando un número tenga tantas balizas alrededor como su cuenta, toca el número mismo para barrer de una vez todos los demás hexágonos a su alrededor: el barrido en cadena. Rápido, y exactamente tan honesto como tus balizas.","fmBacklogTitle":"LA FILA DE TANQUEROS","fmBacklogBody":"Un tanquero acaba de sumarse a la fila en la boca del estrecho. Llega uno cada pocos segundos; la barra delgada del HUD cuenta el tiempo hasta el próximo. Si la fila llega a llenarse, las aseguradoras retiran la cobertura y la patrulla fracasa. Solo la fila puede terminar el barrido.","fmWreckTitle":"CASCO DAÑADO","fmWreckBody":"Una mina estalló bajo el barrido. La patrulla continúa, pero el pecio bloquea ese hexágono por el resto del nivel, los números cercanos se recalculan y {n} tanqueros se suman a la fila. Cada pecio adicional cuesta más, así que baja el ritmo antes de gastar otro.","fmReseedTitle":"SE REANUDA EL MINADO","fmReseedBody":"El agua despejada puede resembrarse de un día para otro. De aquí en adelante, minas nuevas se deslizan hacia aguas sin sondear con el paso del tiempo y el contador de minas sube. Los números que ya abriste nunca mienten.","fmRunnerTitle":"MINADOR AVISTADO","fmRunnerBody":"Un minador avanza hacia aguas sin sondear, marcado por una baliza intermitente. TOCA el buque para interceptarlo: la mina nunca entra al agua y se libera un espacio en la fila.","fmDshipTitle":"LOS CONVOYES YA NO ESPERAN","fmDshipBody":"Ahora los tanqueros entran por su cuenta y siguen tu agua barrida hacia el este. Sigue abriendo paso delante de ellos: un tanquero varado se meterá en aguas sin sondear y se jugará la suerte con las minas, o será detenido por las patrullas que vigilan la costa iraní. Los buques que logran salir por el este bajan la fila.","fmLanesTitle":"DOS CARRILES, ABRE AMBOS","fmLanesBody":"Una línea de separación balizada divide este sector en dos carriles de navegación, y ambos necesitan su propio canal barrido de oeste a este. Abrir el PRIMER carril inicia el tráfico en un sentido y despeja parte de la fila, así que explora ambos carriles y abre primero el más barato.","fmDroneTitle":"DRONES DE UN SOLO USO","fmDroneBody":"Ahora los drones iraníes van por el convoy mismo, en cualquier punto del tablero. TOCA el dron antes de que alcance su objetivo; un impacto inhabilita al tanquero y engrosa la fila.","ambPrefix":"Ambiente"}};
+function TXT(key, en){ return (isES() && ES.ui[key]) || en; }
+function TF(key, en, vars){
+  let s = TXT(key, en);
+  for (const k in (vars || {})) s = s.split("{" + k + "}").join(vars[k]);
+  return s;
+}
+function LT(idx, field){
+  if (isES() && ES.levels[idx] && ES.levels[idx][field] != null) return ES.levels[idx][field];
+  return LEVELS[idx][field];
+}
+function trSVG(svg){
+  if (!isES()) return svg;
+  for (const en in ES.captions) svg = svg.split(">" + en + "<").join(">" + ES.captions[en] + "<");
+  return svg;
+}
 function ensureAudio(){
   if (!AC){
     const Ctor = window.AudioContext || window.webkitAudioContext;
@@ -1320,7 +1347,7 @@ function ambientStart(){
     src.start(); stops.push(src);
   }
   AMB = { master, stops, timer };
-  coach("ambhint", "Ambience on · long-press the sound button to change or silence it", 5000);
+  coach("ambhint", TXT("ambHint", "Ambience on · long-press the sound button to change or silence it"), 5000);
 }
 function ambientStop(){
   if (!AMB) return;
@@ -1331,7 +1358,8 @@ function ambientStop(){
   setTimeout(() => { a.stops.forEach(n => { try { n.stop(); } catch(e){} }); a.master.disconnect(); }, 2500);
 }
 function ambientLabel(){
-  return "Ambience · " + (ambMode === "sonar" ? "Sonar Room" : ambMode === "sea" ? "Open Sea" : "Off");
+  return TXT("ambPrefix", "Ambience") + " · " +
+    (ambMode === "sonar" ? TXT("ambSonar", "Sonar Room") : ambMode === "sea" ? TXT("ambSea", "Open Sea") : TXT("ambOff", "Off"));
 }
 
 /* ---------------- one-time hints ---------------- */
@@ -1479,8 +1507,8 @@ const FM_IMG = {
 const FMQ = [];
 function fmShow(card){
   $("fmTitle").textContent = card.title;
-  $("fmBody").textContent = card.body + " The clock is paused while you read.";
-  $("fmImg").innerHTML = card.img;
+  $("fmBody").textContent = card.body + " " + TXT("clockPaused", "The clock is paused while you read.");
+  $("fmImg").innerHTML = trSVG(card.img);
   $("intelBody") && ($("fmImg").scrollTop = 0);
   $("fmodal").classList.add("open");
   const mc = document.querySelector("#fmodal .modal-card");
@@ -1707,18 +1735,18 @@ function startLevel(idx){
   closeModal();
   show("scr-game");
   if (idx === 0){
-    const shown = fieldManual("fmSweep", "THE SWEEP",
-      "You command the mine countermeasures patrol. Tap water to survey it: each number counts the mines hiding in the six hexes around it. Your first tap is always safe. Open a connected channel of surveyed water from the WEST edge to the EAST edge to reopen the strait; you never need to clear the whole map.",
+    const shown = fieldManual("fmSweep", TXT("fmSweepTitle", "THE SWEEP"),
+      TXT("fmSweepBody", "You command the mine countermeasures patrol. Tap water to survey it: each number counts the mines hiding in the six hexes around it. Your first tap is always safe. Open a connected channel of surveyed water from the WEST edge to the EAST edge to reopen the strait; you never need to clear the whole map."),
       FM_IMG.sweep);
-    fieldManual("fmBuoy", "BUOYS AND THE CHORD",
-      "Numbers are your sonar. When you know a hex hides a mine, HOLD it to drop a buoy. When a number has as many buoys around it as its count, tap the number itself to sweep every other hex around it at once. Fast, and exactly as honest as your buoys.",
+    fieldManual("fmBuoy", TXT("fmBuoyTitle", "BUOYS AND THE CHORD"),
+      TXT("fmBuoyBody", "Numbers are your sonar. When you know a hex hides a mine, HOLD it to drop a buoy. When a number has as many buoys around it as its count, tap the number itself to sweep every other hex around it at once. Fast, and exactly as honest as your buoys."),
       FM_IMG.buoy);
     if (!shown)
-      coach("start", "Open a channel of swept hexes from the WEST edge to the EAST edge · your first tap is always safe", 6500);
+      coach("start", TXT("coachStart", "Open a channel of swept hexes from the WEST edge to the EAST edge · your first tap is always safe"), 6500);
   }
   if (S.lanes.length > 1)
-    fieldManual("lanes2", "TWO LANES, BOTH MUST OPEN",
-      "A buoyed separation line splits this sector into two shipping lanes, and both need their own swept channel from west to east. Opening the FIRST lane starts one-way traffic and clears part of the backlog, so scout both lanes and open the cheaper one first.",
+    fieldManual("lanes2", TXT("fmLanesTitle", "TWO LANES, BOTH MUST OPEN"),
+      TXT("fmLanesBody", "A buoyed separation line splits this sector into two shipping lanes, and both need their own swept channel from west to east. Opening the FIRST lane starts one-way traffic and clears part of the backlog, so scout both lanes and open the cheaper one first."),
       FM_IMG.lanes2);
 }
 
@@ -1739,7 +1767,7 @@ function revealCell(c){
   const before = S.revealed;
   floodReveal(c);
   if (S.revealed - before >= 6) sonarAt(c);   // meaningful clears get a sonar wave
-  if (S.taps >= 2) coach("numbers", "Numbers count adjacent mines · hold a hex to flag it");
+  if (S.taps >= 2) coach("numbers", TXT("coachNumbers", "Numbers count adjacent mines · hold a hex to flag it"));
   checkWin();
 }
 
@@ -1788,7 +1816,7 @@ function toggleFlag(i){
   if (c.flag) SFX.flag(); else SFX.unflag();
   renderCell(c);
   updateHud();
-  if (c.flag) coach("chord", "Flagged · tap a revealed number when its flags match to clear around it");
+  if (c.flag) coach("chord", TXT("coachChord", "Flagged · tap a revealed number when its flags match to clear around it"));
 }
 
 function chord(c){
@@ -1826,10 +1854,10 @@ function detonate(c){
   $("boardWrap").classList.add("shake");
   setTimeout(() => $("boardWrap").classList.remove("shake"), 550);
   const cost = (S.L.wreckCost || 2) + Math.min(2, Math.max(0, S.wrecks - (S.hard ? 1 : 2)));
-  if (!fieldManual("wreck", "HULL DAMAGED",
-    `A mine went off under the sweep. The patrol continues, but the wreck blocks that hex for the rest of the level, nearby numbers re-count, and ${cost} tankers join the backlog. Repeated wrecks cost more each time, so slow down before you spend another.`,
+  if (!fieldManual("wreck", TXT("fmWreckTitle", "HULL DAMAGED"),
+    TF("fmWreckBody", "A mine went off under the sweep. The patrol continues, but the wreck blocks that hex for the rest of the level, nearby numbers re-count, and {n} tankers join the backlog. Repeated wrecks cost more each time, so slow down before you spend another.", {n: cost}),
     FM_IMG.wreck))
-    toast(`Hull damaged · the wreck blocks that hex and ${cost} tankers join the backlog`, 5000);
+    toast(TF("wreckToast", "Hull damaged · the wreck blocks that hex and {n} tankers join the backlog", {n: cost}), 5000);
   addBacklog(cost);
   if (S.over) return;
   updateHud();
@@ -1895,7 +1923,7 @@ function checkWin(){
           S.backlog = Math.max(0, S.backlog - 4);
           renderBacklog(false);
         }
-        toast(`Lane ${S.laneOpen.filter(Boolean).length}/${S.lanes.length} open · one-way traffic moves and the backlog eases`, 5000);
+        toast(TF("laneOpenToast", "Lane {a}/{b} open · one-way traffic moves and the backlog eases", {a: S.laneOpen.filter(Boolean).length, b: S.lanes.length}), 5000);
       }
     }
     if (!open) all = false;
@@ -1952,10 +1980,10 @@ function tickClock(){
   if (S.cycleMs >= cyc){
     S.cycleMs -= cyc;
     SFX.tanker();
-    if (!fieldManual("fmBacklog", "THE TANKER BACKLOG",
-        "A tanker just joined the queue at the mouth of the strait. One arrives every few seconds; the thin bar in the HUD counts down to the next. If the backlog ever fills, insurers pull cover and the patrol fails. Only the backlog can end the sweep.",
+    if (!fieldManual("fmBacklog", TXT("fmBacklogTitle", "THE TANKER BACKLOG"),
+        TXT("fmBacklogBody", "A tanker just joined the queue at the mouth of the strait. One arrives every few seconds; the thin bar in the HUD counts down to the next. If the backlog ever fills, insurers pull cover and the patrol fails. Only the backlog can end the sweep."),
         FM_IMG.backlog))
-      coach("tanker", "A tanker joined the backlog · open the channel before it fills");
+      coach("tanker", TXT("coachTanker", "A tanker joined the backlog · open the channel before it fills"));
     S.tankersArrived++;
     addBacklog(1);
     if (S.over) return;
@@ -1998,10 +2026,10 @@ function seedMine(quiet){
       if (ml){ ml.classList.remove("alert"); void ml.offsetWidth; ml.classList.add("alert"); }
       if (!quiet){
         SFX.minelayer();
-        if (!fieldManual("minelayer", "MINELAYING RESUMES",
-          "Cleared water can be re-seeded overnight. From here on, fresh mines slip into unswept water as time passes and the mine counter climbs. Numbers you have already opened never lie.",
+        if (!fieldManual("minelayer", TXT("fmReseedTitle", "MINELAYING RESUMES"),
+          TXT("fmReseedBody", "Cleared water can be re-seeded overnight. From here on, fresh mines slip into unswept water as time passes and the mine counter climbs. Numbers you have already opened never lie."),
           FM_IMG.reMine))
-          toast("Minelayer active · a new mine entered the water", 4500);
+          toast(TXT("seedToast", "Minelayer active · a new mine entered the water"), 4500);
       }
       return true;
     }
@@ -2016,7 +2044,7 @@ function addBacklog(n){
     S.critWarned = true;
     SFX.alert();
     HAPTIC.medium();
-    toast(`Backlog critical · ${S.L.cap - S.backlog} slots left before the strait closes`, 4800);
+    toast(TF("backlogCritical", "Backlog critical · {n} slots left before the strait closes", {n: S.L.cap - S.backlog}), 4800);
   }
   if (S.backlog >= S.L.cap){
     S.over = true;
@@ -2136,10 +2164,10 @@ function spawnShip(){
   placeEnt(g, cell, cell, true);
   S.ships.push({ cell, g, moveT:0, stallT:0, warned:false });
   SFX.tankerIn();
-  if (!fieldManual("dship", "CONVOYS STOP WAITING",
-    "Tankers now enter on their own and follow your swept water east. Keep opening a way ahead of them: a stranded tanker will push into unswept water and gamble with the mines, or be detained by the patrols that watch the Iranian coast. Ships that make it out east ease the backlog.",
+  if (!fieldManual("dship", TXT("fmDshipTitle", "CONVOYS STOP WAITING"),
+    TXT("fmDshipBody", "Tankers now enter on their own and follow your swept water east. Keep opening a way ahead of them: a stranded tanker will push into unswept water and gamble with the mines, or be detained by the patrols that watch the Iranian coast. Ships that make it out east ease the backlog."),
     FM_IMG.dship))
-    toast("Tanker underway in your channel", 4200);
+    toast(TXT("dshipToast", "Tanker underway in your channel"), 4200);
 }
 
 function removeShip(sh){
@@ -2154,7 +2182,7 @@ function shipExit(sh){
   if (S.backlog > 0){ S.backlog--; renderBacklog(false); }
   SFX.horn();
   HAPTIC.light();
-  coach("dshipout", "Tanker through to open water · every ship that exits eases the backlog by one");
+  coach("dshipout", TXT("dshipOutCoach", "Tanker through to open water · every ship that exits eases the backlog by one"));
 }
 
 function shipDetained(sh, midMove){
@@ -2165,10 +2193,10 @@ function shipDetained(sh, midMove){
   const cost = S.L.convoy.cost ?? 2;
   S.detained++;
   const firstEver = !COACH.detain;
-  coach("detain", `Iranian patrols detain the tanker and tow it off · ${cost} join the backlog and the operation blocks that hex for a while`);
+  coach("detain", TF("detainCoach", "Iranian patrols detain the tanker and tow it off · {n} join the backlog and the operation blocks that hex for a while", {n: cost}));
   if (!firstEver) toast(midMove ?
-    "Iranian patrols pull a tanker out of the channel · it is towed off under escort" :
-    "Stranded tanker detained by Iranian patrols", 5000);
+    TXT("detainMidToast", "Iranian patrols pull a tanker out of the channel · it is towed off under escort") :
+    TXT("detainToast", "Stranded tanker detained by Iranian patrols"), 5000);
   holdCell(cell, SHIP_HOLD);
   addBacklog(cost);
   if (!S.over) updateHud();
@@ -2243,7 +2271,7 @@ function tickShips(dt){
         sh.warned = true;
         sh.g.classList.add("warn");
         SFX.horn();
-        toast("Tanker at the end of swept water · open a way ahead or it will push into the fog", 5000);
+        toast(TXT("stallToast", "Tanker at the end of swept water · open a way ahead or it will push into the fog"), 5000);
       }
       if (sh.stallT >= GAMBLE_AT){
         const route = fogRoute(sh);
@@ -2255,8 +2283,8 @@ function tickShips(dt){
           sh.g.classList.add("gamble");
           SFX.horn();
           const firstEver = !COACH.gamble;
-          coach("gamble", "The tanker stops waiting and pushes into unswept water · it exits east if it survives the fog");
-          if (!firstEver) toast("A tanker pushes into the fog", 3600);
+          coach("gamble", TXT("gambleCoach", "The tanker stops waiting and pushes into unswept water · it exits east if it survives the fog"));
+          if (!firstEver) toast(TXT("gambleToast", "A tanker pushes into the fog"), 3600);
           continue;
         }
       }
@@ -2307,7 +2335,7 @@ function shipStruck(sh, cell){
   detonationFx(cell);
   HAPTIC.heavy();
   SFX.mine();
-  toast("A gambling tanker finds a mine the hard way · the wreck is charted, 2 join the backlog", 5200);
+  toast(TXT("struckToast", "A gambling tanker finds a mine the hard way · the wreck is charted, 2 join the backlog"), 5200);
   addBacklog(2);
   if (S.over) return;
   updateHud();
@@ -2390,10 +2418,10 @@ function spawnRunner(){
   g.addEventListener("pointerdown", e => { e.stopPropagation(); interceptRunner(rn); });
   S.runners.push(rn);
   SFX.minelayerIn();
-  if (!fieldManual("runner", "MINELAYER SIGHTED",
-    "A minelayer is making for unswept water, marked by a blinking beacon. TAP the ship to intercept it: the mine never enters the water and a backlog slot clears.",
+  if (!fieldManual("runner", TXT("fmRunnerTitle", "MINELAYER SIGHTED"),
+    TXT("fmRunnerBody", "A minelayer is making for unswept water, marked by a blinking beacon. TAP the ship to intercept it: the mine never enters the water and a backlog slot clears."),
     FM_IMG.minelayer))
-    toast("Minelayer in the channel · tap the ship to intercept it", 5000);
+    toast(TXT("runnerToast", "Minelayer in the channel · tap the ship to intercept it"), 5000);
 }
 
 function removeRunner(rn){
@@ -2413,8 +2441,8 @@ function interceptRunner(rn){
   const freed = S.backlog > 0;
   if (freed){ S.backlog--; renderBacklog(false); }
   const firstEver = !COACH.runnerout;
-  coach("runnerout", "Minelayer intercepted · its cargo never reaches the water and a backlog slot clears");
-  if (!firstEver) toast(freed ? "Minelayer intercepted · backlog eases by one" : "Minelayer intercepted", 4200);
+  coach("runnerout", TXT("runnerOutCoach", "Minelayer intercepted · its cargo never reaches the water and a backlog slot clears"));
+  if (!firstEver) toast(freed ? TXT("runnerOutToastFreed", "Minelayer intercepted · backlog eases by one") : TXT("runnerOutToast", "Minelayer intercepted"), 4200);
 }
 
 function runnerEscape(rn){
@@ -2424,9 +2452,9 @@ function runnerEscape(rn){
   if (laid){
     S.runnerMines++;
     SFX.minelayer();
-    toast("The minelayer slips into unswept water · sonar hears fresh mine-laying", 5200);
+    toast(TXT("escapeLaid", "The minelayer slips into unswept water · sonar hears fresh mine-laying"), 5200);
   } else {
-    toast("The minelayer slips away into unswept water and goes quiet", 4800);
+    toast(TXT("escapeQuiet", "The minelayer slips away into unswept water and goes quiet"), 4800);
   }
 }
 
@@ -2483,8 +2511,8 @@ function spawnDrone(){
   g.addEventListener("pointerdown", e => { e.stopPropagation(); interceptDrone(dr); });
   S.drones.push(dr);
   SFX.droneIn();
-  if (!fieldManual("drone", "ONE-WAY DRONES",
-    "Iranian drones now come for the convoy itself, anywhere on the board. TAP the drone before it reaches its target; a hit disables the tanker and adds to the backlog.",
+  if (!fieldManual("drone", TXT("fmDroneTitle", "ONE-WAY DRONES"),
+    TXT("fmDroneBody", "Iranian drones now come for the convoy itself, anywhere on the board. TAP the drone before it reaches its target; a hit disables the tanker and adds to the backlog."),
     FM_IMG.drone))
     toast("Drone inbound · tap it before it reaches the convoy", 4600);
 }
@@ -2504,8 +2532,8 @@ function interceptDrone(dr){
   HAPTIC.medium();
   sonarAt(dr.aim);
   const firstEver = !COACH.droneout;
-  coach("droneout", "Drone intercepted short of the convoy");
-  if (!firstEver) toast("Drone intercepted", 3200);
+  coach("droneout", TXT("droneOutCoach", "Drone intercepted short of the convoy"));
+  if (!firstEver) toast(TXT("droneOutToast", "Drone intercepted"), 3200);
 }
 
 function tickDrones(dt){
@@ -2530,11 +2558,11 @@ function tickDrones(dt){
       SFX.detain();
       HAPTIC.heavy();
       holdCell(cell, SHIP_HOLD);
-      toast("A drone gets through · the tanker is disabled and towed off, 2 join the backlog", 5200);
+      toast(TXT("droneHitToast", "A drone gets through · the tanker is disabled and towed off, 2 join the backlog"), 5200);
       addBacklog(2);
       if (!S.over) updateHud();
     } else {
-      toast("The drone loses its target and ditches", 3200);
+      toast(TXT("droneMissToast", "The drone loses its target and ditches"), 3200);
     }
   }
 }
@@ -2879,7 +2907,7 @@ function buildBoardSVG(){
     const anchor = ty === 2.5 ? (flip ? ' text-anchor="end"' : "") : ' text-anchor="middle"';
     html += `<g class="city port" transform="translate(${best[0].toFixed(1)},${best[1].toFixed(1)})">` +
             `<circle class="portglow" r="7"/><circle class="portdot" r="2.3"/><circle class="ring" r="4.2"/>` +
-            `<text x="${tx}" y="${ty}"${anchor}>PORT OF ${cname}</text></g>`;
+            `<text x="${tx}" y="${ty}"${anchor}>${TXT("portOf", "PORT OF ")}${cname}</text></g>`;
   }
   /* dashed international boundary (U.A.E. | Oman on the Musandam exclave) */
   if (S.L.border){
@@ -2890,7 +2918,8 @@ function buildBoardSVG(){
   /* chart labels: land names snap onto their landmass and follow its axis;
      water names run italic along a gentle arc, like a nautical chart */
   let lblN = 0;
-  for (const [t, fx, fy, onland] of (S.L.labels || [])){
+  for (let [t, fx, fy, onland] of (S.L.labels || [])){
+    t = (isES() && ES.maplabels[t]) || t;
     const hx = vbW * fx, hy = vbH * fy;
     if (onland){
       let best = null, bd = Infinity, bcl = null;
@@ -3060,13 +3089,14 @@ function renderBacklog(animateLast){
 
 function updateHud(){
   $("minesLeft").textContent = String(Math.max(0, S.mineCount - S.flags)).padStart(2, "0");
-  $("hudName").textContent = S.L.name;
-  $("hudDate").textContent = S.L.code + " · " + S.L.date;
+  $("hudName").textContent = LT(S.idx, "name");
+  $("hudDate").textContent = LT(S.idx, "code") + " · " + LT(S.idx, "date");
 }
 
 function setTicker(L){
   const sep = "&nbsp;&nbsp;&nbsp;•••&nbsp;&nbsp;&nbsp;";
-  const one = L.ticker.join(sep) + sep;
+  const items = LT(S.idx, "ticker");
+  const one = items.join(sep) + sep;
   const track = $("tickTrack");
   track.innerHTML = one + one;
   const secs = Math.max(24, Math.round(one.replace(/<[^>]+>/g, "").length * 0.30));
@@ -3142,47 +3172,48 @@ function openModal(kind){
   const sweepPct = Math.round(S.revealed / S.safeTotal * 100);
 
   if (kind === "win"){
-    kick.className = "modal-kicker good"; kick.textContent = "Channel Open";
-    title.textContent = L.winTitle || "CONVOY THROUGH";
-    flavor.textContent = L.winFlavor ||
-      "The channel holds. The backlog drains through the corridor you swept.";
-    stats.innerHTML = (S.hard ? `<span class="chip" style="color:var(--red);border-color:rgba(255,92,77,.5)">HARD</span>` : "") +
-                      chip(`Time <b>${fmtTime(S.totalMs)}</b>`) +
-                      chip(`Sweep <b>${sweepPct}%</b>`) +
-                      chip(`Wrecks <b>${S.wrecks}</b>`) +
-                      (S.shipsOut ? chip(`Ships through <b>${S.shipsOut}</b>`) : "") +
-                      (S.runnersStopped ? chip(`Minelayers intercepted <b>${S.runnersStopped}</b>`) : "") +
-                      (S.dronesDowned ? chip(`Drones intercepted <b>${S.dronesDowned}</b>`) : "") +
-                      (S.perfect ? `<span class="chip perfect">${ICONS.star} Perfect sweep</span>` : "") +
-                      (S.newBest ? `<span class="chip best">${ICONS.star} New best</span>` : "");
-    const fact = FACTS[(S.idx * 5 + Math.floor(S.totalMs / 1000)) % FACTS.length];
-    btns.insertAdjacentHTML("afterend", `<div class="fact"><b>DID YOU KNOW</b> · ${fact}</div>`);
+    kick.className = "modal-kicker good"; kick.textContent = TXT("kickerOpen", "Channel Open");
+    title.textContent = LT(S.idx, "winTitle") || TXT("winTitleDefault", "CONVOY THROUGH");
+    flavor.textContent = LT(S.idx, "winFlavor") ||
+      TXT("winFlavorDefault", "The channel holds. The backlog drains through the corridor you swept.");
+    stats.innerHTML = (S.hard ? `<span class="chip" style="color:var(--red);border-color:rgba(255,92,77,.5)">${TXT("hardTag", "HARD")}</span>` : "") +
+                      chip(`${TXT("chipTime", "Time")} <b>${fmtTime(S.totalMs)}</b>`) +
+                      chip(`${TXT("chipSweep", "Sweep")} <b>${sweepPct}%</b>`) +
+                      chip(`${TXT("chipWrecks", "Wrecks")} <b>${S.wrecks}</b>`) +
+                      (S.shipsOut ? chip(`${TXT("chipShips", "Ships through")} <b>${S.shipsOut}</b>`) : "") +
+                      (S.runnersStopped ? chip(`${TXT("chipIntercepts", "Minelayers intercepted")} <b>${S.runnersStopped}</b>`) : "") +
+                      (S.dronesDowned ? chip(`${TXT("chipDronesDown", "Drones intercepted")} <b>${S.dronesDowned}</b>`) : "") +
+                      (S.perfect ? `<span class="chip perfect">${ICONS.star} ${TXT("chipPerfect", "Perfect sweep")}</span>` : "") +
+                      (S.newBest ? `<span class="chip best">${ICONS.star} ${TXT("chipBest", "New best")}</span>` : "");
+    const factArr = isES() && ES.facts.length ? ES.facts : FACTS;
+    const fact = factArr[(S.idx * 5 + Math.floor(S.totalMs / 1000)) % factArr.length];
+    btns.insertAdjacentHTML("afterend", `<div class="fact"><b>${TXT("didYouKnow", "DID YOU KNOW")}</b> · ${fact}</div>`);
     if (S.idx < LEVELS.length - 1)
-      btns.innerHTML = `<button class="btn primary" id="mNext">Next Chapter</button>
-                        <button class="btn small" id="mReplay">Replay</button>
-                        <button class="btn small" id="mMenu">Patrol Log</button>`;
+      btns.innerHTML = `<button class="btn primary" id="mNext">${TXT("btnNext", "Next Chapter")}</button>
+                        <button class="btn small" id="mReplay">${TXT("btnReplay", "Replay")}</button>
+                        <button class="btn small" id="mMenu">${TXT("btnPatrolLog", "Patrol Log")}</button>`;
     else
-      btns.innerHTML = `<button class="btn primary" id="mMenu">Patrol Log</button>
-                        <button class="btn small" id="mReplay">Replay</button>
-                        <button class="btn small" id="mTitleBtn">Title</button>`;
+      btns.innerHTML = `<button class="btn primary" id="mMenu">${TXT("btnPatrolLog", "Patrol Log")}</button>
+                        <button class="btn small" id="mReplay">${TXT("btnReplay", "Replay")}</button>
+                        <button class="btn small" id="mTitleBtn">${TXT("btnTitle", "Title")}</button>`;
   } else if (kind === "blocked"){
-    kick.className = "modal-kicker bad"; kick.textContent = "Channel Blocked";
-    title.textContent = "THE LANE IS SEALED";
-    flavor.textContent = "Between the minefield and the wrecks, no navigable channel remains. The sweep starts over.";
-    stats.innerHTML = chip(`Swept <b>${sweepPct}%</b>`) + chip(`Wrecks <b>${S.wrecks}</b>`);
-    btns.innerHTML = `<button class="btn primary" id="mRetry">Retry Sweep</button>
-                      <button class="btn small" id="mMenu">Patrol Log</button>`;
+    kick.className = "modal-kicker bad"; kick.textContent = TXT("kickerBlocked", "Channel Blocked");
+    title.textContent = TXT("blockedTitle", "THE LANE IS SEALED");
+    flavor.textContent = TXT("blockedFlavor", "Between the minefield and the wrecks, no navigable channel remains. The sweep starts over.");
+    stats.innerHTML = chip(`${TXT("chipSweep", "Sweep")} <b>${sweepPct}%</b>`) + chip(`${TXT("chipWrecks", "Wrecks")} <b>${S.wrecks}</b>`);
+    btns.innerHTML = `<button class="btn primary" id="mRetry">${TXT("btnRetry", "Retry Sweep")}</button>
+                      <button class="btn small" id="mMenu">${TXT("btnPatrolLog", "Patrol Log")}</button>`;
   } else {
-    kick.className = "modal-kicker bad"; kick.textContent = "Backlog Full";
-    title.textContent = "STRAIT CLOSED";
-    flavor.textContent = "Too many tankers stack up at the approaches. Insurers pull cover, traffic halts, and the strait shuts down.";
-    stats.innerHTML = chip(`Swept <b>${sweepPct}%</b>`) +
-                      chip(`Arrived <b>${S.tankersArrived}</b>`) +
-                      (S.wrecks ? chip(`Wrecks <b>${S.wrecks} · +${S.wrecks * (L.wreckCost || 2)}</b>`) : "") +
-                      (S.detained ? chip(`Detained <b>${S.detained} · +${S.detained * ((L.convoy && L.convoy.cost) || 2)}</b>`) : "") +
-                      (S.struck ? chip(`Struck in fog <b>${S.struck} · +${S.struck * 2}</b>`) : "");
-    btns.innerHTML = `<button class="btn primary" id="mRetry">Retry Sweep</button>
-                      <button class="btn small" id="mMenu">Patrol Log</button>`;
+    kick.className = "modal-kicker bad"; kick.textContent = TXT("kickerFull", "Backlog Full");
+    title.textContent = TXT("closedTitle", "STRAIT CLOSED");
+    flavor.textContent = TXT("closedFlavor", "Too many tankers stack up at the approaches. Insurers pull cover, traffic halts, and the strait shuts down.");
+    stats.innerHTML = chip(`${TXT("chipSweep", "Sweep")} <b>${sweepPct}%</b>`) +
+                      chip(`${TXT("chipArrived", "Arrived")} <b>${S.tankersArrived}</b>`) +
+                      (S.wrecks ? chip(`${TXT("chipWrecks", "Wrecks")} <b>${S.wrecks} · +${S.wrecks * (L.wreckCost || 2)}</b>`) : "") +
+                      (S.detained ? chip(`${TXT("chipDetained", "Detained")} <b>${S.detained} · +${S.detained * ((L.convoy && L.convoy.cost) || 2)}</b>`) : "") +
+                      (S.struck ? chip(`${TXT("chipStruck", "Struck in fog")} <b>${S.struck} · +${S.struck * 2}</b>`) : "");
+    btns.innerHTML = `<button class="btn primary" id="mRetry">${TXT("btnRetry", "Retry Sweep")}</button>
+                      <button class="btn small" id="mMenu">${TXT("btnPatrolLog", "Patrol Log")}</button>`;
   }
   $("modal").classList.add("open");
   const on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
@@ -3210,18 +3241,20 @@ function renderChapters(){
     card.className = "chap-card" + (unlocked ? "" : " locked");
     const dparts = L.date.split(" ");
     let state;
-    const hardTag = i in PROG.hardBest ? ` <span class="hardtag">HARD ${fmtTime(PROG.hardBest[i]*1000)}</span>` : "";
-    if (cleared) state = `<span class="done">CLEARED ${fmtTime(PROG.best[i]*1000)}</span>` + hardTag +
+    const hardTag = i in PROG.hardBest ? ` <span class="hardtag">${TXT("hardTag", "HARD")} ${fmtTime(PROG.hardBest[i]*1000)}</span>` : "";
+    if (cleared) state = `<span class="done">${TXT("cleared", "CLEARED")} ${fmtTime(PROG.best[i]*1000)}</span>` + hardTag +
                          (PROG.perfect[i] ? ` <span class="star">${ICONS.star}</span>` : "") +
-                         ` &nbsp;<span class="go">${ICONS.play} REPLAY</span>`;
-    else if (unlocked) state = `<span class="go">${ICONS.play} PLAY</span>`;
-    else state = `${ICONS.lock} LOCKED`;
+                         ` &nbsp;<span class="go">${ICONS.play} ${TXT("replay", "REPLAY")}</span>`;
+    else if (unlocked) state = `<span class="go">${ICONS.play} ${TXT("play", "PLAY")}</span>`;
+    else state = `${ICONS.lock} ${TXT("locked", "LOCKED")}`;
+    const ldate = LT(i, "date");
+    const ldp = ldate.split(" ");
     card.innerHTML =
-      `<div><span class="chap-d1">${dparts[0]} ${dparts[dparts.length - 1]}</span></div>` +
-      `<div class="chap-d2">${(dparts[1] && dparts[1] !== dparts[dparts.length - 1] ? dparts[1].split("-")[0] : "0" + (i + 1))}</div>` +
-      `<div class="chap-code">${L.code} · ${L.sector}</div>` +
-      `<div class="chap-name">${L.name}</div>` +
-      `<div class="chap-sub">${L.sub}</div>` +
+      `<div><span class="chap-d1">${ldp[0]} ${ldp[ldp.length - 1]}</span></div>` +
+      `<div class="chap-d2">${(ldp[1] && ldp[1] !== ldp[ldp.length - 1] ? ldp[1].split("-")[0] : "0" + (i + 1))}</div>` +
+      `<div class="chap-code">${LT(i, "code")} · ${LT(i, "sector")}</div>` +
+      `<div class="chap-name">${LT(i, "name")}</div>` +
+      `<div class="chap-sub">${LT(i, "sub")}</div>` +
       `<div class="chap-state">${state}</div>`;
     if (unlocked) card.addEventListener("click", () => showBrief(i));
     wrap.appendChild(card);
@@ -3236,11 +3269,11 @@ function showBrief(i){
   briefIdx = i;
   const L = LEVELS[i];
   closeModal();
-  $("briefDate").textContent = L.date;
-  $("briefName").textContent = L.code + " · " + L.name;
-  $("briefSector").textContent = "SECTOR · " + L.sector;
-  $("briefSub").textContent = L.sub;
-  $("briefWire").innerHTML = L.brief.map(([src, h]) =>
+  $("briefDate").textContent = LT(i, "date");
+  $("briefName").textContent = LT(i, "code") + " · " + LT(i, "name");
+  $("briefSector").textContent = TXT("sector", "SECTOR") + " · " + LT(i, "sector");
+  $("briefSub").textContent = LT(i, "sub");
+  $("briefWire").innerHTML = LT(i, "brief").map(([src, h]) =>
     `<div class="wire-item"><span class="wire-src">${src}</span><span class="wire-h">${h}</span></div>`).join("");
   const { cells } = buildCells(L.mask);
   const water = cells.filter(c => c.water).length;
@@ -3248,14 +3281,14 @@ function showBrief(i){
   const lanes = computeLanes(cells, L.mask[0].length).length;
   const mxChip = txt => `<span class="chip mxchip">${txt}</span>`;
   $("briefChips").innerHTML =
-    `<span class="chip">Sector <b>${water}</b> hexes</span>` +
-    `<span class="chip">Est. mines <b>${mines}</b></span>` +
-    `<span class="chip">Backlog cap <b>${L.cap}</b></span>` +
-    (lanes > 1 ? mxChip("Two lanes") : `<span class="chip">Lanes to open <b>${lanes}</b></span>`) +
-    (L.reMine ? mxChip("Re-seeding") : "") +
-    (L.runners ? mxChip("Minelayers") : "") +
-    (L.convoy ? mxChip("Convoys underway") : "") +
-    (L.drones ? mxChip("Drones overhead") : "");
+    `<span class="chip">${TF("chipSector", "Sector <b>{n}</b> hexes", {n: water})}</span>` +
+    `<span class="chip">${TF("chipMines", "Est. mines <b>{n}</b>", {n: mines})}</span>` +
+    `<span class="chip">${TF("chipCap", "Backlog cap <b>{n}</b>", {n: L.cap})}</span>` +
+    (lanes > 1 ? mxChip(TXT("chipTwoLanes", "Two lanes")) : `<span class="chip">${TF("chipLanes", "Lanes to open <b>{n}</b>", {n: lanes})}</span>`) +
+    (L.reMine ? mxChip(TXT("chipReseed", "Re-seeding")) : "") +
+    (L.runners ? mxChip(TXT("chipMinelayers", "Minelayers")) : "") +
+    (L.convoy ? mxChip(TXT("chipConvoys", "Convoys underway")) : "") +
+    (L.drones ? mxChip(TXT("chipDrones", "Drones overhead")) : "");
   show("scr-brief");
 }
 
@@ -3553,33 +3586,37 @@ const MECHANICS = [
     tips:["Tap the drone, not the ship; the launch whine is your warning."] }
 ];
 let intelTab = "briefing";
+const TAB_UI = { briefing:"tabBriefing", manual:"tabManual", history:"tabHistory", countries:"tabCountries",
+  proxies:"tabProxies", strategies:"tabStrategies", technologies:"tabTechnology", timeline:"tabTimeline" };
 function renderIntel(){
   $("intelTabs").innerHTML = INTEL_TABS.map(([k, label]) =>
-    `<button class="intel-tab${k === intelTab ? " on" : ""}" data-tab="${k}">${label}</button>`).join("");
+    `<button class="intel-tab${k === intelTab ? " on" : ""}" data-tab="${k}">${TXT(TAB_UI[k], label)}</button>`).join("");
   let html;
   if (intelTab === "manual"){
-    html = MECHANICS.map(m => {
-      const unlocked = DEV || (m.ch - 1) <= PROG.u || (m.ch - 1) in PROG.best;
+    html = MECHANICS.map((m0, mi) => {
+      const m = isES() && ES.mechanics[mi] ? Object.assign({}, m0, ES.mechanics[mi]) : m0;
+      const unlocked = DEV || (m0.ch - 1) <= PROG.u || (m0.ch - 1) in PROG.best;
       if (!unlocked)
-        return `<div class="intel-entry mx-locked"><h4>?????</h4><p>Unlocks in Chapter ${m.ch}.</p></div>`;
+        return `<div class="intel-entry mx-locked"><h4>${TXT("mxLockedName", "?????")}</h4><p>${TF("mxUnlocks", "Unlocks in Chapter {n}.", {n: m0.ch})}</p></div>`;
       return `<div class="intel-entry">` +
-        `<h4>${m.name} <span class="mx-ch">CH ${m.ch}</span></h4>` +
-        (m.img && FM_IMG[m.img] ? `<div class="mx-img">${FM_IMG[m.img]
+        `<h4>${m.name} <span class="mx-ch">CH ${m0.ch}</span></h4>` +
+        (m0.img && FM_IMG[m0.img] ? `<div class="mx-img">${trSVG(FM_IMG[m0.img])
           .replace(/url\(#wg[ABC]\)/g, "rgba(38,80,100,.55)")
           .replace(/url\(#mineGrad\)/g, "#c23b2e")
           .replace(/url\(#revGrad\)/g, "rgba(62,242,154,.10)")}</div>` : "") +
-        `<p><b>The record:</b> ${m.real}</p>` +
-        `<p class="mx-tips"><b>How it works:</b> ${m.how}</p>` +
-        `<p class="mx-tips"><b>Tips:</b></p><ul class="mx-list">` +
+        `<p><b>${TXT("mxRecord", "The record:")}</b> ${m.real}</p>` +
+        `<p class="mx-tips"><b>${TXT("mxHow", "How it works:")}</b> ${m.how}</p>` +
+        `<p class="mx-tips"><b>${TXT("mxTips", "Tips:")}</b></p><ul class="mx-list">` +
         m.tips.map(tip => `<li>${tip}</li>`).join("") + `</ul></div>`;
     }).join("");
-    if (DEV) html = `<div class="intel-entry mx-dev"><p>DEV BUILD: all entries visible. Players unlock each entry with its chapter.</p></div>` + html;
+    if (DEV) html = `<div class="intel-entry mx-dev"><p>${TXT("mxDev", "DEV BUILD: all entries visible. Players unlock each entry with its chapter.")}</p></div>` + html;
   } else {
-    html = (INTEL[intelTab] || []).map(e =>
+    const DATA = isES() && ES.intel[intelTab] ? ES.intel : INTEL;
+    html = (DATA[intelTab] || []).map(e =>
       `<div class="intel-entry"><h4>${e.t}</h4><p>${e.d}</p></div>`).join("");
   }
   if (intelTab === "briefing")
-    html += `<div class="intel-cta"><button class="btn primary" id="btnPrologueBegin">Begin Chapter 1</button></div>`;
+    html += `<div class="intel-cta"><button class="btn primary" id="btnPrologueBegin">${TXT("beginCh1", "Begin Chapter 1")}</button></div>`;
   $("intelBody").innerHTML = html;
   $("intelBody").scrollTop = 0;
 }
@@ -3614,8 +3651,8 @@ $("btnContinue").addEventListener("click", () => {
   showBrief(next);
 });
 function hardLabel(){
-  if (!hardUnlocked()) return "Hard mode · locked";
-  return HARD ? "Mode · HARD" : "Mode · Patrol";
+  if (!hardUnlocked()) return TXT("hardLocked", "Hard mode · locked");
+  return HARD ? TXT("modeHard", "Mode · HARD") : TXT("modePatrol", "Mode · Patrol");
 }
 function renderHardBtn(){
   const b = $("btnHard");
@@ -3624,15 +3661,15 @@ function renderHardBtn(){
 }
 $("btnHard").addEventListener("click", () => {
   if (!hardUnlocked()){
-    toast("Clear all seven chapters to unlock Hard mode", 3600);
+    toast(TXT("hardLockToast", "Clear all seven chapters to unlock Hard mode"), 3600);
     return;
   }
   HARD = !HARD;
   try { localStorage.setItem("ormuz.hard", HARD ? "1" : "0"); } catch(e){}
   renderHardBtn();
   toast(HARD ?
-    "HARD mode · denser minefields, a faster clock, busier traffic, less forgiveness" :
-    "Patrol mode · standard campaign difficulty", 4200);
+    TXT("hardOnToast", "HARD mode · denser minefields, a faster clock, busier traffic, less forgiveness") :
+    TXT("hardOffToast", "Patrol mode · standard campaign difficulty"), 4200);
 });
 $("btnChapters").addEventListener("click", () => { renderChapters(); renderHardBtn(); show("scr-chapters"); });
 $("btnChapBack").addEventListener("click", () => show("scr-title"));
@@ -3654,7 +3691,7 @@ $("btnRestart").addEventListener("click", () => {
   const now = performance.now();
   if (now - restartArm < 2600){ restartArm = 0; startLevel(S.idx); return; }
   restartArm = now;
-  toast("Tap restart again to abandon this sweep", 2600);
+  toast(TXT("restartConfirm", "Tap restart again to abandon this sweep"), 2600);
 });
 ["btnGameBack", "btnChapBack", "btnBriefBack", "btnPrologueBack"].forEach(id => { $(id).innerHTML = ICONS.back; });
 $("btnRestart").innerHTML = ICONS.restart;
@@ -3688,6 +3725,35 @@ $("btnMute").addEventListener("click", () => {
   $("btnMute").innerHTML = muted ? ICONS.soundOff : ICONS.soundOn;
   if (muted) ambientStop(); else if (clockId) ambientStart();
 });
+function applyLang(){
+  document.documentElement.lang = LANG;
+  $("tagline").textContent = TXT("tagline", "Open the Channel");
+  $("btnContinue").textContent = TXT("startPatrol", "Start Patrol");
+  $("btnChapters").textContent = TXT("chapters", "Chapters");
+  $("btnPrologue").textContent = TXT("intel", "Intel");
+  $("howto").innerHTML = TXT("howto", '<b>Tap</b> to sweep &nbsp;·&nbsp; <b>Hold</b> to flag &nbsp;·&nbsp; connect the <b>Persian Gulf</b> to the <b>Gulf of Oman</b><br>with a channel of swept hexes before the tanker backlog fills.');
+  $("finenote").textContent = TXT("finenote", "Seven chapters follow the real record, from the first rumor of mines to this week. Headlines are paraphrased from the reported record of those dates.");
+  document.querySelector(".followline").textContent = TXT("follow", "Follow the build · @jabreu89 · App Store release coming");
+  $("rotateH").textContent = TXT("rotateTitle", "Rotate your device");
+  $("rotateP").textContent = TXT("rotateBody", "HORMUZ charts the whole strait, west to east. Turn your phone sideways to play.");
+  $("chapH").textContent = TXT("patrolLog", "Patrol Log · 2026");
+  $("intelH").textContent = TXT("intelTitle", "Intel");
+  $("briefTag").textContent = TXT("situationReport", "Situation Report");
+  $("wireHead").textContent = TXT("newsWire", "News Wire · Those Days");
+  $("btnBegin").textContent = TXT("beginSweep", "Begin Sweep");
+  $("fmOk").textContent = TXT("understood", "Understood");
+  document.querySelector(".fmKick").textContent = TXT("fieldManualKicker", "Field Manual");
+  $("btnLang").textContent = isES() ? "Idioma · Español" : "Language · English";
+  $("btnAmb").textContent = ambientLabel();
+  if ($("btnHard")) renderHardBtn();
+}
+$("btnLang").addEventListener("click", () => {
+  LANG = isES() ? "en" : "es";
+  try { localStorage.setItem("ormuz.lang", LANG); } catch(e){}
+  applyLang();
+  toast(isES() ? "Idioma: Español · los tableros nuevos usan las etiquetas en español" : "Language: English", 3600);
+});
+applyLang();
 $("btnAmb").textContent = ambientLabel();
 if (DEV) $("titleKicker").textContent = "Straitrunner · DEV BUILD";
 $("btnAmb").addEventListener("click", () => {
