@@ -2947,7 +2947,6 @@ function buildBoardSVG(){
 
   /* ports sit in the water beside their coast, marked with a glowing berth light */
   const portBoxes = [];
-  const seaBoxes = [];
   const landAdjPort = c => {
     const D = (c.r % 2) ? N_ODD : N_EVEN;
     return D.some(([dc, dr]) => {
@@ -2975,8 +2974,18 @@ function buildBoardSVG(){
     portBoxes.push({ x: anchor.includes("middle") ? best[0] : (anchor ? best[0] + tx - phw : best[0] + tx + phw),
                      y: best[1] + ty, hw: phw });
     html += `<g class="city port" transform="translate(${best[0].toFixed(1)},${best[1].toFixed(1)})">` +
-            `<circle class="portglow" r="7"/><circle class="portdot" r="2.3"/><circle class="ring" r="4.2"/>` +
-            `<text x="${tx}" y="${ty}"${anchor}>${TXT("portOf", "PORT OF ")}${cname}</text></g>`;
+            `<circle class="portglow" r="7"/><circle class="portdot" r="2.3"/><circle class="ring" r="4.2"/>`;
+    /* letter-by-letter, tied to the hexes beneath, same as the sea names */
+    const ptxt = TXT("portOf", "PORT OF ") + cname;
+    const padv = 8.5;
+    let plx = anchor.includes("middle") ? tx - (ptxt.length * padv) / 2 + padv / 2
+            : (anchor ? tx - ptxt.length * padv + padv / 2 : tx + padv / 2);
+    for (const ch of ptxt){
+      if (ch !== " ")
+        html += `<text class="lchar" text-anchor="middle" x="${plx.toFixed(1)}" y="${ty}" data-gx="${(best[0] + plx).toFixed(1)}" data-gy="${(best[1] + ty - 4).toFixed(1)}">${ch}</text>`;
+      plx += padv;
+    }
+    html += `</g>`;
   }
   /* dashed international boundary (U.A.E. | Oman on the Musandam exclave) */
   if (S.L.border){
@@ -3020,8 +3029,15 @@ function buildBoardSVG(){
         if (!hit) break;
         ly = Math.max(vbH * 0.12, Math.min(vbH * 0.88, ly + (hit.y <= ly ? 30 : -30)));
       }
-      seaBoxes.push({ x: cx2, y: ly - 6, hw: w / 2, hh: 12 });
-      html += `<text class="map-label water" font-size="17" x="${cx2.toFixed(1)}" y="${ly.toFixed(1)}">${t}</text>`;
+      /* each letter is its own element tied to the hex beneath it, so the
+         sweep eats the name letter by letter as the water is surveyed */
+      const adv = 14.7;
+      let lx = cx2 - (t.length * adv) / 2 + adv / 2;
+      for (const ch of t){
+        if (ch !== " " && ch !== "·")
+          html += `<text class="map-label water lchar" font-size="17" x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" data-gx="${lx.toFixed(1)}" data-gy="${(ly - 6).toFixed(1)}">${ch}</text>`;
+        lx += adv;
+      }
     }
   }
 
@@ -3040,41 +3056,33 @@ function buildBoardSVG(){
   }
   S.waterTop = wTop - HEX_S;
   S.waterBot = wBot + HEX_S;
-  /* the chart is printed on the fog: each sea/port name tracks the cells
-     beneath it and fades away once the area is mostly surveyed */
-  const seaEls = [...svg.querySelectorAll("text.map-label.water")];
-  const portEls = [...svg.querySelectorAll("g.city.port text")];
-  const zones = [];
-  seaBoxes.forEach((b, i) => { if (seaEls[i]) zones.push({ el: seaEls[i], ...b }); });
-  portBoxes.forEach((b, i) => { if (portEls[i]) zones.push({ el: portEls[i], x: b.x, y: b.y - 4, hw: b.hw, hh: 9 }); });
+  /* the chart is printed on the fog: every letter of every sea and port name
+     belongs to the water hex beneath it, and reveals eat the names letter by
+     letter as the survey advances */
   S.cellZones = new Map();
-  for (const z of zones){
-    z.n = 0; z.total = 0; z.done = false;
-    for (const c of S.cells){
-      if (!c.water) continue;
+  const waters = S.cells.filter(c => c.water);
+  for (const el of svg.querySelectorAll("text.lchar")){
+    const gx = +el.dataset.gx, gy = +el.dataset.gy;
+    let bestC = null, bd = Infinity;
+    for (const c of waters){
       const [x, y] = cellCenter(c);
-      if (Math.abs(x - z.x) <= z.hw + HEX_S * 0.4 && Math.abs(y - (z.y + z.hh / 2)) <= z.hh + HEX_S * 0.6){
-        z.total++;
-        if (!S.cellZones.has(c.i)) S.cellZones.set(c.i, []);
-        S.cellZones.get(c.i).push(z);
-        if (c.rev){ z.n++; }
-      }
+      const d2 = (x - gx) * (x - gx) + (y - gy) * (y - gy);
+      if (d2 < bd){ bd = d2; bestC = c; }
     }
-    z.k = Math.max(2, Math.round(z.total * 0.45));
-    if (z.total && z.n >= z.k){ z.done = true; z.el.classList.add("swept"); }
+    if (!bestC) continue;
+    if (bestC.rev){ el.classList.add("swept"); continue; }
+    if (!S.cellZones.has(bestC.i)) S.cellZones.set(bestC.i, []);
+    S.cellZones.get(bestC.i).push(el);
   }
   fitBoard();
 }
 
 function sweepLabels(c){
   if (!S.cellZones || c.lblCounted) return;
-  const zs = S.cellZones.get(c.i);
-  if (!zs) return;
+  const els = S.cellZones.get(c.i);
   c.lblCounted = true;
-  for (const z of zs){
-    z.n++;
-    if (!z.done && z.n >= z.k){ z.done = true; z.el.classList.add("swept"); }
-  }
+  if (!els) return;
+  for (const el of els) el.classList.add("swept");
 }
 
 /* Adaptive fit: one identical board on every device; what adapts is how much
@@ -3119,7 +3127,7 @@ function cellClass(c){
 function renderCell(c){
   const g = cellEls[c.i];
   if (!g || !c.water) return;
-  if (c.rev) sweepLabels(c);
+  if (c.rev || c.wreck) sweepLabels(c);
   g.setAttribute("class", cellClass(c));
   let inner = `<polygon class="hexbg" points="${HEXPTS}"/>`;
   if (c.wreck) inner += WRECK_SVG;
