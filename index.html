@@ -321,7 +321,8 @@ svg#board{width:100%;height:100%;touch-action:none}
 .port .ring{stroke:#ffd76a;opacity:.5}
 @keyframes portpulse{0%,100%{transform:scale(.7);opacity:.32}50%{transform:scale(1.35);opacity:.12}}
 .city .ring{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.35}
-.city text{font-size:11.5px;letter-spacing:1.4px;fill:#9fc3d8;opacity:.35;font-weight:700;
+.city text{transition:opacity .9s ease}.city text.swept{opacity:0!important}
+.city text{font-size:11.5px;letter-spacing:1.4px;fill:#9fc3d8;opacity:.3;font-weight:700;
   font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   paint-order:stroke;stroke:#04100a;stroke-width:2.4px}
 .intl-border{fill:none;stroke:#9fc3d8;stroke-width:1;opacity:.3;stroke-dasharray:1 4;stroke-linecap:round}
@@ -331,7 +332,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 [data-theme="chart"] .intl-border{stroke:#5a4a2e;opacity:.55}
 [data-theme="ecdis"] .city circle{fill:#7fe9b6}
 [data-theme="ecdis"] .city .ring{stroke:#7fe9b6}
-[data-theme="ecdis"] .city text{fill:#9df5cd;opacity:.38;stroke:#04100a}
+[data-theme="ecdis"] .city text{fill:#9df5cd;opacity:.32;stroke:#04100a}
 [data-theme="ecdis"] .intl-border{stroke:#35e08a;opacity:.35}
 .op-area{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.14;stroke-dasharray:6 6}
 .chart-deco line{stroke:#9fc3d8;stroke-width:.5;opacity:.05}
@@ -342,7 +343,8 @@ svg#board{width:100%;height:100%;touch-action:none}
 .map-label{font-weight:700;letter-spacing:3.2px;text-anchor:middle;pointer-events:none;
   font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .map-label.onland{fill:#2c1e08;opacity:.55}
-.map-label.water{fill:#cfe6f4;opacity:.1;font-weight:600;letter-spacing:4.2px;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
+.map-label.water{transition:opacity .9s ease}.map-label.water.swept{opacity:0!important}
+.map-label.water{fill:#cfe6f4;opacity:.08;font-weight:600;letter-spacing:4.2px;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
 .map-label.islet{fill:#a9cee2;opacity:.42}
 .iconbtn svg{width:20px;height:20px}
 .slot svg{width:13px;max-width:85%;height:7px;color:var(--amber)}
@@ -2945,6 +2947,7 @@ function buildBoardSVG(){
 
   /* ports sit in the water beside their coast, marked with a glowing berth light */
   const portBoxes = [];
+  const seaBoxes = [];
   const landAdjPort = c => {
     const D = (c.r % 2) ? N_ODD : N_EVEN;
     return D.some(([dc, dr]) => {
@@ -3017,6 +3020,7 @@ function buildBoardSVG(){
         if (!hit) break;
         ly = Math.max(vbH * 0.12, Math.min(vbH * 0.88, ly + (hit.y <= ly ? 30 : -30)));
       }
+      seaBoxes.push({ x: cx2, y: ly - 6, hw: w / 2, hh: 12 });
       html += `<text class="map-label water" font-size="17" x="${cx2.toFixed(1)}" y="${ly.toFixed(1)}">${t}</text>`;
     }
   }
@@ -3036,7 +3040,41 @@ function buildBoardSVG(){
   }
   S.waterTop = wTop - HEX_S;
   S.waterBot = wBot + HEX_S;
+  /* the chart is printed on the fog: each sea/port name tracks the cells
+     beneath it and fades away once the area is mostly surveyed */
+  const seaEls = [...svg.querySelectorAll("text.map-label.water")];
+  const portEls = [...svg.querySelectorAll("g.city.port text")];
+  const zones = [];
+  seaBoxes.forEach((b, i) => { if (seaEls[i]) zones.push({ el: seaEls[i], ...b }); });
+  portBoxes.forEach((b, i) => { if (portEls[i]) zones.push({ el: portEls[i], x: b.x, y: b.y - 4, hw: b.hw, hh: 9 }); });
+  S.cellZones = new Map();
+  for (const z of zones){
+    z.n = 0; z.total = 0; z.done = false;
+    for (const c of S.cells){
+      if (!c.water) continue;
+      const [x, y] = cellCenter(c);
+      if (Math.abs(x - z.x) <= z.hw + HEX_S * 0.4 && Math.abs(y - (z.y + z.hh / 2)) <= z.hh + HEX_S * 0.6){
+        z.total++;
+        if (!S.cellZones.has(c.i)) S.cellZones.set(c.i, []);
+        S.cellZones.get(c.i).push(z);
+        if (c.rev){ z.n++; }
+      }
+    }
+    z.k = Math.max(2, Math.round(z.total * 0.45));
+    if (z.total && z.n >= z.k){ z.done = true; z.el.classList.add("swept"); }
+  }
   fitBoard();
+}
+
+function sweepLabels(c){
+  if (!S.cellZones || c.lblCounted) return;
+  const zs = S.cellZones.get(c.i);
+  if (!zs) return;
+  c.lblCounted = true;
+  for (const z of zs){
+    z.n++;
+    if (!z.done && z.n >= z.k){ z.done = true; z.el.classList.add("swept"); }
+  }
 }
 
 /* Adaptive fit: one identical board on every device; what adapts is how much
@@ -3081,6 +3119,7 @@ function cellClass(c){
 function renderCell(c){
   const g = cellEls[c.i];
   if (!g || !c.water) return;
+  if (c.rev) sweepLabels(c);
   g.setAttribute("class", cellClass(c));
   let inner = `<polygon class="hexbg" points="${HEXPTS}"/>`;
   if (c.wreck) inner += WRECK_SVG;
