@@ -82,8 +82,8 @@ body{
 
 /* ---------- screens ---------- */
 .screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;
-  padding-left:max(var(--sal), var(--gutter, 0px));
-  padding-right:max(var(--sar), var(--gutter, 0px))}
+  padding-left:max(var(--sal), var(--gutter-l, 0px));
+  padding-right:max(var(--sar), var(--gutter-r, 0px))}
 .screen.active{display:flex;animation:screenin .3s cubic-bezier(.2,.7,.3,1)}
 @keyframes screenin{from{opacity:0;transform:translateX(16px)}}
 
@@ -110,7 +110,7 @@ body{
 
 /* ---------- title ---------- */
 #scr-title{align-items:center;justify-content:center;text-align:center;
-  padding:20px max(20px, var(--sal), var(--gutter, 0px)) 20px max(20px, var(--sar), var(--gutter, 0px))}
+  padding:20px max(20px, var(--sar), var(--gutter-r, 0px)) 20px max(20px, var(--sal), var(--gutter-l, 0px))}
 .titlemap{position:absolute;inset:0;width:100%;height:100%;opacity:.5;pointer-events:none}
 .titlemap .coast{fill:#123048}
 .titlemap .route{fill:none;stroke:var(--amber);stroke-width:1.4;stroke-dasharray:2 7;opacity:.7;animation:routedrift 22s linear infinite}
@@ -262,8 +262,8 @@ h1.logo{font-size:52px;letter-spacing:.14em;font-weight:800;line-height:1;text-s
 .hud{
   position:absolute;top:calc(3px + var(--sat));left:0;right:0;z-index:6;
   display:flex;align-items:center;gap:6px;pointer-events:none;
-  padding:0 calc(max(var(--sar), var(--gutter, 0px)) + 8px)
-          0 calc(max(var(--sal), var(--gutter, 0px)) + 8px);
+  padding:0 calc(max(var(--sar), var(--gutter-r, 0px)) + 8px)
+          0 calc(max(var(--sal), var(--gutter-l, 0px)) + 8px);
 }
 .hud button,.hud .stat,.hud .backlog-mid{pointer-events:auto}
 .hud-title{text-shadow:0 1px 4px rgba(0,0,0,.8)}
@@ -297,7 +297,7 @@ h1.logo{font-size:52px;letter-spacing:.14em;font-weight:800;line-height:1;text-s
 #boardWrap{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   /* the extra 12px on the left keeps the start column clear of punch-holes and notches */
-  padding:2px max(var(--sar), var(--gutter, 0px)) 2px calc(max(var(--sal), var(--gutter, 0px)) + 12px);
+  padding:2px max(var(--sar), var(--gutter-r, 0px)) 2px calc(max(var(--sal), var(--gutter-l, 0px)) + 12px);
 }
 #boardWrap.shake{animation:shake .5s ease}
 @keyframes shake{
@@ -319,7 +319,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 .port .ring{stroke:#ffd76a;opacity:.5}
 @keyframes portpulse{0%,100%{transform:scale(.7);opacity:.32}50%{transform:scale(1.35);opacity:.12}}
 .city .ring{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.35}
-.city text{font-size:8.5px;letter-spacing:1.4px;fill:#9fc3d8;opacity:.85;font-weight:700;
+.city text{font-size:8.5px;letter-spacing:1.4px;fill:#9fc3d8;opacity:.7;font-weight:700;
   font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   paint-order:stroke;stroke:#04100a;stroke-width:2.4px}
 .intl-border{fill:none;stroke:#9fc3d8;stroke-width:1;opacity:.3;stroke-dasharray:1 4;stroke-linecap:round}
@@ -329,7 +329,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 [data-theme="chart"] .intl-border{stroke:#5a4a2e;opacity:.55}
 [data-theme="ecdis"] .city circle{fill:#7fe9b6}
 [data-theme="ecdis"] .city .ring{stroke:#7fe9b6}
-[data-theme="ecdis"] .city text{fill:#9df5cd;opacity:.9;stroke:#04100a}
+[data-theme="ecdis"] .city text{fill:#9df5cd;opacity:.72;stroke:#04100a}
 [data-theme="ecdis"] .intl-border{stroke:#35e08a;opacity:.35}
 .op-area{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.14;stroke-dasharray:6 6}
 .chart-deco line{stroke:#9fc3d8;stroke-width:.5;opacity:.05}
@@ -340,7 +340,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 .map-label{font-weight:700;letter-spacing:3.2px;text-anchor:middle;pointer-events:none;
   font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .map-label.onland{fill:#2c1e08;opacity:.55}
-.map-label.water{fill:#cfe6f4;opacity:.62;font-weight:600;letter-spacing:4.2px;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
+.map-label.water{fill:#cfe6f4;opacity:.45;font-weight:600;letter-spacing:4.2px;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
 .map-label.islet{fill:#a9cee2;opacity:.42}
 .iconbtn svg{width:20px;height:20px}
 .slot svg{width:13px;max-width:85%;height:7px;color:var(--amber)}
@@ -809,19 +809,19 @@ const LEVELS = [
     cities:[["JASK",.6,.1],["KHOR FAKKAN",.04,.7],["SOHAR",.3,.95]],
     border:[[.13,.72],[.09,1.0]],
     mask:[
-      "IIIIIIIIIIIIIII......",
-      "I~~~~~~~~~~~~~II.....",
-      "~~~~~~~~~~~~~~~~~~...",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "O~~~~~~~~~~~~~~~~~~~~",
-      "OOOO~~~~~~~~~~~~~~...",
-      "OOOOOOOO~~~~........."
+      "IIIIIIIIIIIIIIIIIIIIIII",
+      "II~~~~~~~~~~~~~IIIIIIII",
+      "~~~~~~~~~~~~~~~~~~~....",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "OO~~~~~~~~~~~~~~~~~~~~~",
+      "OOOOO~~~~~~~~~~~~~~....",
+      "OOOOOOOOO~~~~OOOOOOOOOO"
     ]
   },
   {
@@ -849,19 +849,19 @@ const LEVELS = [
     cities:[["BANDAR ABBAS",.3,.06],["KHASAB",.3,.62]],
     border:[[.16,.55],[.1,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIII",
-      "III~~~~~~~~~~~~~~IIII",
-      "I~~~~~~~~~~Q~~~~~~III",
-      "~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~~~~~~~~~~~~~~~~~I",
-      "~~~~Q~~~~~~~Q~~~~~~~~",
-      "~~~~~OO~~~~~~~~~~~~~~",
-      "~~OOOOOOOO~~~~~~~~~~~",
-      "OOOOOOOOOOOO~~~~~~~~.",
-      "OOOOOOOOOOOOOOO~~~..."
+      "IIIIIIIIIIIIIIIIIIIIIII",
+      "IIII~~~~~~~~~~~~~~IIIII",
+      "II~~~~~~~~~~Q~~~~~~IIII",
+      "~~~~~~~~~~~~~~~~~~~~~II",
+      "~~~~~~~~~~~~~~~~~~~~~II",
+      "~~~~~~~~~~~~~~~~~~~~~II",
+      "~~~~~~~~~~~~~~~~~~~~~II",
+      "~~~~~~~~~~~~~~~~~~~~~II",
+      "~~~~~Q~~~~~~~Q~~~~~~~~~",
+      "~~~~~~OO~~~~~~~~~~~~~~~",
+      "~~~OOOOOOOO~~~~~~~~~~~~",
+      "OOOOOOOOOOOOO~~~~~~~~..",
+      "OOOOOOOOOOOOOOOO~~~OOOO"
     ]
   },
   {
@@ -888,19 +888,19 @@ const LEVELS = [
     cities:[["BANDAR ABBAS",.62,.06],["KHASAB",.28,.86]],
     border:[[.14,.72],[.1,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIII",
-      "I~~~~~~~~~~~~~~~~IIII",
-      "I~QQQQQQQQQ~~~~~~~~~I",
-      "~~QQQQQQ~~~~~~~~~~~~~",
-      "~~~QQ~~~~~~Q~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~OO~~~~~~~~~~~",
-      "O~~~~OOOOOO~~~~~~~~~.",
-      "OOOOOOOOOOOOO~~~~...."
+      "IIIIIIIIIIIIIIIIIIIIIII",
+      "II~~~~~~~~~~~~~~~~IIIII",
+      "II~QQQQQQQQQ~~~~~~~~~II",
+      "~~~QQQQQQ~~~~~~~~~~~~~~",
+      "~~~~QQ~~~~~~Q~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~OO~~~~~~~~~~~~",
+      "OO~~~~OOOOOO~~~~~~~~~..",
+      "OOOOOOOOOOOOOO~~~~OOOOO"
     ]
   },
   {
@@ -927,19 +927,19 @@ const LEVELS = [
     cities:[["BANDAR LENGEH",.3,.06],["RAS AL KHAIMAH",.42,.9]],
     border:[[.62,.7],[.56,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIII",
-      "II~~~~~~~~~~~~~~~IIII",
-      "~~~~Q~~~~~~~~~~~~~~~I",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~Q~~~~Q~~~~~Q~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~OO~~~~~~~~~",
-      ".~~~~~~~OOOOOO~~~~~~.",
-      ".OOOOOOOOOOOOOO~~~..."
+      "IIIIIIIIIIIIIIIIIIIIIII",
+      "III~~~~~~~~~~~~~~~IIIII",
+      "~~~~~Q~~~~~~~~~~~~~~~II",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~Q~~~~Q~~~~~Q~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~OO~~~~~~~~~~",
+      "..~~~~~~~OOOOOO~~~~~~..",
+      "OOOOOOOOOOOOOOOO~~~OOOO"
     ]
   },
   {
@@ -967,19 +967,19 @@ const LEVELS = [
     cities:[["BANDAR ABBAS",.62,.06],["KHASAB",.42,.72]],
     border:[[.28,.6],[.2,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIII",
-      "I~~~~~~~~~~~~~~~~~III",
-      "I~QQQQQQ~~~Q~~~~~~III",
-      "~~~QQQ~~~~~~~Q~~~~~~~",
-      "~~~~Q~~~~~~~~~~~~~~~~",
-      "~~~~Q~~~~~~~~~~~~~~~~",
-      "~~~~Q~~~~~~~~~~~~~~~~",
-      "~~~~Q~~~~~~~~~~~~~~~~",
-      "~~~~Q~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~O~~~~~~~~~~",
-      "~~~~~~~OOOOO~~~~~~~~~",
-      ".~~~OOOOOOOOOO~~~~~~.",
-      "OOOOOOOOOOOOOOO~~~..."
+      "IIIIIIIIIIIIIIIIIIIIIII",
+      "II~~~~~~~~~~~~~~~~~IIII",
+      "II~QQQQQQ~~~Q~~~~~~IIII",
+      "~~~~QQQ~~~~~~~Q~~~~~~~~",
+      "~~~~~Q~~~~~~~~~~~~~~~~~",
+      "~~~~~Q~~~~~~~~~~~~~~~~~",
+      "~~~~~Q~~~~~~~~~~~~~~~~~",
+      "~~~~~Q~~~~~~~~~~~~~~~~~",
+      "~~~~~Q~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~O~~~~~~~~~~~",
+      "~~~~~~~~OOOOO~~~~~~~~~~",
+      "..~~~OOOOOOOOOO~~~~~~..",
+      "OOOOOOOOOOOOOOOO~~~OOOO"
     ]
   },
   {
@@ -1000,24 +1000,24 @@ const LEVELS = [
       "JUN 22 · <b>CNBC</b> · Shipping stalls after Iran declares the key waterway closed again",
       "JUN 27 · <b>JMIC</b> · Widened route through the strait announced near Oman: traffic in both directions"
     ],
-    minePct:.185, cap:15, interval:19, wreckCost:3, zeroCap:10, reMine:{every:3, max:4}, runners:{every:34, escape:6}, convoy:{every:24, max:3},
+    minePct:.175, cap:15, interval:19, wreckCost:3, zeroCap:11, reMine:{every:3, max:4}, runners:{every:34, escape:6}, convoy:{every:24, max:3},
     labels:[["IRANIAN COASTLINE",.5,.17,0],["MUSANDAM COAST",.3,.82,0],["SEPARATION SCHEME",.5,.5,0],["PERSIAN GULF",.16,.27,0],["GULF OF OMAN",.78,.28,0]],
     cities:[["BANDAR ABBAS",.6,.05],["KHASAB",.2,.8]],
     border:[[.3,.75],[.24,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIII",
-      "II~~~~~~~~~~~~~~~~~II",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "BBBBBBBBBBBBBBBBBBBBB",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      ".~~OOOOO~~~~~~~~~~~~.",
-      ".OOOOOOOOOOOOO~~~~..."
+      "IIIIIIIIIIIIIIIIIIIIIII",
+      "III~~~~~~~~~~~~~~~~~III",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "BBBBBBBBBBBBBBBBBBBBBBB",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "..~~OOOOO~~~~~~~~~~~~..",
+      "OOOOOOOOOOOOOOO~~~~OOOO"
     ]
   },
   {
@@ -1046,19 +1046,19 @@ const LEVELS = [
     cities:[["JASK",.62,.06],["DIBBA",.1,.8],["SOHAR",.45,.95]],
     border:[[.2,.76],[.16,1.0]],
     mask:[
-      "IIIIIIIIIIIIIIIIIIIII",
-      "IIIII~~~~~~~~~~IIIIII",
-      "II~~~~~~Q~~~Q~~~~~III",
-      "I~~~~~~~~~~~~~~~~~~~I",
-      "~~~~Q~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~Q~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "~~~~~~~~~~~~~~~~~~~~~",
-      "OO~~~~~~~~~~~~~~~~~OO",
-      "OOOOOOOOOOOOOOOOOOOOO"
+      "IIIIIIIIIIIIIIIIIIIIIII",
+      "IIIIII~~~~~~~~~~IIIIIII",
+      "III~~~~~~Q~~~Q~~~~~IIII",
+      "II~~~~~~~~~~~~~~~~~~~II",
+      "~~~~~Q~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~Q~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
+      "OOO~~~~~~~~~~~~~~~~~OOO",
+      "OOOOOOOOOOOOOOOOOOOOOOO"
     ]
   }
 ];
@@ -2973,7 +2973,6 @@ function buildBoardSVG(){
 
   /* chart labels: land names snap onto their landmass and follow its axis;
      water names run italic along a gentle arc, like a nautical chart */
-  let lblN = 0;
   for (let [t, fx, fy, onland] of (S.L.labels || [])){
     t = (isES() && ES.maplabels[t]) || t;
     const hx = vbW * fx, hy = vbH * fy;
@@ -2996,14 +2995,13 @@ function buildBoardSVG(){
         html += `<text class="map-label onland" font-size="${size.toFixed(1)}" transform="translate(${best[0].toFixed(1)},${best[1].toFixed(1)}) rotate(${ang.toFixed(1)})">${t}</text>`;
       }
     } else {
-      /* path must be longer than the letterspaced text or textPath truncates */
-      const w = Math.max(80, t.length * 11.4);
-      const cx2 = Math.max(w / 2 + 8, Math.min(vbW - w / 2 - 8, hx));  // keep the arc on the chart
+      /* straight mono label, same register as the port names; the curved
+         textPath arc was a leftover of the retired admiralty-chart theme */
+      const w = Math.max(80, t.length * 10.8);
+      const cx2 = Math.max(w / 2 + 8, Math.min(vbW - w / 2 - 8, hx));
       /* keep water names clear of the HUD strip (top) and ticker strip (bottom) */
       const hy2 = Math.max(vbH * 0.16, Math.min(vbH * 0.86, hy));
-      const pid = "lblp" + (lblN++);
-      html += `<defs><path id="${pid}" d="M${(cx2 - w / 2).toFixed(1)},${hy2.toFixed(1)} q ${(w / 2).toFixed(1)},-10 ${w.toFixed(1)},0"/></defs>` +
-              `<text class="map-label water" font-size="10.5"><textPath href="#${pid}" startOffset="50%">${t}</textPath></text>`;
+      html += `<text class="map-label water" font-size="10" x="${cx2.toFixed(1)}" y="${hy2.toFixed(1)}">${t}</text>`;
     }
   }
 
@@ -3363,8 +3361,8 @@ function showBrief(i){
    (dev/sbot.js, no hidden reads). REGENERATE after any tuning change:
    load sbot on a ?dev page and take the fastest win of __SBOT.runN(idx, 8). */
 const AI_RECORD = [
-  { t:38, s:80, w:0 }, { t:34, s:75, w:1 }, { t:41, s:75, w:1 },
-  { t:52, s:79, w:1 }, { t:50, s:85, w:0 }, { t:56, s:98, w:2 }, { t:48, s:76, w:2 }
+  { t:30, s:79, w:0 }, { t:53, s:83, w:0 }, { t:42, s:64, w:1 },
+  { t:37, s:56, w:1 }, { t:43, s:69, w:2 }, { t:52, s:94, w:1 }, { t:54, s:76, w:2 }
 ];
 
 const FACTS = [
@@ -3935,21 +3933,32 @@ document.addEventListener("gesturechange", e => e.preventDefault());
    viewport-fit=cover. If a notch-era iPhone reports no inset in landscape,
    reserve the gutter manually so the island never covers the HUD or board. */
 (function(){
-  if (!/iPhone/.test(navigator.userAgent)) return;
-  if (Math.max(screen.width, screen.height) < 812) return;   // pre-notch iPhones
+  const iphone = /iPhone/.test(navigator.userAgent) && Math.max(screen.width, screen.height) >= 812;
+  const touch = matchMedia("(pointer: coarse)").matches;
+  if (!iphone && !touch) return;
   const probe = document.createElement("div");
   probe.style.cssText = "position:fixed;left:0;top:0;visibility:hidden;" +
     "padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)";
   document.body.appendChild(probe);
+  const set = (l, r, b) => {
+    const st = document.documentElement.style;
+    st.setProperty("--gutter-l", l); st.setProperty("--gutter-r", r); st.setProperty("--gutter-b", b);
+  };
   const apply = () => {
     const cs = getComputedStyle(probe);
     const measured = Math.max(parseFloat(cs.paddingLeft) || 0, parseFloat(cs.paddingRight) || 0);
     const landscape = matchMedia("(orientation: landscape)").matches;
-    /* sideways mode (locked portrait): the island sits along the app's left
-       edge but the portrait left/right insets read 0, so reserve manually */
-    const missing = (landscape && measured < 20) || !landscape;
-    document.documentElement.style.setProperty("--gutter", missing ? "59px" : "0px");
-    document.documentElement.style.setProperty("--gutter-b", missing ? "14px" : "0px");
+    if (!landscape){
+      /* sideways mode: the fixed 90-degree rotation puts the notch or camera
+         along the app's LEFT edge only; the right edge just clears the bar */
+      set(iphone ? "59px" : "34px", "24px", "14px");
+    } else if (iphone && measured < 20){
+      /* notch iPhone reporting no inset (iframe / missing viewport-fit):
+         the island may sit on either side, reserve both */
+      set("59px", "59px", "14px");
+    } else {
+      set("0px", "0px", "0px");
+    }
   };
   apply();
   matchMedia("(orientation: landscape)").addEventListener("change", () => setTimeout(apply, 80));
