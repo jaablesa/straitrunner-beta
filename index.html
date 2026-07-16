@@ -321,7 +321,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 .port .ring{stroke:#ffd76a;opacity:.5}
 @keyframes portpulse{0%,100%{transform:scale(.7);opacity:.32}50%{transform:scale(1.35);opacity:.12}}
 .city .ring{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.35}
-.city text{font-size:10px;letter-spacing:1.4px;fill:#9fc3d8;opacity:.55;font-weight:700;
+.city text{font-size:11.5px;letter-spacing:1.4px;fill:#9fc3d8;opacity:.45;font-weight:700;
   font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   paint-order:stroke;stroke:#04100a;stroke-width:2.4px}
 .intl-border{fill:none;stroke:#9fc3d8;stroke-width:1;opacity:.3;stroke-dasharray:1 4;stroke-linecap:round}
@@ -331,7 +331,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 [data-theme="chart"] .intl-border{stroke:#5a4a2e;opacity:.55}
 [data-theme="ecdis"] .city circle{fill:#7fe9b6}
 [data-theme="ecdis"] .city .ring{stroke:#7fe9b6}
-[data-theme="ecdis"] .city text{fill:#9df5cd;opacity:.58;stroke:#04100a}
+[data-theme="ecdis"] .city text{fill:#9df5cd;opacity:.48;stroke:#04100a}
 [data-theme="ecdis"] .intl-border{stroke:#35e08a;opacity:.35}
 .op-area{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.14;stroke-dasharray:6 6}
 .chart-deco line{stroke:#9fc3d8;stroke-width:.5;opacity:.05}
@@ -342,7 +342,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 .map-label{font-weight:700;letter-spacing:3.2px;text-anchor:middle;pointer-events:none;
   font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .map-label.onland{fill:#2c1e08;opacity:.55}
-.map-label.water{fill:#cfe6f4;opacity:.3;font-weight:600;letter-spacing:4.2px;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
+.map-label.water{fill:#cfe6f4;opacity:.2;font-weight:600;letter-spacing:4.2px;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
 .map-label.islet{fill:#a9cee2;opacity:.42}
 .iconbtn svg{width:20px;height:20px}
 .slot svg{width:13px;max-width:85%;height:7px;color:var(--amber)}
@@ -2787,6 +2787,7 @@ function buildBoardSVG(){
   const vbW = hw * (cols + 0.5) + PAD * 2;
   const vbH = 1.5 * HEX_S * (rows - 1) + 2 * HEX_S + PAD * 2;
   svg.setAttribute("viewBox", `0 0 ${vbW.toFixed(1)} ${vbH.toFixed(1)}`);
+  svg.dataset.vb = vbW.toFixed(1) + "," + vbH.toFixed(1);
 
   const th = T();
   const lin = (id, [a, b]) =>
@@ -2942,6 +2943,7 @@ function buildBoardSVG(){
   }
 
   /* ports sit in the water beside their coast, marked with a glowing berth light */
+  const portBoxes = [];
   const landAdjPort = c => {
     const D = (c.r % 2) ? N_ODD : N_EVEN;
     return D.some(([dc, dr]) => {
@@ -2965,6 +2967,9 @@ function buildBoardSVG(){
     const ty = best[1] < vbH * 0.14 ? 13 : (best[1] > vbH * 0.84 ? -9 : 2.5);
     const tx = ty === 2.5 ? (flip ? -9 : 9) : 0;
     const anchor = ty === 2.5 ? (flip ? ' text-anchor="end"' : "") : ' text-anchor="middle"';
+    const phw = (8 + cname.length) * 4.6;
+    portBoxes.push({ x: anchor.includes("middle") ? best[0] : (anchor ? best[0] + tx - phw : best[0] + tx + phw),
+                     y: best[1] + ty, hw: phw });
     html += `<g class="city port" transform="translate(${best[0].toFixed(1)},${best[1].toFixed(1)})">` +
             `<circle class="portglow" r="7"/><circle class="portdot" r="2.3"/><circle class="ring" r="4.2"/>` +
             `<text x="${tx}" y="${ty}"${anchor}>${TXT("portOf", "PORT OF ")}${cname}</text></g>`;
@@ -3001,11 +3006,17 @@ function buildBoardSVG(){
     } else {
       /* straight mono label, same register as the port names; the curved
          textPath arc was a leftover of the retired admiralty-chart theme */
-      const w = Math.max(80, t.length * 14);
+      const w = Math.max(80, t.length * 18.5);
       const cx2 = Math.max(w / 2 + 8, Math.min(vbW - w / 2 - 8, hx));
       /* keep water names clear of the HUD strip (top) and ticker strip (bottom) */
-      const hy2 = Math.max(vbH * 0.16, Math.min(vbH * 0.86, hy));
-      html += `<text class="map-label water" font-size="13" x="${cx2.toFixed(1)}" y="${hy2.toFixed(1)}">${t}</text>`;
+      let ly = Math.max(vbH * 0.16, Math.min(vbH * 0.86, hy));
+      /* ports are anchored to their berth lights, so the sea name dodges them */
+      for (let tries = 0; tries < 3; tries++){
+        const hit = portBoxes.find(p => Math.abs(p.y - ly) < 24 && Math.abs(p.x - cx2) < w / 2 + p.hw + 8);
+        if (!hit) break;
+        ly = Math.max(vbH * 0.12, Math.min(vbH * 0.88, ly + (hit.y <= ly ? 30 : -30)));
+      }
+      html += `<text class="map-label water" font-size="17" x="${cx2.toFixed(1)}" y="${ly.toFixed(1)}">${t}</text>`;
     }
   }
 
@@ -3015,7 +3026,50 @@ function buildBoardSVG(){
   svg.innerHTML = html;
   cellEls = [];
   svg.querySelectorAll("g.cell").forEach(g => { cellEls[+g.dataset.i] = g; });
+  let wTop = Infinity, wBot = -Infinity;
+  for (const c of S.cells){
+    if (!c.water) continue;
+    const y = cellCenter(c)[1];
+    if (y < wTop) wTop = y;
+    if (y > wBot) wBot = y;
+  }
+  S.waterTop = wTop - HEX_S;
+  S.waterBot = wBot + HEX_S;
+  fitBoard();
 }
+
+/* Adaptive fit: one identical board on every device; what adapts is how much
+   decorative coast the screen keeps. Viewports wider than the chart's natural
+   aspect (modern phones, best in the native shell) crop into the non-playable
+   coastal margins so every hex renders larger; water, shoreline, ports and
+   entities are never cropped. Narrow screens keep the full chart. */
+function fitBoard(){
+  if (!S || !S.cells) return;
+  const svg = $("board"), wrap = $("boardWrap");
+  if (!svg || !svg.dataset.vb || !wrap) return;
+  const nat = svg.dataset.vb.split(",");
+  const vbW = +nat[0], vbH = +nat[1];
+  const cs = getComputedStyle(wrap);
+  const cw = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const ch = wrap.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const full = () => svg.setAttribute("viewBox", `0 0 ${vbW} ${vbH}`);
+  if (cw <= 0 || ch <= 0){ full(); return; }
+  const CA = cw / ch;
+  if (CA <= vbW / vbH + 0.01){ full(); return; }
+  const pad = HEX_S * 1.2;                       /* shoreline stroke + port dots stay visible */
+  const minY = Math.max(0, S.waterTop - pad);
+  const maxY = Math.min(vbH, S.waterBot + pad);
+  const newH = Math.max(vbW / CA, maxY - minY);
+  if (newH >= vbH - 1){ full(); return; }
+  /* distribute the crop between the two land margins in proportion */
+  const topLand = minY, botLand = vbH - maxY;
+  const spare = newH - (maxY - minY);
+  let y = topLand + botLand > 0 ? minY - spare * (topLand / (topLand + botLand)) : minY - spare / 2;
+  y = Math.max(0, Math.min(vbH - newH, y));
+  svg.setAttribute("viewBox", `0 ${y.toFixed(1)} ${vbW.toFixed(1)} ${newH.toFixed(1)}`);
+}
+window.addEventListener("resize", () => setTimeout(fitBoard, 90));
+matchMedia("(orientation: landscape)").addEventListener("change", () => setTimeout(fitBoard, 120));
 
 function cellClass(c){
   if (c.wreck) return "cell water wrecked";
