@@ -319,7 +319,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 .port .ring{stroke:#ffd76a;opacity:.5}
 @keyframes portpulse{0%,100%{transform:scale(.7);opacity:.32}50%{transform:scale(1.35);opacity:.12}}
 .city .ring{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.35}
-.city text{font-size:8.5px;letter-spacing:1.4px;fill:#9fc3d8;opacity:.7;font-weight:700;
+.city text{font-size:10px;letter-spacing:1.4px;fill:#9fc3d8;opacity:.55;font-weight:700;
   font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   paint-order:stroke;stroke:#04100a;stroke-width:2.4px}
 .intl-border{fill:none;stroke:#9fc3d8;stroke-width:1;opacity:.3;stroke-dasharray:1 4;stroke-linecap:round}
@@ -329,7 +329,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 [data-theme="chart"] .intl-border{stroke:#5a4a2e;opacity:.55}
 [data-theme="ecdis"] .city circle{fill:#7fe9b6}
 [data-theme="ecdis"] .city .ring{stroke:#7fe9b6}
-[data-theme="ecdis"] .city text{fill:#9df5cd;opacity:.72;stroke:#04100a}
+[data-theme="ecdis"] .city text{fill:#9df5cd;opacity:.58;stroke:#04100a}
 [data-theme="ecdis"] .intl-border{stroke:#35e08a;opacity:.35}
 .op-area{fill:none;stroke:#9fc3d8;stroke-width:.8;opacity:.14;stroke-dasharray:6 6}
 .chart-deco line{stroke:#9fc3d8;stroke-width:.5;opacity:.05}
@@ -340,7 +340,7 @@ svg#board{width:100%;height:100%;touch-action:none}
 .map-label{font-weight:700;letter-spacing:3.2px;text-anchor:middle;pointer-events:none;
   font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .map-label.onland{fill:#2c1e08;opacity:.55}
-.map-label.water{fill:#cfe6f4;opacity:.45;font-weight:600;letter-spacing:4.2px;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
+.map-label.water{fill:#cfe6f4;opacity:.3;font-weight:600;letter-spacing:4.2px;paint-order:stroke;stroke:#081c2b;stroke-width:3.2px}
 .map-label.islet{fill:#a9cee2;opacity:.42}
 .iconbtn svg{width:20px;height:20px}
 .slot svg{width:13px;max-width:85%;height:7px;color:var(--amber)}
@@ -811,7 +811,7 @@ const LEVELS = [
     mask:[
       "IIIIIIIIIIIIIIIIIIIIIII",
       "II~~~~~~~~~~~~~IIIIIIII",
-      "~~~~~~~~~~~~~~~~~~~....",
+      "~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~",
@@ -820,8 +820,8 @@ const LEVELS = [
       "~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~",
       "OO~~~~~~~~~~~~~~~~~~~~~",
-      "OOOOO~~~~~~~~~~~~~~....",
-      "OOOOOOOOO~~~~OOOOOOOOOO"
+      "OOOOO~~~~~~~~~~~~~~~~~~",
+      "OOOOOOOOOOOOOOOOOOOOOOO"
     ]
   },
   {
@@ -860,8 +860,8 @@ const LEVELS = [
       "~~~~~Q~~~~~~~Q~~~~~~~~~",
       "~~~~~~OO~~~~~~~~~~~~~~~",
       "~~~OOOOOOOO~~~~~~~~~~~~",
-      "OOOOOOOOOOOOO~~~~~~~~..",
-      "OOOOOOOOOOOOOOOO~~~OOOO"
+      "OOOOOOOOOOOOO~~~~~~~~~~",
+      "OOOOOOOOOOOOOOOOOOOOOOO"
     ]
   },
   {
@@ -899,8 +899,8 @@ const LEVELS = [
       "~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~OO~~~~~~~~~~~~",
-      "OO~~~~OOOOOO~~~~~~~~~..",
-      "OOOOOOOOOOOOOO~~~~OOOOO"
+      "OO~~~~OOOOOO~~~~~~~~~~~",
+      "OOOOOOOOOOOOOOOOOOOOOOO"
     ]
   },
   {
@@ -938,8 +938,8 @@ const LEVELS = [
       "~~~Q~~~~Q~~~~~Q~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~OO~~~~~~~~~~",
-      "..~~~~~~~OOOOOO~~~~~~..",
-      "OOOOOOOOOOOOOOOO~~~OOOO"
+      "~~~~~~~~~OOOOOO~~~~~~~~",
+      "OOOOOOOOOOOOOOOOOOOOOOO"
     ]
   },
   {
@@ -978,8 +978,8 @@ const LEVELS = [
       "~~~~~Q~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~O~~~~~~~~~~~",
       "~~~~~~~~OOOOO~~~~~~~~~~",
-      "..~~~OOOOOOOOOO~~~~~~..",
-      "OOOOOOOOOOOOOOOO~~~OOOO"
+      "~~~~~OOOOOOOOOO~~~~~~~~",
+      "OOOOOOOOOOOOOOOOOOOOOOO"
     ]
   },
   {
@@ -1016,8 +1016,8 @@ const LEVELS = [
       "~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~",
       "~~~~~~~~~~~~~~~~~~~~~~~",
-      "..~~OOOOO~~~~~~~~~~~~..",
-      "OOOOOOOOOOOOOOO~~~~OOOO"
+      "~~~~OOOOO~~~~~~~~~~~~~~",
+      "OOOOOOOOOOOOOOOOOOOOOOO"
     ]
   },
   {
@@ -2997,11 +2997,11 @@ function buildBoardSVG(){
     } else {
       /* straight mono label, same register as the port names; the curved
          textPath arc was a leftover of the retired admiralty-chart theme */
-      const w = Math.max(80, t.length * 10.8);
+      const w = Math.max(80, t.length * 14);
       const cx2 = Math.max(w / 2 + 8, Math.min(vbW - w / 2 - 8, hx));
       /* keep water names clear of the HUD strip (top) and ticker strip (bottom) */
       const hy2 = Math.max(vbH * 0.16, Math.min(vbH * 0.86, hy));
-      html += `<text class="map-label water" font-size="10" x="${cx2.toFixed(1)}" y="${hy2.toFixed(1)}">${t}</text>`;
+      html += `<text class="map-label water" font-size="13" x="${cx2.toFixed(1)}" y="${hy2.toFixed(1)}">${t}</text>`;
     }
   }
 
@@ -3361,8 +3361,8 @@ function showBrief(i){
    (dev/sbot.js, no hidden reads). REGENERATE after any tuning change:
    load sbot on a ?dev page and take the fastest win of __SBOT.runN(idx, 8). */
 const AI_RECORD = [
-  { t:30, s:79, w:0 }, { t:53, s:83, w:0 }, { t:42, s:64, w:1 },
-  { t:37, s:56, w:1 }, { t:43, s:69, w:2 }, { t:52, s:94, w:1 }, { t:54, s:76, w:2 }
+  { t:21, s:47, w:1 }, { t:52, s:86, w:1 }, { t:42, s:80, w:0 },
+  { t:35, s:53, w:1 }, { t:50, s:69, w:2 }, { t:53, s:93, w:3 }, { t:44, s:77, w:2 }
 ];
 
 const FACTS = [
