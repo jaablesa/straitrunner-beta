@@ -1,6 +1,6 @@
 /* Ormuz service worker: network-first for the app shell so deploys reach
    returning players on the next load, cache-first for static assets. */
-const CACHE = "ormuz-v32";
+const CACHE = "ormuz-v33";
 const ASSETS = [
   "./",
   "./index.html",
