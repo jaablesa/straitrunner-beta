@@ -1432,7 +1432,7 @@ function loadProgress(){
   }
   catch(e){ return fresh; }
 }
-function saveProgress(p){
+function saveProgress(p = PROG){
   if (DEV) return;
   p.v = CAMPAIGN_V;
   try { localStorage.setItem(STORE_KEY, JSON.stringify(p)); } catch(e){}
