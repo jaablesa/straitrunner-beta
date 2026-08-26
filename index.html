@@ -2072,6 +2072,9 @@ function startLevel(idx){
     fieldManual("lanes2", TXT("fmLanesTitle", "TWO LANES, BOTH MUST OPEN"),
       TXT("fmLanesBody", "A buoyed separation line splits this sector into two shipping lanes, and both need their own swept channel from west to east. Opening the FIRST lane starts one-way traffic and clears part of the backlog, so scout both lanes and open the cheaper one first."),
       FM_IMG.lanes2);
+  /* after the whole render settles: adapt the viewBox to the measured
+     container (mid-render calls can be overwritten by the natural set) */
+  setTimeout(fitBoard, 0);
 }
 
 function tapCell(i){
@@ -3374,7 +3377,18 @@ function fitBoard(){
   const full = () => svg.setAttribute("viewBox", `0 0 ${vbW} ${vbH}`);
   if (cw <= 0 || ch <= 0){ full(); return; }
   const CA = cw / ch;
-  if (CA <= vbW / vbH + 0.01){ full(); return; }
+  if (CA <= vbW / vbH + 0.01){
+    /* container TALLER than the chart (squarish displays: folded-out
+       screens, desktop windows): extend the view into the pre-painted
+       land margins instead of letterboxing. extRect art exists EXT=420
+       units beyond every edge; stay comfortably inside it. */
+    const MARGIN = 380;
+    const newH = Math.min(vbW / CA, vbH + 2 * MARGIN);
+    if (newH <= vbH + 1){ full(); return; }
+    const y = -((newH - vbH) / 2);
+    svg.setAttribute("viewBox", `0 ${y.toFixed(1)} ${vbW.toFixed(1)} ${newH.toFixed(1)}`);
+    return;
+  }
   const pad = HEX_S * 1.2;                       /* shoreline stroke + port dots stay visible */
   const minY = Math.max(0, S.waterTop - pad);
   const maxY = Math.min(vbH, S.waterBot + pad);
@@ -3389,6 +3403,9 @@ function fitBoard(){
 }
 window.addEventListener("resize", () => setTimeout(fitBoard, 90));
 matchMedia("(orientation: landscape)").addEventListener("change", () => setTimeout(fitBoard, 120));
+/* fold/unfold transitions and some embedded webviews resize the visual
+   viewport without a window resize event; cover both sources */
+if (window.visualViewport) visualViewport.addEventListener("resize", () => setTimeout(fitBoard, 90));
 
 function cellClass(c){
   if (c.wreck) return "cell water wrecked";
